@@ -1,36 +1,40 @@
 {
-  "build": {
-    "beforeDevCommand": "yarn dev",
-    "beforeBuildCommand": "yarn build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
-  },
-  "package": {
-    "productName": "cao",
-    "version": "0.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
+    "build": {
+        "beforeDevCommand": "yarn dev",
+        "beforeBuildCommand": "yarn build",
+        "devPath": "http://localhost:1420",
+        "distDir": "../dist"
     },
-    "windows": [
-      {
-        "title": "cao",
-        "width": 800,
-        "height": 600
-      }
-    ],
-    "security": {
-      "csp": null
+    "package": {
+        "productName": "cao",
+        "version": "0.0.0"
     },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "io.shabang.cao"
+    "tauri": {
+        "allowlist": {
+            "all": false,
+            "shell": {
+                "all": false,
+                "open": true
+            },
+            "window": {
+                "all": true
+            }
+        },
+        "windows": [
+            {
+                "title": "cao",
+                "width": 800,
+                "height": 600,
+                "titleBarStyle": "Overlay"
+            }
+        ],
+        "security": {
+            "csp": null
+        },
+        "bundle": {
+            "active": true,
+            "targets": "all",
+            "identifier": "io.shabang.cao"
+        }
     }
-  }
 }

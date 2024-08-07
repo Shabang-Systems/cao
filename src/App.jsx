@@ -1,21 +1,40 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import { useState, useEffect } from "react";
+import { appWindow } from "@tauri-apps/api/window";
+
+import { ThemeContext } from "./contexts.js";
+
+import Capture from "./views/Capture.jsx";
+
+import "./theme.css";
+import "./app.css";
 
 function App() {
-    const [greetMsg, setGreetMsg] = useState("");
-    const [name, setName] = useState("");
+    const [isDark, setIsDark] = useState(false);
 
-    async function greet() {
-        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-        setGreetMsg(await invoke("greet", { name }));
-    }
+    useEffect(() => {
+        appWindow.theme().then((x) => {
+            setIsDark(x == "dark");
+        });
+        const unlistenFuture = appWindow.onThemeChanged(({ payload: theme }) => {
+            setIsDark(theme == "dark");
+        });
+
+        return () => {
+            unlistenFuture.then((x) => x());
+        };
+    }, []);
 
     return (
-        <div className="container">
-            <h1>Welcome to Tauri!</h1>
-            <p>{greetMsg}</p>
-        </div>
+        <ThemeContext.Provider value={{
+            dark: isDark
+        }}>
+            <div id="theme-box" className={isDark ? "dark" : ""}>
+                <div className={"global w-screen h-screen"}>
+                    <div id="top-hide"></div>
+                    <Capture/>
+                </div>
+            </div>
+        </ThemeContext.Provider>
     );
 }
 
