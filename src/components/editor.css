@@ -1,0 +1,7 @@
+.cm-mountpoint {
+    @apply w-full h-full p-10
+}
+
+.cm-focused {
+    outline: 0 !important;
+}
