@@ -19,7 +19,8 @@
     "@uiw/react-codemirror": "^4.23.0",
     "codemirror": "^6.0.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hot-keys": "^2.7.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 
 import Editor from "./components/editor.jsx";
 
+import "./App.css";
+
 
 function App() {
     const WORLD =  {
@@ -24,8 +26,11 @@ function App() {
     };
 
     return (
-        <div className="w-screen h-screen cursor-text">
-            <Editor value={WORLD.node[0]} onChange={WORLD.node[1]} />
+        <div className="global w-screen h-screen">
+            <div id="top-hide"></div>
+            <div className="cursor-text w-full h-full">
+                <Editor value={WORLD.node[0]} onChange={WORLD.node[1]} />
+            </div>
         </div>
     );
 }
