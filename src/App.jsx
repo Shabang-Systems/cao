@@ -1,37 +1,40 @@
 import { useState, useEffect } from "react";
+import { appWindow } from "@tauri-apps/api/window";
 
-import Editor from "./components/editor.jsx";
+import { ThemeContext } from "./contexts.js";
 
-import "./App.css";
+import Capture from "./views/Capture.jsx";
 
+import "./theme.css";
+import "./app.css";
 
 function App() {
-    const WORLD =  {
-        node: useState("# light it up"),
-        left: null,
-        right: {
-            node: useState("# light it up further"),
-            left: null,
-            right: null,
-            up: null,
-            down: null
-        },
-        up: null,
-        down: {
-            left: null,
-            right: null,
-            up: null,
-            down: null
-        }
-    };
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        appWindow.theme().then((x) => {
+            setIsDark(x == "dark");
+        });
+        const unlistenFuture = appWindow.onThemeChanged(({ payload: theme }) => {
+            setIsDark(theme == "dark");
+        });
+
+        return () => {
+            unlistenFuture.then((x) => x());
+        };
+    }, []);
 
     return (
-        <div className="global w-screen h-screen">
-            <div id="top-hide"></div>
-            <div className="cursor-text w-full h-full">
-                <Editor value={WORLD.node[0]} onChange={WORLD.node[1]} />
+        <ThemeContext.Provider value={{
+            dark: isDark
+        }}>
+            <div id="theme-box" className={isDark ? "dark" : ""}>
+                <div className={"global w-screen h-screen"}>
+                    <div id="top-hide"></div>
+                    <Capture/>
+                </div>
             </div>
-        </div>
+        </ThemeContext.Provider>
     );
 }
 

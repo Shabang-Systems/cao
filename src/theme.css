@@ -1,0 +1,9 @@
+#theme-box {
+    --background-color: white
+}
+
+#theme-box.dark {
+    --background-color: #282c34
+}
+
+
