@@ -1,3 +1,5 @@
+@import url("./extern/fa/css/all.min.css");
+
 .global {
     background-color: var(--background-color);
 }
