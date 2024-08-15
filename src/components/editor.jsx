@@ -9,19 +9,19 @@ import { indentUnit } from "@codemirror/language";
 import { snippetCompletion } from "@codemirror/autocomplete";
 import { githubLight } from '@uiw/codemirror-theme-github';
 
-import { ThemeContext } from "../contexts.js";
+import { ThemeContext } from "@contexts";
 
 import "./editor.css";
-import strings from "../strings.js";
+import strings from "@strings";
 
-export default function Editor( { onChange, onSelectChange, defaultValue, value } ) {
+export default function Editor( { onChange, onSelectionChange, defaultValue, value } ) {
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);
 
     useEffect(() => {
-        if (typeof onSelectChange == "function") {
-            onSelectChange(selection);
+        if (typeof onSelectionChange == "function") {
+            onSelectionChange(selection);
         }
     }, [selection]);
 
