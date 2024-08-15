@@ -2,7 +2,10 @@
 
 .global {
     background-color: var(--background-color);
+    overflow-y: scroll;
+    margin-bottom: 40px;
 }
+
 
 #top-hide {
     width: 100%;
