@@ -1,10 +1,10 @@
 #theme-box {
     --background-color: white;
-    --background-decoration: #e3e3e3;
+    --background-decoration: #ededed;
 
-    --foreground-decoration: #878787;
-    --foreground-color: #fafafa;
-    --foreground-accent: white;
+    --foreground-decoration: #c7c7c7;
+    --foreground-color: #404040;
+    --foreground-accent: black;
 }
 
 #theme-box.dark {
@@ -12,7 +12,7 @@
     --background-decoration: #3a414f;
 
     --foreground-decoration: #7787a3;
-    --foreground-color: #fafafa;
+    --foreground-color: #abb2bf;
     --foreground-accent: white;
 }
 

@@ -1,5 +1,5 @@
 .cm-mountpoint {
-    @apply w-full h-full p-12
+    @apply w-full h-full p-12 pl-12 pr-20
 }
 
 .cm-focused {

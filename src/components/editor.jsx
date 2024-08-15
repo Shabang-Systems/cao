@@ -20,6 +20,10 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
     const { dark } = useContext(ThemeContext);
 
     useEffect(() => {
+        setCode(value);
+    }, [value]);
+
+    useEffect(() => {
         if (typeof onSelectionChange == "function") {
             onSelectionChange(selection);
         }

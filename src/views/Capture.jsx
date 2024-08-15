@@ -2,19 +2,21 @@ import { useState, useEffect } from "react";
 import Editor from "@components/editor.jsx";
 
 import { useSelector, useDispatch } from 'react-redux';
-import { set, select } from "@api/capture.js";
+import { set, select, pop, grow, view } from "@api/capture.js";
 
 import "./Capture.css";
 
 export default function Capture() {
-    const [ captureID, setCaptureID ] = useState(0);
+    const scratchpad = useSelector((state) =>
+        state.capture.scratchpads[state.capture.current]
+    );
 
-    const count = useSelector((state) =>
+    const length = useSelector((state) =>
         state.capture.scratchpads.length
     );
 
-    const inboxText = useSelector((state) =>
-        state.capture.scratchpads[captureID]
+    const captureID = useSelector((state) =>
+        state.capture.current
     );
 
     const selectionText = useSelector((state) =>
@@ -27,34 +29,52 @@ export default function Capture() {
     return (
         <div className="cursor-text w-full h-full">
             <Editor
-                value={inboxText}
-                onChange={(x) => dispatch(set({idx: captureID,
-                                               text: x}))}
+                value={scratchpad}
+                onChange={(x) => dispatch(set(x))}
                 onSelectionChange={(sel) => {
                     if(sel != null) dispatch(select(sel[0]));
                     else dispatch(select(sel));
                 }}
             />
-            <div className="absolute" style={{top: "10px", right: "20px",
-                                              zIndex: 20000,
-                                              paddingTop: 20, paddingRight: 5}}>
+            <div className="absolute captureid-outer" style={{top: "10px", right: "10px",
+                                                              zIndex: 20000,
+                                                              paddingTop: 20, paddingRight: 5}}>
+                <div className="mb-3">
+                    <div className="button" onClick={() => {
+                        if (scratchpad == "") {
+                            dispatch(pop());
+                        } else {
+                            dispatch(view(captureID-1));
+                        }
+                    }}>
+                        <i className="fa-solid fa-chevron-up"></i>
+                    </div>
+                    <div className="button" onClick={() => {
+                        if (captureID == length - 1 ) {
+                            dispatch(grow());
+                        } else {
+                            dispatch(view(captureID+1));
+                        }
+                    }}>
+                        <i className="fa-solid fa-chevron-down"></i>
+                    </div>
+                </div>
                 <ul className="captureid-wrapper">
                     {
-                        [...Array(count).keys()].map((x) => {
+                        [...Array(length).keys()].map((x) => {
                             return (
-                                <li className={"captureid-dot " + (
+                                <li key={x} className={"captureid-dot " + (
                                     x == captureID ? "active" : ""
                                 )}></li>
                             );
                         })
                     }
                 </ul> 
-                <div>
-                </div>
+
             </div>
 
             <div className="absolute font-bold" style={{bottom: "20px", zIndex: 20000}}>
-                { selectionText }
+                {/* {scratchpads[captureID]} */}
             </div>
         </div>
 

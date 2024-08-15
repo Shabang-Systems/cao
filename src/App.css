@@ -12,3 +12,18 @@
     z-index: 200;
     background-color: var(--background-color);
 }
+
+.button {
+    background-color: var(--background-decoration);
+    color: var(--foreground-color);
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.button:hover {
+    background-color: var(--foreground-decoration);
+    color: var(--foreground-accent);
+}
