@@ -1,6 +1,11 @@
+@import url("./extern/fa/css/all.min.css");
+
 .global {
     background-color: var(--background-color);
+    overflow-y: scroll;
+    margin-bottom: 40px;
 }
+
 
 #top-hide {
     width: 100%;
@@ -9,4 +14,19 @@
     top: 0;
     z-index: 200;
     background-color: var(--background-color);
+}
+
+.button {
+    background-color: var(--background-decoration);
+    color: var(--foreground-color);
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.button:hover {
+    background-color: var(--foreground-decoration);
+    color: var(--foreground-accent);
 }

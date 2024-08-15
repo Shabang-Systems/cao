@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { appWindow } from "@tauri-apps/api/window";
-
 import { ThemeContext } from "./contexts.js";
-
-import Capture from "./views/Capture.jsx";
+import Capture from "@views/Capture.jsx";
 
 import "./theme.css";
 import "./app.css";

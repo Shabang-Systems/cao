@@ -1,9 +1,19 @@
 #theme-box {
-    --background-color: white
+    --background-color: white;
+    --background-decoration: #ededed;
+
+    --foreground-decoration: #c7c7c7;
+    --foreground-color: #404040;
+    --foreground-accent: black;
 }
 
 #theme-box.dark {
-    --background-color: #282c34
+    --background-color: #282c34;
+    --background-decoration: #3a414f;
+
+    --foreground-decoration: #7787a3;
+    --foreground-color: #abb2bf;
+    --foreground-accent: white;
 }
 
 
