@@ -98,7 +98,9 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
     }, [selection]);
 
     return (
-        <div className="cm-mountpoint">
+        <div className="cm-mountpoint" onClick={() => { if (cm.current) {
+            cm.current.editor.focus();
+        }}}>
             <CodeMirror
                 ref={cm}
                 editable={!chunkMode}

@@ -31,6 +31,12 @@
     color: var(--foreground-accent);
 }
 
+.button.disabled {
+    opacity: 0.3;
+    background-color: var(--background-decoration) !important;
+    color: var(--foreground-color) !important;
+}
+
 #error-modal {
     color: var(--foreground-color);
 }

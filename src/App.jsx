@@ -16,13 +16,19 @@ import store from "@api/store.js";
 import { Provider } from 'react-redux';
 
 import Capture from "@views/Capture.jsx";
+import Process from "@views/Process.jsx";
 import ErrorBoundary from "@components/error.jsx";
 
 import "./theme.css";
 import "./app.css";
 import { globalShortcut } from "@tauri-apps/api";
 
+import { useSelector } from 'react-redux';
+
+import { useNavigate } from 'react-router-dom';
+
 function GlobalErrorModal({error}) {
+    const navigate = useNavigate();
     
     return (
         <div
@@ -55,8 +61,29 @@ const router = createBrowserRouter([
             </ErrorBoundary>
         ),
     },
+    {
+        path: "/process",
+        element: (
+            <ErrorBoundary fallback={(error) =>
+                <GlobalErrorModal error={JSON.stringify(error,
+                                                        Object.getOwnPropertyNames(error), 4)}/>}>
+                <Process/>
+            </ErrorBoundary>
+        ),
+    }
 ]);
 
+
+function RoutableMain() {
+    return (
+        <div className={"global w-screen h-screen"}>
+            <div id="top-hide"></div>
+            <RouterProvider router={router}/>
+        </div>
+
+    );
+
+}
 
 function App() {
     const [isDark, setIsDark] = useState(false);
@@ -80,10 +107,7 @@ function App() {
                 dark: isDark
             }}>
                 <div id="theme-box" className={isDark ? "dark" : ""}>
-                    <div className={"global w-screen h-screen"}>
-                        <div id="top-hide"></div>
-                            <RouterProvider router={router}/>
-                    </div>
+                    <RoutableMain />
                 </div>
             </ThemeContext.Provider>
         </Provider>
