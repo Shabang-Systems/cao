@@ -11,7 +11,7 @@
 }
 
 .task-divider {
-    height: 5px;
+    height: 10px;
     border: 1px solid transparent;
     background: transparent;
     cursor: pointer;

@@ -17,6 +17,8 @@ import "./editor.css";
 import strings from "@strings";
 
 
+// god I'm so bad at life
+var lineBuffer = [];
 
 export default function Editor( { onChange, onSelectionChange, defaultValue, value } ) {
     const [code, setCode] = useState(value ? value : defaultValue);
@@ -24,15 +26,29 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
     const { dark } = useContext(ThemeContext);
     const cm = useRef(null);
 
+    useEffect(() => {
+        lineBuffer = [];
+    }, []);
+
+
     class SimpleWidget extends WidgetType {
+        constructor(line) {
+            super();
+            this.line = line;
+            this.active = lineBuffer.includes(this.line);
+        }
+
         toDOM() {
             const element = document.createElement('div');
-            element.className = 'task-divider';
+            element.className = 'task-divider'+(this.active ? " focused" : "");
+            let l = this.line;
             function modify(e) {
                 if (element.className.includes("focused")) {
                     element.className = "task-divider";
+                    lineBuffer = lineBuffer.filter(x => x != l);
                 } else {
                     element.className = "task-divider focused";
+                    lineBuffer = lineBuffer.concat([l]);
                 }
             }
             element.onclick = modify;
@@ -96,13 +112,15 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
                             return Decoration.set(starts.map(x =>
                                 Decoration.widget({
                                     block: true,
-                                    widget: new SimpleWidget()
+                                    widget: new SimpleWidget(x.from)
                                 }).range(x.from)
                             ));
                         },
                         provide: f => EditorView.decorations.from(f)
                     })
                 ].concat(dark ? [] : [ githubLight ])} />
+            <div onClick={() => console.log(lineBuffer)} className="button">
+                Commit</div>
         </div>
     );
 }
