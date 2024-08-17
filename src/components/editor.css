@@ -9,3 +9,43 @@
 .cm-focused {
     outline: 0 !important;
 }
+
+.task-divider {
+    height: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin: -3px 0;
+    z-index: 1000;
+    position: relative;
+}
+
+.task-divider.focused {
+    padding: 14px 0 14px 0;
+}
+
+.task-divider-line {
+    transition: opacity 0.3s linear;
+    border-top: 1.5px dotted var(--background-decoration);
+    height: 0;
+    width: 100%;
+    opacity: 0;
+}
+
+.task-divider:hover > .task-divider-line {
+    opacity: 0.5;
+}
+
+.task-divider.focused > .task-divider-line {
+    opacity: 1 !important;
+}
+
+.paragraph-hint {
+    color: var(--foreground-decoration);
+    font-weight: 600;
+    font-size: 13px;
+    opacity: 0.4;
+    padding-left: 3px;
+}

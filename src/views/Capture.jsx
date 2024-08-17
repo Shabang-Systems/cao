@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Editor from "@components/editor.jsx";
 
 import { useSelector, useDispatch } from 'react-redux';
@@ -25,39 +25,78 @@ export default function Capture() {
 
     const dispatch = useDispatch();
 
+    const [isCapturing, setIsCapturing] = useState(false);
+    const chunkCallback = useRef(() => {});
+
 
     return (
         <div className="cursor-text w-full h-full">
             <Editor
                 value={scratchpad}
                 onChange={(x) => dispatch(set(x))}
+                chunkMode={isCapturing}
                 onSelectionChange={(sel) => {
                     if(sel != null) dispatch(select(sel[0]));
                     else dispatch(select(sel));
+                }}
+                bindChunckCallback={(x) => {
+                    chunkCallback.current = x;
                 }}
             />
             <div className="absolute captureid-outer" style={{top: "10px", right: "10px",
                                                               zIndex: 20000,
                                                               paddingTop: 20, paddingRight: 5}}>
                 <div className="mb-3">
-                    <div className="button" onClick={() => {
-                        if (scratchpad == "") {
-                            dispatch(pop());
-                        } else {
-                            dispatch(view(captureID-1));
-                        }
-                    }}>
-                        <i className="fa-solid fa-chevron-up"></i>
-                    </div>
-                    <div className="button" onClick={() => {
-                        if (captureID == length - 1 ) {
-                            dispatch(grow());
-                        } else {
-                            dispatch(view(captureID+1));
-                        }
-                    }}>
-                        <i className="fa-solid fa-chevron-down"></i>
-                    </div>
+                    {(scratchpad != "") ?
+                        <>
+                            <div className="button pointer" onClick={() => {
+                                if (!isCapturing) {
+                                    setIsCapturing(true);
+                                } else {
+                                    if (chunkCallback.current) {
+                                        console.log(chunkCallback.current());
+                                    }
+                                }
+                            }}>
+                                <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                            </div>
+                            {!isCapturing ?
+                                <div className="divider-box">
+                                    <div className="divider"></div>
+                                </div>
+                                :
+                                <div className="button pointer" onClick={() => {
+                                    setIsCapturing(false);
+                                }}>
+                                <i className="fa-solid fa-xmark" style={{paddingLeft: 1.8}} />
+                                </div>
+                            }
+                        </>
+                     : <></>}
+                    {!isCapturing ?
+                     <>
+                         <div className="button" onClick={() => {
+                             if (scratchpad == "") {
+                                 dispatch(pop());
+                             } else {
+                                 dispatch(view(captureID-1));
+                             }
+                         }}>
+                             <i className="fa-solid fa-chevron-up"></i>
+                         </div>
+                         <div className="button" onClick={() => {
+                             if (captureID == length - 1 ) {
+                                 dispatch(grow());
+                             } else {
+                                 dispatch(view(captureID+1));
+                             }
+                         }}>
+                             <i className="fa-solid fa-chevron-down"></i>
+                         </div>
+
+
+                     </>: <></>
+                    }
                 </div>
                 <ul className="captureid-wrapper">
                     {
@@ -74,7 +113,6 @@ export default function Capture() {
             </div>
 
             <div className="absolute font-bold" style={{bottom: "20px", zIndex: 20000}}>
-                {/* {scratchpads[captureID]} */}
             </div>
         </div>
 

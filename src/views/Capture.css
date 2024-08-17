@@ -16,3 +16,16 @@
 .captureid-dot.active {
     background-color: var(--foreground-decoration) !important;
 }
+
+.divider-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 15px;
+}
+
+.divider {
+    height: 0.1px;
+    border-top: 1px solid var(--background-decoration);
+    width: 90%;
+}

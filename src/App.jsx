@@ -16,18 +16,47 @@ import store from "@api/store.js";
 import { Provider } from 'react-redux';
 
 import Capture from "@views/Capture.jsx";
+import ErrorBoundary from "@components/error.jsx";
 
 import "./theme.css";
 import "./app.css";
+import { globalShortcut } from "@tauri-apps/api";
+
+function GlobalErrorModal({error}) {
+    
+    return (
+        <div
+            id="error-modal"
+            className="w-full h-full flex items-center justify-center absolute" style={{zIndex: 1000}}>
+            <div className="w-8/12 overflow-y-scroll" style={{maxHeight: "89vh"}}>
+                <h1 className="block font-bold text-xl">Aw crap!</h1>
+                You have broken cao; bad job. :/ <div className="button inline-block" onClick={() => {
+                    window.location.href = "/";
+                }}>Travel to Safety</div>
+                <br />
+
+                <pre style={{whiteSpace: "pre-wrap", wordWrap: "break-word", fontSize: 10, margin: "20px 0"}}>
+                    {error}
+                </pre>
+
+            </div>
+        </div>
+    );
+}
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <Capture/>
+            <ErrorBoundary fallback={(error) =>
+                <GlobalErrorModal error={JSON.stringify(error,
+                                                        Object.getOwnPropertyNames(error), 4)}/>}>
+                <Capture/>
+            </ErrorBoundary>
         ),
     },
 ]);
+
 
 function App() {
     const [isDark, setIsDark] = useState(false);
@@ -53,7 +82,7 @@ function App() {
                 <div id="theme-box" className={isDark ? "dark" : ""}>
                     <div className={"global w-screen h-screen"}>
                         <div id="top-hide"></div>
-                        <RouterProvider router={router}/>
+                            <RouterProvider router={router}/>
                     </div>
                 </div>
             </ThemeContext.Provider>
