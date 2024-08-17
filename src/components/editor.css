@@ -42,3 +42,10 @@
     opacity: 1 !important;
 }
 
+.paragraph-hint {
+    color: var(--foreground-decoration);
+    font-weight: 600;
+    font-size: 13px;
+    opacity: 0.4;
+    padding-left: 3px;
+}
