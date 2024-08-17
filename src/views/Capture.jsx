@@ -3,6 +3,8 @@ import Editor from "@components/editor.jsx";
 
 import { useSelector, useDispatch } from 'react-redux';
 import { set, select, pop, grow, view } from "@api/capture.js";
+import { abtib } from "@api/tasks.js";
+import { useNavigate } from 'react-router-dom';
 
 import "./Capture.css";
 
@@ -24,6 +26,7 @@ export default function Capture() {
     );
 
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [isCapturing, setIsCapturing] = useState(false);
     const chunkCallback = useRef(() => {});
@@ -47,32 +50,29 @@ export default function Capture() {
                                                               zIndex: 20000,
                                                               paddingTop: 20, paddingRight: 5}}>
                 <div className="mb-3">
-                    {(scratchpad != "") ?
-                        <>
-                            <div className="button pointer" onClick={() => {
-                                if (!isCapturing) {
-                                    setIsCapturing(true);
-                                } else {
-                                    if (chunkCallback.current) {
-                                        console.log(chunkCallback.current());
-                                    }
-                                }
-                            }}>
-                                <i className="fa-solid fa-arrow-right-to-bracket"></i>
-                            </div>
-                            {!isCapturing ?
-                                <div className="divider-box">
-                                    <div className="divider"></div>
-                                </div>
-                                :
-                                <div className="button pointer" onClick={() => {
-                                    setIsCapturing(false);
-                                }}>
-                                <i className="fa-solid fa-xmark" style={{paddingLeft: 1.8}} />
-                                </div>
+                    <div className={"button " + ((scratchpad == "") ? "disabled cursor-default" : "cursor")} onClick={() => {
+                        if (!isCapturing) {
+                            setIsCapturing(true);
+                        } else {
+                            if (chunkCallback.current) {
+                                dispatch(abtib(chunkCallback.current()));
+                                navigate("/browse");
                             }
-                        </>
-                     : <></>}
+                        }
+                    }}>
+                        <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                    </div>
+                    {!isCapturing ?
+                        <div className="divider-box">
+                            <div className="divider"></div>
+                        </div>
+                        :
+                        <div className="button pointer" onClick={() => {
+                            setIsCapturing(false);
+                        }}>
+                        <i className="fa-solid fa-xmark" style={{paddingLeft: 1.8}} />
+                        </div>
+                    }
                     {!isCapturing ?
                      <>
                          <div className="button" onClick={() => {

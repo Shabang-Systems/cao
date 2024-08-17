@@ -48,4 +48,5 @@
     font-size: 13px;
     opacity: 0.4;
     padding-left: 3px;
+    user-select: none;
 }

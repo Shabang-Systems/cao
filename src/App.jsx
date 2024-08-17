@@ -1,47 +1,60 @@
-// utiltiies
+//// utiltiies ////
 import { useState, useEffect } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 
-// routing
+//// routing ////
 import {
     createBrowserRouter,
     RouterProvider,
     Route,
     Link,
+    Outlet,
+    useLocation
 } from "react-router-dom";
 
-// globals
+//// view controlling ////
+import { Provider } from 'react-redux';
 import { ThemeContext } from "./contexts.js";
 import store from "@api/store.js";
-import { Provider } from 'react-redux';
 
+//// views ////
 import Capture from "@views/Capture.jsx";
-import ErrorBoundary from "@components/error.jsx";
+import Browser from "@views/Browser.jsx";
 
+//// components ////
+import { ErrorBoundary, GlobalErrorModal } from "@components/error.jsx";
+
+//// styles ////
 import "./theme.css";
 import "./app.css";
-import { globalShortcut } from "@tauri-apps/api";
 
-function GlobalErrorModal({error}) {
-    
+function RoutableMain() {
+    const loc = useLocation();
+
     return (
-        <div
-            id="error-modal"
-            className="w-full h-full flex items-center justify-center absolute" style={{zIndex: 1000}}>
-            <div className="w-8/12 overflow-y-scroll" style={{maxHeight: "89vh"}}>
-                <h1 className="block font-bold text-xl">Aw crap!</h1>
-                You have broken cao; bad job. :/ <div className="button inline-block" onClick={() => {
-                    window.location.href = "/";
-                }}>Travel to Safety</div>
-                <br />
-
-                <pre style={{whiteSpace: "pre-wrap", wordWrap: "break-word", fontSize: 10, margin: "20px 0"}}>
-                    {error}
-                </pre>
-
+        <div id="routable-main">
+            <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
+                                                         zIndex: 20000}}>
+                <Link to={"/"}>
+                    <div className={"bottom-nav-button"+(loc.pathname == "/executor" ? " active" : "")}>
+                        <i className="fa-solid fa-person-running"></i>
+                    </div>
+                </Link>
+                <Link to={"/"}>
+                    <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
+                        <i className="fa-solid fa-inbox"></i>
+                    </div>
+                </Link>
+                <Link to={"/browse"}>
+                    <div className={"bottom-nav-button"+(loc.pathname == "/browse" ? " active" : "")}>
+                        <i className="fa-solid fa-layer-group"></i>
+                    </div>
+                </Link>
             </div>
+            <Outlet />
         </div>
     );
+
 }
 
 const router = createBrowserRouter([
@@ -51,12 +64,21 @@ const router = createBrowserRouter([
             <ErrorBoundary fallback={(error) =>
                 <GlobalErrorModal error={JSON.stringify(error,
                                                         Object.getOwnPropertyNames(error), 4)}/>}>
-                <Capture/>
+                <RoutableMain/>
             </ErrorBoundary>
         ),
+        children: [
+            {
+                path: "/",
+                element: <Capture/>
+            },
+            {
+                path: "/browse",
+                element: <Browser/>
+            },
+        ]
     },
 ]);
-
 
 function App() {
     const [isDark, setIsDark] = useState(false);
@@ -82,8 +104,9 @@ function App() {
                 <div id="theme-box" className={isDark ? "dark" : ""}>
                     <div className={"global w-screen h-screen"}>
                         <div id="top-hide"></div>
-                            <RouterProvider router={router}/>
+                        <RouterProvider router={router}/>
                     </div>
+
                 </div>
             </ThemeContext.Provider>
         </Provider>
