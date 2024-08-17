@@ -30,3 +30,7 @@
     background-color: var(--foreground-decoration);
     color: var(--foreground-accent);
 }
+
+#error-modal {
+    color: var(--foreground-color);
+}

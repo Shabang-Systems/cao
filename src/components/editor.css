@@ -9,3 +9,32 @@
 .cm-focused {
     outline: 0 !important;
 }
+
+.task-divider {
+    height: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.task-divider.focused {
+    padding: 14px 0 14px 0;
+}
+
+.task-divider-line {
+    transition: opacity 0.3s linear;
+    border-top: 1.5px dotted var(--background-decoration);
+    height: 0;
+    width: 100%;
+    opacity: 0;
+}
+
+.task-divider:hover > .task-divider-line {
+    opacity: 0.5;
+}
+
+.task-divider.focused > .task-divider-line {
+    opacity: 1 !important;
+}
+
