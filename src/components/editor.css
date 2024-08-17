@@ -13,9 +13,13 @@
 .task-divider {
     height: 5px;
     border: 1px solid transparent;
+    background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
+    margin: -3px 0;
+    z-index: 1000;
+    position: relative;
 }
 
 .task-divider.focused {

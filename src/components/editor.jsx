@@ -57,6 +57,7 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
         <div className="cm-mountpoint">
             <CodeMirror
                 ref={cm}
+                /* editable={false} */
                 value={value ? value : code}
                 theme={dark ? "dark" : "light"}
                 basicSetup={{
