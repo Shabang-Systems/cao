@@ -58,7 +58,9 @@ export default function Capture() {
                         } else {
                             if (chunkCallback.current) {
                                 dispatch(abtib(chunkCallback.current()));
-                                navigate("/browse");
+                                dispatch(set(""));
+                                dispatch(pop());
+                                setIsCapturing(false);
                             }
                         }
                     }} data-tooltip-id={((scratchpad == "") ? "notp": "rootp")} data-tooltip-content={strings.TOOLTIPS.SUBMIT} data-tooltip-place="left">
