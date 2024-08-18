@@ -36,7 +36,7 @@ function RoutableMain() {
     const loc = useLocation();
 
     return (
-        <div id="routable-main">
+        <div id="routable-main" className="h-full">
             <Tooltip id="rootp" />
             <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
                                                          zIndex: 20000}}>

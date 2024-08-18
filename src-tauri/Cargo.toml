@@ -1,8 +1,8 @@
 [package]
 name = "cao"
 version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "turbo-powered paper"
+authors = ["Shabang Systems, LLC"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,6 +14,15 @@ tauri-build = { version = "1", features = [] }
 tauri = { version = "1", features = [ "window-all", "shell-open"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+chrono = { version = "0.4.38", features = ["serde"] }
+
+[dependencies.uuid]
+version = "1.10.0"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
