@@ -6,6 +6,8 @@ import { set, select, pop, grow, view } from "@api/capture.js";
 import { abtib } from "@api/tasks.js";
 import { useNavigate } from 'react-router-dom';
 
+import strings from '@strings';
+
 import "./Capture.css";
 
 export default function Capture() {
@@ -59,7 +61,7 @@ export default function Capture() {
                                 navigate("/browse");
                             }
                         }
-                    }} data-tooltip-id={((scratchpad == "") ? "notp": "rootp")} data-tooltip-content="Submit" data-tooltip-place="left">
+                    }} data-tooltip-id={((scratchpad == "") ? "notp": "rootp")} data-tooltip-content={strings.TOOLTIPS.SUBMIT} data-tooltip-place="left">
                         <i className="fa-solid fa-arrow-right-to-bracket"></i>
                     </div>
                     {!isCapturing ?
@@ -69,7 +71,7 @@ export default function Capture() {
                         :
                         <div className="button pointer" onClick={() => {
                             setIsCapturing(false);
-                        }} data-tooltip-id="rootp" data-tooltip-content="Cancel"  data-tooltip-place="left">
+                        }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CANCEL} data-tooltip-place="left">
                         <i className="fa-solid fa-xmark" style={{paddingLeft: 1.8}} />
                         </div>
                     }
@@ -81,7 +83,7 @@ export default function Capture() {
                              } else {
                                  dispatch(view(captureID-1));
                              }
-                         }}>
+                         }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.PREVIOUS_SHEET} data-tooltip-place="left">
                              <i className="fa-solid fa-chevron-up"></i>
                          </div>
                          <div className="button" onClick={() => {
@@ -90,7 +92,7 @@ export default function Capture() {
                              } else {
                                  dispatch(view(captureID+1));
                              }
-                         }}>
+                         }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.NEXT_SHEET} data-tooltip-place="left">
                              <i className="fa-solid fa-chevron-down"></i>
                          </div>
 

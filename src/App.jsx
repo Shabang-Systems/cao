@@ -29,6 +29,9 @@ import { ErrorBoundary, GlobalErrorModal } from "@components/error.jsx";
 import "./theme.css";
 import "./app.css";
 
+//// text ////
+import strings from "@strings";
+
 function RoutableMain() {
     const loc = useLocation();
 
@@ -42,12 +45,12 @@ function RoutableMain() {
                         <i className="fa-solid fa-person-running"></i>
                     </div>
                 </Link>
-                <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content="Capture">
+                <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
                     <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
                         <i className="fa-solid fa-inbox"></i>
                     </div>
                 </Link>
-                <Link to={"/browse"} data-tooltip-id="rootp" data-tooltip-content="Browse">
+                <Link to={"/browse"} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.BROWSE}>
                     <div className={"bottom-nav-button"+(loc.pathname == "/browse" ? " active" : "")}>
                         <i className="fa-solid fa-layer-group"></i>
                     </div>
