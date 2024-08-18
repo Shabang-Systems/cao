@@ -4,18 +4,15 @@ import { createSlice } from '@reduxjs/toolkit';
 export const tasksSlice = createSlice({
     name: "tasks",
     initialState: {
-        tasks: [],
+        entries: [],
     },
     reducers: {
+        abtib: (state, { payload }) => {
+            console.log(payload);
+        },
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase("inbox/add/finish", (state, action) => {
-                console.log(state);
-            })
-    }
 });
 
-export const { } = tasksSlice.actions;
+export const { abtib } = tasksSlice.actions;
 export default tasksSlice.reducer;
 

@@ -3,7 +3,7 @@ import Editor from "@components/editor.jsx";
 
 import { useSelector, useDispatch } from 'react-redux';
 import { set, select, pop, grow, view } from "@api/capture.js";
-import { capture, finish } from "@api/inbox/add.js";
+import { abtib } from "@api/tasks.js";
 import { useNavigate } from 'react-router-dom';
 
 import "./Capture.css";
@@ -25,16 +25,8 @@ export default function Capture() {
         state.capture.selection ? state.capture.selection : ""
     );
 
-    const capturing = useSelector((state) => state.inbox.add.inCapture);
-
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (capturing == true) {
-            navigate("/process");
-        }
-    }, [capturing]);
 
     const [isCapturing, setIsCapturing] = useState(false);
     const chunkCallback = useRef(() => {});
@@ -63,7 +55,8 @@ export default function Capture() {
                             setIsCapturing(true);
                         } else {
                             if (chunkCallback.current) {
-                                dispatch(capture(chunkCallback.current()));
+                                dispatch(abtib(chunkCallback.current()));
+                                navigate("/browse");
                             }
                         }
                     }}>

@@ -16,7 +16,7 @@ import store from "@api/store.js";
 import { Provider } from 'react-redux';
 
 import Capture from "@views/Capture.jsx";
-import Process from "@views/Process.jsx";
+import Browser from "@views/Browser.jsx";
 import ErrorBoundary from "@components/error.jsx";
 
 import "./theme.css";
@@ -62,12 +62,12 @@ const router = createBrowserRouter([
         ),
     },
     {
-        path: "/process",
+        path: "/browse",
         element: (
             <ErrorBoundary fallback={(error) =>
                 <GlobalErrorModal error={JSON.stringify(error,
                                                         Object.getOwnPropertyNames(error), 4)}/>}>
-                <Process/>
+                <Browser/>
             </ErrorBoundary>
         ),
     }
