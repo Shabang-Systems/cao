@@ -8,6 +8,7 @@ import {
     RouterProvider,
     Route,
     Link,
+    Outlet
 } from "react-router-dom";
 
 // globals
@@ -50,6 +51,23 @@ function GlobalErrorModal({error}) {
     );
 }
 
+function RoutableMain() {
+    return (
+        <div id="routable-main">
+            <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
+                                                        zIndex: 20000,
+                                                        paddingTop: 20, paddingRight: 5}}>
+                <Link to={"/"}>
+                    <div className="button">BOOM</div>
+                </Link>
+            </div>
+            <Outlet />
+        </div>
+    );
+
+}
+
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -57,33 +75,23 @@ const router = createBrowserRouter([
             <ErrorBoundary fallback={(error) =>
                 <GlobalErrorModal error={JSON.stringify(error,
                                                         Object.getOwnPropertyNames(error), 4)}/>}>
-                <Capture/>
+                <RoutableMain/>
             </ErrorBoundary>
         ),
+        children: [
+            {
+                path: "/",
+                element: <Capture/>
+            },
+            {
+                path: "/browse",
+                element: <Browser/>
+            },
+        ]
     },
-    {
-        path: "/browse",
-        element: (
-            <ErrorBoundary fallback={(error) =>
-                <GlobalErrorModal error={JSON.stringify(error,
-                                                        Object.getOwnPropertyNames(error), 4)}/>}>
-                <Browser/>
-            </ErrorBoundary>
-        ),
-    }
 ]);
 
 
-function RoutableMain() {
-    return (
-        <div className={"global w-screen h-screen"}>
-            <div id="top-hide"></div>
-            <RouterProvider router={router}/>
-        </div>
-
-    );
-
-}
 
 function App() {
     const [isDark, setIsDark] = useState(false);
@@ -107,7 +115,11 @@ function App() {
                 dark: isDark
             }}>
                 <div id="theme-box" className={isDark ? "dark" : ""}>
-                    <RoutableMain />
+                    <div className={"global w-screen h-screen"}>
+                        <div id="top-hide"></div>
+                        <RouterProvider router={router}/>
+                    </div>
+
                 </div>
             </ThemeContext.Provider>
         </Provider>

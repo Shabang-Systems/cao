@@ -40,3 +40,9 @@
 #error-modal {
     color: var(--foreground-color);
 }
+
+.bottom-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
