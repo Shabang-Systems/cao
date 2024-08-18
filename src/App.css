@@ -1,5 +1,14 @@
 @import url("./extern/fa/css/all.min.css");
 
+#rootp {
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 400;
+  width: max-content;
+  z-index: 10000000000000;
+}
+
 .global {
     background-color: var(--background-color);
     overflow-y: scroll;
@@ -47,12 +56,16 @@
     align-items: center;
     color: var(--background-decoration);
     font-size: 13px;
-    padding: 5px 5px 3px 0;
+    padding: 0 5px 88px 3px;
     justify-content: space-between;
-    height: 75px;
+    height: 80px;
 }
 
 .buttom-nav {
+}
+
+.bottom-nav-button {
+    padding: 5px 0;
 }
 
 .bottom-nav-button.active {

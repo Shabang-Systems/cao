@@ -59,7 +59,7 @@ export default function Capture() {
                                 navigate("/browse");
                             }
                         }
-                    }}>
+                    }} data-tooltip-id={((scratchpad == "") ? "notp": "rootp")} data-tooltip-content="Submit" data-tooltip-place="left">
                         <i className="fa-solid fa-arrow-right-to-bracket"></i>
                     </div>
                     {!isCapturing ?
@@ -69,7 +69,7 @@ export default function Capture() {
                         :
                         <div className="button pointer" onClick={() => {
                             setIsCapturing(false);
-                        }}>
+                        }} data-tooltip-id="rootp" data-tooltip-content="Cancel"  data-tooltip-place="left">
                         <i className="fa-solid fa-xmark" style={{paddingLeft: 1.8}} />
                         </div>
                     }
