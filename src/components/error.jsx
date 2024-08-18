@@ -34,4 +34,26 @@ class ErrorBoundary extends Component {
     }
 }
 
-export default ErrorBoundary;
+function GlobalErrorModal({error}) {
+    return (
+        <div
+            id="error-modal"
+            className="w-full h-full flex items-center justify-center absolute" style={{zIndex: 1000}}>
+            <div className="w-8/12 overflow-y-scroll" style={{maxHeight: "89vh"}}>
+                <h1 className="block font-bold text-xl">Aw crap!</h1>
+                You have broken cao; bad job. :/ <div className="button inline-block" onClick={() => {
+                    window.location.href = "/";
+                }}>Travel to Safety</div>
+                <br />
+
+                <pre style={{whiteSpace: "pre-wrap", wordWrap: "break-word", fontSize: 10, margin: "20px 0"}}>
+                    {error}
+                </pre>
+
+            </div>
+        </div>
+    );
+}
+
+export { GlobalErrorModal, ErrorBoundary };
+
