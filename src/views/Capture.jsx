@@ -58,6 +58,8 @@ export default function Capture() {
                         } else {
                             if (chunkCallback.current) {
                                 dispatch(abtib(chunkCallback.current()));
+                                dispatch(set(""));
+                                dispatch(pop());
                                 navigate("/browse");
                             }
                         }

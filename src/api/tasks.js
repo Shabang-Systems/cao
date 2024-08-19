@@ -5,9 +5,7 @@ const abtib = createAsyncThunk(
     'tasks/abtib',
 
     async (tasks, thunkAPI) => {
-        let parsed = await invoke('parse_tasks', { captured: tasks })
-        console.log(parsed);
-        return [];
+        return await invoke('parse_tasks', { captured: tasks });
     },
 )
 
@@ -21,25 +19,29 @@ export const tasksSlice = createSlice({
                 id: "a6fee358-d6ee-46f0-8981-fc10e79162c9",
                 capture: "5a874ef5-ebcd-4e87-8640-fcf9123482d4",
                 content: "boom clap the sound of my heart",
-                tags: ["# nacc"],
+                tags: ["nacc"],
                 rrule: null,
                 priority: 0, // [0, +∞)
                 effort: 1, // hours
-                start: (new Date()).toString(),
-                due: (new Date()).toString(),
-                schedule: (new Date()).toString(),
+                start: null,
+                due: null,
+                schedule: null,
+                captured: new Date().toString(),
+                locked: false,
             },
             {
                 id: "08a4d57a-884a-4d59-b6ce-acd7537c63fe",
                 capture: "5a874ef5-ebcd-4e87-8640-fcf9123482d4",
                 content: "the beat goes on and on",
                 rrule: "FREQ=MONTHLY;BYMONTHDAY=17",
-                tags: ["# nacc"],
+                tags: ["nacc"],
                 priority: 0,
                 effort: 4, // hours
-                start: (new Date()).toString(),
-                due: (new Date()).toString(),
-                schedule: (new Date()).toString(),
+                start: null,
+                due: null,
+                schedule: null,
+                captured: new Date().toString(),
+                locked: false,
             }
         ],
     },

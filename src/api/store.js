@@ -8,4 +8,5 @@ export default configureStore({
         capture,
         tasks
     },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware()
 })
