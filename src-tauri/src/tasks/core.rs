@@ -29,6 +29,8 @@ pub struct TaskDescription {
     pub captured: NaiveDateTime,
     /// is the schedule date locked (i.e. no auto schedule)
     pub locked: bool,
+    /// is the task completed
+    pub completed: bool,
 }
 
 impl TaskDescription {
@@ -45,7 +47,8 @@ impl TaskDescription {
             due: None,
             schedule: None,
             captured: Utc::now().naive_local(),
-            locked: false
+            locked: false,
+            completed: false,
         }
     }
 }

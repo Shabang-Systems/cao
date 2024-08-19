@@ -60,7 +60,7 @@ export default function Capture() {
                                 dispatch(abtib(chunkCallback.current()));
                                 dispatch(set(""));
                                 dispatch(pop());
-                                navigate("/browse");
+                                setIsCapturing(false);
                             }
                         }
                     }} data-tooltip-id={((scratchpad == "") ? "notp": "rootp")} data-tooltip-content={strings.TOOLTIPS.SUBMIT} data-tooltip-place="left">
