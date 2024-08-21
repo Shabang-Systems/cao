@@ -1,0 +1,29 @@
+.capture-cm {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.capture-cm-box {
+    width: 100%;
+    padding: 5px 10px;
+    background: var(--background-decoration);
+    color: var(--foreground-color);
+    border-radius: 3px;
+    margin-left: 3px;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: monospace;
+}
+
+.capture-cm-box::placeholder {
+  opacity: 0.2;
+}
+
+.capture-cm-box:focus {
+    outline: none;
+}
+
+
+

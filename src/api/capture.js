@@ -1,4 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { snapshot } from "@api/utils.js";
+import { invoke } from '@tauri-apps/api/tauri';
 
 export const captureSlice = createSlice({
     name: "capture",
@@ -42,7 +44,23 @@ export const captureSlice = createSlice({
                 selection: text
             }
         },
-    }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(snapshot.fulfilled, (state, { payload } ) => {
+                return {
+                    ...state,
+                    scratchpads: payload.scratchpads
+                }
+            })
+            .addMatcher(
+                (action) => (action.type.startsWith("capture") &&
+                             ["grow", "pop", "set"].includes(action.type.split("/")[1])),
+                (state, action) => {
+                    invoke('upsert', { transaction: { Board: state.scratchpads }});
+                }
+            )
+    },
 });
 
 export const {set, view, grow, pop, select} = captureSlice.actions;

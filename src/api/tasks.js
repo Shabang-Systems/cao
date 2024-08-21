@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { createSelector } from "@reduxjs/toolkit";
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri';
+
+import { snapshot } from "@api/utils.js";
 
 const abtib = createAsyncThunk(
     'tasks/abtib',
@@ -16,51 +18,6 @@ export const tasksSlice = createSlice({
     name: "tasks",
     initialState: {
         entries: [
-            {
-                id: "a6fee358-d6ee-46f0-8981-fc10e79162c9",
-                capture: "5a874ef5-ebcd-4e87-8640-fcf9123482d4",
-                content: "boom clap the sound of my heart",
-                tags: ["nacc"],
-                rrule: null,
-                priority: 0, // [0, +∞)
-                effort: 1, // hours
-                start: null,
-                due: null,
-                schedule: null,
-                captured: new Date().toString(),
-                locked: false,
-                completed: false,
-            },
-            {
-                id: "08a4d57a-884a-4d59-b6ce-acd7537c63fe",
-                capture: "5a874ef5-ebcd-4e87-8640-fcf9123482d4",
-                content: "the beat goes on and on\n\n# Yes of course\nit has to go on",
-                rrule: "FREQ=MONTHLY;BYMONTHDAY=17",
-                tags: ["nacc"],
-                priority: 0,
-                effort: 4, // hours
-                start: null,
-                due: null,
-                schedule: null,
-                captured: new Date(2022, 1, 10).toString(),
-                locked: false,
-                completed: false,
-            },
-            {
-                id: "55d76698-5929-441b-b70e-917f11e2c7b8",
-                capture: "5a874ef5-ebcd-4e87-8640-fcf9123482d4",
-                content: "lol",
-                rrule: "FREQ=MONTHLY;BYMONTHDAY=17",
-                tags: ["nacc"],
-                priority: 0,
-                effort: 4, // hours
-                start: null,
-                due: null,
-                schedule: null,
-                captured: new Date(2023, 1, 10).toString(),
-                locked: false,
-                completed: false,
-            }
         ],
     },
     reducers: {
@@ -72,15 +29,23 @@ export const tasksSlice = createSlice({
                 ...state.entries[idx],
                 ...payload
             }
+            invoke('upsert', { transaction: { Task: state.entries[idx] }});
         }
     },
     extraReducers: (builder) => {
-        builder.addCase(abtib.fulfilled, (state, action) => {
-            return {
-                ...state,
-                entries: state.entries.concat(action.payload)
-            }
-        })
+        builder
+            .addCase(abtib.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    entries: state.entries.concat(payload)
+                }
+            })
+            .addCase(snapshot.fulfilled, (state, { payload } ) => {
+                return {
+                    ...state,
+                    entries: payload.tasks
+                }
+            })
     },
 });
 
