@@ -50,6 +50,7 @@ function GlobalErrorModal({error}) {
                     {error}
                 </pre>
 
+                Feel free to write to support@shabang.io.
             </div>
         </div>
     );

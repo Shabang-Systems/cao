@@ -13,15 +13,17 @@ import {
 } from "react-router-dom";
 
 //// view controlling ////
-import { Provider } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { ThemeContext } from "./contexts.js";
 import store from "@api/store.js";
+import { snapshot } from "@api/utils.js";
 
 //// views ////
 import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
 
 //// components ////
+import Load from "@components/load.jsx";
 import { Tooltip } from 'react-tooltip';
 import { ErrorBoundary, GlobalErrorModal } from "@components/error.jsx";
 
@@ -35,29 +37,43 @@ import strings from "@strings";
 function RoutableMain() {
     const loc = useLocation();
 
+    const ready = useSelector((state) => {
+        return state.ui.ready;
+    });
+    const dispatch = useDispatch();
+
+    // generate the initial snapshot
+    useEffect(() => {
+        dispatch(snapshot());
+    }, []);
+
     return (
-        <div id="routable-main" className="h-full">
-            <Tooltip id="rootp" />
-            <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
-                                                         zIndex: 20000}}>
-                <Link to={"/"}>
-                    <div className={"bottom-nav-button"+(loc.pathname == "/executor" ? " active" : "")}>
-                        <i className="fa-solid fa-person-running"></i>
-                    </div>
-                </Link>
-                <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
-                    <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
-                        <i className="fa-solid fa-inbox"></i>
-                    </div>
-                </Link>
-                <Link to={"/browse"} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.BROWSE}>
-                    <div className={"bottom-nav-button"+(loc.pathname == "/browse" ? " active" : "")}>
-                        <i className="fa-solid fa-layer-group"></i>
-                    </div>
-                </Link>
-            </div>
-            <Outlet />
-        </div>
+        ready == true ?
+            <div id="routable-main" className="h-full">
+                <Tooltip id="rootp" />
+                <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
+                                                             zIndex: 20000}}>
+                    <Link to={"/"}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/executor" ? " active" : "")}>
+                            <i className="fa-solid fa-person-running"></i>
+                        </div>
+                    </Link>
+                    <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
+                            <i className="fa-solid fa-inbox"></i>
+                        </div>
+                    </Link>
+                    <Link to={"/browse"} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.BROWSE}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/browse" ? " active" : "")}>
+                            <i className="fa-solid fa-layer-group"></i>
+                        </div>
+                    </Link>
+                </div>
+                <Outlet />
+            </div> : (ready == false ? <Load /> :
+                      <GlobalErrorModal error={JSON.stringify(ready,
+                                                              Object.getOwnPropertyNames(ready),
+                                                              4)}/>)
     );
 
 }

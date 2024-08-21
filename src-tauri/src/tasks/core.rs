@@ -1,14 +1,16 @@
-use serde::{Serialize};
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use chrono::{NaiveDateTime, Utc};
 use std::default::Default;
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TaskDescription {
     //// task ID 
-    id: String,
+    #[doc(hidden)]
+    pub(crate) id: String,
     //// capture board ID, optional
-    capture: Option<String>,
+    #[doc(hidden)]
+    pub(crate) capture: Option<String>,
     /// the context of the task (i.e. title + description)
     pub content: String,
     /// tags (MD headers above and inside the content)

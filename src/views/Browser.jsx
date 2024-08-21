@@ -11,14 +11,14 @@ export default function Browser() {
     return (
         <div className="m-12">
             <div className="capture-cm">
-                <input className="capture-cm-box" placeholder="you can filter by tags @likeso" autocorrect="off" autoCorrect={false} />
+                <input className="capture-cm-box" placeholder="you can filter by tags @likeso" autoCorrect="off" />
             </div>
 
             {entries.map((x) => (
-                <>
-                <Task key={x.id} task={x}/>
-                <div className="task-divider focused cursor-default"><div className="task-divider-line"></div></div>
-                </>
+                <div key={x.id}>
+                    <Task task={x}/>
+                    <div className="task-divider focused cursor-default"><div className="task-divider-line"></div></div>
+                </div>
             ))}
         </div>
     );
