@@ -5,6 +5,7 @@ use anyhow::Result;
 
 mod tasks;
 mod state;
+mod query;
 mod commands;
 
 use state::*;

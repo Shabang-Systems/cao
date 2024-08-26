@@ -3,8 +3,11 @@ use super::tasks::core::TaskDescription;
 
 /// return a snapshot of the application state
 #[tauri::command]
-pub fn snapshot(state: tauri::State<GlobalState>) -> GlobalState {
-    state.into()
+pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
+    return {
+        let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
+        (*monitor).clone()
+    }
 }
 
 /// upsert a task into the database
