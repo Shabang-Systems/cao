@@ -10,6 +10,7 @@ import { indentUnit } from "@codemirror/language";
 import { snippetCompletion } from "@codemirror/autocomplete";
 import { githubLight } from '@uiw/codemirror-theme-github';
 import ReactDOM from "react-dom/client";
+import * as events from '@uiw/codemirror-extensions-events';
 
 import { ThemeContext } from "@contexts";
 
@@ -24,7 +25,7 @@ import strings from "@strings";
 // than just having one of these nice global buffers
 var lineBuffer = [];
 
-export default function Editor( { onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback } ) {
+export default function Editor( { onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange } ) {
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);
@@ -129,7 +130,18 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
                     markdown({ base: markdownLanguage,
                                codeLanguages: languages }),
                     placeholder(strings.COMPONENTS__EDITOR__CM_PLACEHOLDER),
-                    
+                    events.content({
+                        focus: (evn) => {
+                            if (typeof onFocusChange == "function") {
+                                onFocusChange(true);
+                            }
+                        },
+                        blur: (evn) => {
+                            if (typeof onFocusChange == "function") {
+                                onFocusChange(false);
+                            }
+                        },
+                    })
                 ].concat(dark ? [] : [ githubLight ])
                             .concat(chunkMode ? [StateField.define({
                                 create(state) {

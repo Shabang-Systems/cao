@@ -35,6 +35,7 @@ export const tasksSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(abtib.fulfilled, (state, { payload }) => {
+                payload.forEach((i) => invoke('upsert', { transaction: { Task: i }}));
                 return {
                     ...state,
                     entries: state.entries.concat(payload)
