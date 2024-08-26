@@ -53,7 +53,7 @@ export default function Capture() {
                                                               paddingTop: 20, paddingRight: 5}}>
                 <div className="mb-3">
                     <div className={"button " + ((scratchpad == "") ? "disabled cursor-default" : "cursor")} onClick={() => {
-                        if (!isCapturing) {
+                        if (!isCapturing && (scratchpad != "")) {
                             setIsCapturing(true);
                         } else {
                             if (chunkCallback.current) {

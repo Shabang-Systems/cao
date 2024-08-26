@@ -5,3 +5,43 @@
 .task-cm .cm-editor {
     padding: 0;
 }
+
+.task-actions {
+    display: flex;
+    margin-bottom: -5px;
+    font-size: 13px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 5px;
+}
+
+.task-action {
+    color: var(--foreground-decoration);
+    cursor: pointer;
+    margin-right: 5px;
+}
+.task-action.right {
+    margin-right: 0 !important;
+}
+
+.task-action:hover {
+    color: var(--foreground-color);
+}
+.nohover {
+    color: var(--foreground-decoration) !important;
+}
+
+.task-divider-outer {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    margin-right: 5px;
+}
+.task-divider-inner {
+    width: 0px;
+    height: 20px;
+    border-left: 1px solid var(--background-decoration);
+    margin: 0 8px;
+}
+
+
