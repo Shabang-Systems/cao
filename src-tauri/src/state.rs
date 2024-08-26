@@ -10,12 +10,22 @@ use std::sync::Mutex;
 
 use serde_json::{to_string_pretty, from_str};
 
+/// what's the upsert tryin' to 'sert?
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Transaction {
+    Task(TaskDescription),
+    Board(Vec<String>)
+}
+
 /// Application registry
 /// This should contain everything about the application that
 /// includes user generated, non-instance-specific data
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Cao {
-    pub tasks: Vec<TaskDescription>
+    #[serde(default)]
+    pub tasks: Vec<TaskDescription>,
+    #[serde(default)]
+    pub scratchpads: Vec<String>
 }
 
 /// Global shared application state
@@ -45,7 +55,10 @@ impl From<tauri::State<'_, GlobalState>> for GlobalState {
     }
 }
 
+/// Public Operatinos
 impl GlobalState {
+    /// a temporary global init scheme before more careful thinking transpires
+    /// TODO obviously can't go to production
     pub fn demo_init() -> Self {
         let test_path = expanduser::expanduser("~/Downloads/cao.json")
             .unwrap().display().to_string();
@@ -62,7 +75,7 @@ impl GlobalState {
                 let tasks = parse_tasks(vec!["# omg!\nI have an empty day.",
                                              "## what\nam I say this?.",
                                              "# what!\nshall"]);
-                let state = Cao { tasks: tasks };
+                let state = Cao { tasks: tasks, scratchpads: vec![] };
                 Mutex::new(state)
             },
             path: test_path
@@ -84,7 +97,21 @@ impl GlobalState {
     }
 
     /// upsert a particular task description into the system
-    pub fn upsert(&self, desc: &TaskDescription) {
+    pub fn upsert(&self, transaction: &Transaction) {
+        match transaction {
+            Transaction::Task(task) => self.upsert_td_(task),
+            Transaction::Board(boards) => self.upsert_scratchpad_(boards),
+        }
+        
+        // commit to file
+        let _ = self.save();
+    }
+}
+
+
+/// Type-specific Upsert Operatinos
+impl GlobalState {
+    fn upsert_td_(&self, desc: &TaskDescription) {
         {
             let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
             let tasks = &mut monitor.tasks;
@@ -96,9 +123,12 @@ impl GlobalState {
                 tasks.push(desc.clone());
             }
         }
-        // commit to file
-        let _ = self.save();
+    }
+    fn upsert_scratchpad_(&self, pads: &Vec<String>) {
+        {
+            let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+            // TODO this is goofy fix it
+            monitor.scratchpads = pads.clone();
+        }
     }
 }
-
-

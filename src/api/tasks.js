@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { createSelector } from "@reduxjs/toolkit";
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri';
 
 import { snapshot } from "@api/utils.js";
 
@@ -29,7 +29,7 @@ export const tasksSlice = createSlice({
                 ...state.entries[idx],
                 ...payload
             }
-            invoke('upsert', { task: state.entries[idx] });
+            invoke('upsert', { transaction: { Task: state.entries[idx] }});
         }
     },
     extraReducers: (builder) => {
