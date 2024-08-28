@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
 import { edit, remove } from "@api/tasks.js";
@@ -13,36 +13,54 @@ import { useOutsideAlerter } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
 
-export default function Task( { task } ) {
+export default function Task( { task, initialFocus, onFocusChange } ) {
     let dispatch = useDispatch();
-    let [hasFocus, setHasFocus] = useState(false);
-    const DEBUG = false;
+    let [hasFocus, setHasFocus] = useState(initialFocus);
 
     const springs = useSpring({
         height: hasFocus ? 30 : 0,
         opacity: hasFocus ? 1 : 0,
         paddingTop: hasFocus ? 10 : 0,
         marginBottom: hasFocus ? 3 : 0,
-        from: { height: 0, opacity:0, paddingTop: 0, marginBottom: 0 },
+        pointerEvents: hasFocus ? "initial": "none",
+        from: { height: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
         config: { mass: 1, friction: 35, tension: 300 }
     });
 
     const wrapperRef = useRef(null);
+    const cm = useRef(null);
     useOutsideAlerter(wrapperRef, () => setHasFocus(false));
 
+    useEffect(() => {
+        if (typeof onFocusChange == "function") onFocusChange(hasFocus);
+    }, [hasFocus]);
+
+    // useEffect(() => {
+    //     if (initialFocus && cm.current && cm.current.editor) {
+    //         cm.current.editor.focus();
+    //     }
+    // }, [initialFocus]);
 
     return (
         <div className="task" ref={wrapperRef}>
             <div className="task-cm">
                 <Editor
+                    ref={cm}
                     value={task.content}
                     onFocusChange={(x) => { if (x && !hasFocus) setHasFocus(true); }}
                     onChange={(x) =>
                         dispatch(edit({id: task.id, content: x}))
                     }
+                    focus={initialFocus}
                 />
                 <animated.div className={"task-actions"} style={{...springs}}>
-                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}>
+                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
+                         onClick={() => {
+                             setHasFocus(false);
+                             // TODO completing tasks is a bit of a thing so
+                             // BE CAREFUL about it and do it
+                         }}
+                    >
                         <i className="task-action fa-solid fa-check" style={{transform: "translateY(0.5px)"}} />
                     </div>
                     <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.SCHEDULED} data-tooltip-place={"bottom"}>
@@ -77,7 +95,9 @@ export default function Task( { task } ) {
                             />
                         </div> 
                     </div>
-                    <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"} onClick={() => dispatch(remove({id: task.id}))}>
+                    <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"} onClick={() => {
+                        dispatch(remove({id: task.id}));
+                    }}>
                         <i className="task-action fa-solid fa-trash" />
                     </div>
                 </animated.div>
