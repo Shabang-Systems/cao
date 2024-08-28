@@ -1,0 +1,106 @@
+.datepicker {
+    padding: 8px;
+    border-radius: 6px;
+    background-color: var(--background-decoration);
+}
+
+.datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+}
+
+.datepicker-header-text {
+    color: var(--foreground-color);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dategrid {
+    display: grid;
+    grid-template-rows: auto auto auto auto auto auto auto;
+    grid-template-columns: auto auto auto auto auto auto auto;
+    padding-left: 5px;
+}
+
+.dategrid-annotation {
+    position: relative;
+    height: 20px;
+    margin-bottom: 3px;
+}
+
+.dategrid-annotation-text {
+    position: absolute;
+    top: 65%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--foreground-decoration);
+    font-size: 12px;
+}
+
+.dategrid-cell {
+    position: relative;
+    width: 29px;
+    height: 30px;
+    text-align: center;
+    color: var(--foreground-color);
+    font-weight: 450;
+    margin: 2px;
+    cursor: pointer;
+}
+
+.dategrid-cell.active {
+    background-color: var(--background-accent);
+    color: var(--foreground-accent)
+}
+
+.dategrid-cell.diminished {
+    opacity: 0.6 !important;
+    color: var(--foreground-decoration) !important;
+    background-color: var(--background-decoration)  !important;
+}
+
+.dategrid-cell:hover {
+    background-color: var(--background-accent);
+    opacity: 0.9;
+}
+
+
+.dategrid-cell-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+}
+
+.datepicker-time {
+    padding: 12px 8px 8px 8px;
+    display: flex;
+    align-items: center;
+}
+
+.datepicker-time-input {
+    width: 100%;
+    border-radius: 2px;
+    background-color: var(--background-accent);
+    color: var(--foreground-color);
+    font-size: 14px;
+    padding: 3px 8px;
+}
+
+.datepicker-time-input:focus {
+    outline: 0;
+}
+
+.datepicker-symbol {
+    margin-left: 13px;
+    color: var(--foreground-decoration);
+    transition: 0.3s color;
+    cursor: pointer;
+}
+
+.datepicker-symbol:hover {
+    color: var(--foreground-color);
+}

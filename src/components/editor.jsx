@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef, forwardRef } from "react";
 
 import { EditorView } from 'codemirror';
 import { placeholder, ViewPlugin, Decoration, WidgetType } from '@codemirror/view';
@@ -25,7 +25,7 @@ import strings from "@strings";
 // than just having one of these nice global buffers
 var lineBuffer = [];
 
-export default function Editor( { onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange } ) {
+export default forwardRef (function Editor({ onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange}, ref ) {
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);
@@ -167,4 +167,4 @@ export default function Editor( { onChange, onSelectionChange, defaultValue, val
             </div>
         </div>
     );
-}
+});

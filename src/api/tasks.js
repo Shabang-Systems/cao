@@ -12,7 +12,6 @@ const abtib = createAsyncThunk(
     },
 )
 
-
 // this is where the entire database is dumped
 export const tasksSlice = createSlice({
     name: "tasks",
@@ -30,6 +29,16 @@ export const tasksSlice = createSlice({
                 ...payload
             }
             invoke('upsert', { transaction: { Task: state.entries[idx] }});
+        },
+        remove: (state, { payload }) => {
+            let entries = state.entries
+                .filter(x => payload.id != x.id);
+            invoke('delete', { transaction: { Task: payload.id }});
+
+            return {
+                ...state,
+                entries
+            }
         }
     },
     extraReducers: (builder) => {
@@ -61,6 +70,6 @@ let allIncompleteTasksSelector = createSelector(
 );
 
 export { abtib, allIncompleteTasksSelector };
-export const { edit } = tasksSlice.actions;
+export const { edit, remove } = tasksSlice.actions;
 export default tasksSlice.reducer;
 

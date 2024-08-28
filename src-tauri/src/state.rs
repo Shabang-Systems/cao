@@ -16,6 +16,10 @@ pub enum Transaction {
     Task(TaskDescription),
     Board(Vec<String>)
 }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Delete {
+    Task(String),
+}
 
 /// Application registry
 /// This should contain everything about the application that
@@ -106,22 +110,39 @@ impl GlobalState {
         // commit to file
         let _ = self.save();
     }
+
+    /// drop something from the system
+    pub fn delete(&self, transaction: &Delete) {
+        let _ = match transaction {
+            Delete::Task(task) => self.delete_task_(&task),
+        };
+        
+        // commit to file
+        let _ = self.save();
+    }
 }
 
 
-/// Type-specific Upsert Operatinos
+/// Type-specific CRUD Operatinos
 impl GlobalState {
-    fn upsert_td_(&self, desc: &TaskDescription) {
-        {
-            let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
-            let tasks = &mut monitor.tasks;
+    fn delete_task_(&self, id: &str) {
+        let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+        let tasks = &mut monitor.tasks;
+        match tasks.iter().position(|x| x.id == id) {
+            Some(idx) => { tasks.remove(idx); },
+            None => (),
+        };
+    }
 
-            // TODO make this not cringé
-            if let Some(idx) = tasks.iter().position(|r| r.id == desc.id) {
-                tasks[idx] = desc.clone();
-            } else {
-                tasks.push(desc.clone());
-            }
+    fn upsert_td_(&self, desc: &TaskDescription) {
+        let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+        let tasks = &mut monitor.tasks;
+
+        // TODO make this not cringé
+        if let Some(idx) = tasks.iter().position(|r| r.id == desc.id) {
+            tasks[idx] = desc.clone();
+        } else {
+            tasks.push(desc.clone());
         }
     }
     fn upsert_scratchpad_(&self, pads: &Vec<String>) {

@@ -14,3 +14,9 @@ pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
 pub fn upsert(transaction: Transaction, state: tauri::State<GlobalState>) {
     state.upsert(&transaction);
 }
+
+/// upsert a task into the database
+#[tauri::command]
+pub fn delete(transaction: Delete, state: tauri::State<GlobalState>) {
+    state.delete(&transaction);
+}

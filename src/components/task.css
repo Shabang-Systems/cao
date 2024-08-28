@@ -8,10 +8,11 @@
 
 .task-actions {
     display: flex;
+    flex-wrap: wrap;
     margin-bottom: -5px;
     font-size: 13px;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
     padding-left: 5px;
 }
 
@@ -19,12 +20,16 @@
     color: var(--foreground-decoration);
     cursor: pointer;
     margin-right: 5px;
+    /* padding-top: 5px; */
 }
 .task-action.right {
     margin-right: 0 !important;
 }
 
 .task-action:hover {
+    color: var(--foreground-color);
+}
+.task-action.accent {
     color: var(--foreground-color);
 }
 .nohover {
@@ -35,7 +40,7 @@
     display: flex;
     align-content: center;
     justify-content: center;
-    margin-right: 5px;
+    margin-right: 20px;
 }
 .task-divider-inner {
     width: 0px;
