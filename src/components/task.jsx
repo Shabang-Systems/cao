@@ -69,7 +69,12 @@ export default function Task( { task } ) {
                                     transform: "translateY(1.5px)"
                                 }}
                             / >
-                            <TagBar defaultValue={task.tags} />
+                            <TagBar
+                                defaultValue={task.tags}
+                                onNewTags={(t) => {
+                                    dispatch(edit({id: task.id, tags: t}));
+                                }}
+                            />
                         </div> 
                     </div>
                     <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"}>
