@@ -1,0 +1,18 @@
+.tagbar-wrapper {
+    transform: translateY(0.5px);
+    display: inline-block;
+    cursor: text;
+}
+
+.tagbar-tag-text {
+    background: var(--background-decoration);
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+.tagbar-tag {
+    padding-right: 5px;
+    transform: translateY(1px);
+    display: inline-block;
+}
+
+

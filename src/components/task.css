@@ -44,4 +44,12 @@
     margin: 0 8px;
 }
 
+.tagbar-wrapper {
+    width: 100%;
+}
 
+.task-tag-bar {
+    max-width: 50vw;
+    display: flex;
+    align-items: center;
+}
