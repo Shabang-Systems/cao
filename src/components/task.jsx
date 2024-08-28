@@ -11,6 +11,8 @@ import { animated, useSpring } from '@react-spring/web';
 
 import { useOutsideAlerter } from "./utils.js";
 
+import TagBar from "@components/tagbar.jsx";
+
 export default function Task( { task } ) {
     let dispatch = useDispatch();
     let [hasFocus, setHasFocus] = useState(false);
@@ -47,7 +49,7 @@ export default function Task( { task } ) {
                         {task.schedule ? moment.utc(task.schedule).fromNow() : strings.COMPONENTS__TASK__TAP_TO_SCHEDULE}
                     </div>
                     <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>
-                    <div className="flex" style={{transform: "translateY(-1px)"}}>
+                    <div className="flex">
                         <div className="task-action"  data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.START} data-tooltip-place={"bottom"}>
                             {"no start date"}
                         </div>
@@ -59,7 +61,17 @@ export default function Task( { task } ) {
                         </div>
                     </div>
                     <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>
-                    <div className="flex-grow"></div>
+                    <div className="flex-grow">
+                        <div className="task-tag-bar task-action nohover cursor-default w-full">
+                            <i className="fa-solid fa-tag"
+                                style={{
+                                    paddingRight: "5px",
+                                    transform: "translateY(1.5px)"
+                                }}
+                            / >
+                            <TagBar defaultValue={task.tags} />
+                        </div> 
+                    </div>
                     <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"}>
                         <i className="task-action fa-solid fa-trash" />
                     </div>

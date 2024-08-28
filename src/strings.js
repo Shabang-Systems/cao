@@ -1,6 +1,7 @@
 export default {
     COMPONENTS__EDITOR__CM_PLACEHOLDER: "Go on, capture something...",
     COMPONENTS__EDITOR__PARAGRAPH_HINT: "Tap between paragraphs to seperate into subtasks.",
+    COMPONENTS__TAGBAR_EMPTY: "set some?",
     COMPONENTS__TASK__TAP_TO_SCHEDULE: "unscheduled",
     TOOLTIPS: {
         COMPLETE: "Complete Task",
