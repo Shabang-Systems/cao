@@ -21,7 +21,8 @@ async fn main() -> Result<()> {
         .invoke_handler(tauri::generate_handler![
             tasks::parse_tasks,
             commands::snapshot,
-            commands::upsert
+            commands::upsert,
+            commands::delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

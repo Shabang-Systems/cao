@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
-import { edit } from "@api/tasks.js";
+import { edit, remove } from "@api/tasks.js";
 import "./task.css";
 
 import strings from "@strings";
@@ -77,7 +77,7 @@ export default function Task( { task } ) {
                             />
                         </div> 
                     </div>
-                    <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"}>
+                    <div className="task-action right" data-tooltip-id={hasFocus? "rootp" : "notp"} data-tooltip-content={strings.TOOLTIPS.DELETE} data-tooltip-place={"bottom"} onClick={() => dispatch(remove({id: task.id}))}>
                         <i className="task-action fa-solid fa-trash" />
                     </div>
                 </animated.div>
