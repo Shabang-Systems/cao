@@ -1,11 +1,11 @@
 import moment from "moment";
 
 export function hydrateCalendar(year, month) {
-    let baseDate = new Date(2024, month-1, 1);
-    let lastDate = new Date(2024, month, 0);
+    let baseDate = new Date(year, month, 1);
+    let lastDate = new Date(year, month+1, 0);
     let prefixes = [...Array(baseDate.getDay()).keys()]
         .map(x=>x+1)
-        .map(x=>new Date(year, month-1, 1-x))
+        .map(x=>new Date(year, month, 1-x))
         .map(x=>x.getDate())
         .reverse();
     let contents = [...Array(lastDate.getDate()).keys()]

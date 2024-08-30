@@ -38,7 +38,9 @@ export default function DatePicker({}) {
                         <i className="fa-solid fa-angle-left" />
                     </div>
                 </div>
-                <div className="datepicker-header-text">
+                <div
+                    onClick={() => setRef(new Date())}
+                    className="datepicker-header-text cursor-pointer">
                     {moment(ref).format("MMMM yyyy")}
                 </div>
                 <div onClick={forward}
