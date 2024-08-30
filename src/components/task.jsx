@@ -13,6 +13,8 @@ import { useOutsideAlerter } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
 
+import DateModal from "@components/datemodal.jsx";
+
 export default function Task( { task, initialFocus, onFocusChange } ) {
     let dispatch = useDispatch();
     let [hasFocus, setHasFocus] = useState(initialFocus);
@@ -43,6 +45,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
 
     return (
         <div className="task" ref={wrapperRef}>
+            <DateModal />
             <div className="task-cm">
                 <Editor
                     ref={cm}
