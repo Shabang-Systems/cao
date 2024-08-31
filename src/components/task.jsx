@@ -37,6 +37,9 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         if (typeof onFocusChange == "function") onFocusChange(hasFocus);
     }, [hasFocus]);
 
+    const dueRef = useRef(null);
+    const deferRef = useRef(null);
+
     // useEffect(() => {
     //     if (initialFocus && cm.current && cm.current.editor) {
     //         cm.current.editor.focus();
@@ -45,7 +48,19 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
 
     return (
         <div className="task" ref={wrapperRef}>
-            <DateModal />
+            <DateModal
+                initialDate={task.due ? new Date(task.due) : null}
+                onDate={(d) => {
+                    dispatch(edit({id: task.id, due: d?d.getTime():null}));
+                }}
+                ref={dueRef} />
+            <DateModal
+                initialDate={task.start ? new Date(task.start) : null}
+                // this slices away the Z for timezone, because the backend expends a *NO TIMEZONE*
+                onDate={(d) => {
+                    dispatch(edit({id: task.id, start: d?d.getTime():null}));
+                }}
+                ref={deferRef} />
             <div className="task-cm">
                 <Editor
                     ref={cm}
@@ -71,14 +86,27 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     </div>
                     <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>
                     <div className="flex">
-                        <div className="task-action"  data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.START} data-tooltip-place={"bottom"}>
-                            {"no start date"}
+                        <div className="task-action"
+                             onClick={() =>
+                                 deferRef.current?deferRef.current.setOpen(true):null}
+                             data-tooltip-id={hasFocus? "rootp" : "notp"}
+                             data-tooltip-content={strings.TOOLTIPS.START} data-tooltip-place={"bottom"}>
+                            {task.start ?
+                             moment.utc(task.start).fromNow() :
+                             strings.COMPONENTS__TASK__NO_START_DATE}
                         </div>
                         <div className="task-action nohover cursor-default">
                             <i className="fa-solid fa-arrow-right-long" style={{padding: "0 3px", transform: "translateY(0.7px)"}}/>
                         </div>
-                        <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.DUE} data-tooltip-place={"bottom"}>
-                            {"no due date"}
+                        <div className="task-action"
+                             onClick={() =>
+                                 dueRef.current?dueRef.current.setOpen(true):null}
+
+                             data-tooltip-id={hasFocus? "rootp" : "notp"}
+                             data-tooltip-content={strings.TOOLTIPS.DUE} data-tooltip-place={"bottom"}>
+                            {task.due ?
+                             moment(task.due).format(strings.DATETIME_FORMAT) :
+                             strings.COMPONENTS__TASK__NO_DUE_DATE}
                         </div>
                     </div>
                     <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>

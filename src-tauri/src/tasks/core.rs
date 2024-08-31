@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc, serde::ts_microseconds_option};
 use std::default::Default;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -22,13 +22,16 @@ pub struct TaskDescription {
     /// effort of the task, in hours
     pub effort: f32,
     /// when the task is able to be done
-    pub start: Option<NaiveDateTime>,
+    #[serde(with = "ts_microseconds_option")]
+    pub start: Option<DateTime<Utc>>,
     /// when the task is needs to be done
-    pub due: Option<NaiveDateTime>,
+    #[serde(with = "ts_microseconds_option")]
+    pub due: Option<DateTime<Utc>>,
     /// when the task is scheduled to be done
-    pub schedule: Option<NaiveDateTime>,
+    #[serde(with = "ts_microseconds_option")]
+    pub schedule: Option<DateTime<Utc>>,
     /// when the task was capture
-    pub captured: NaiveDateTime,
+    pub captured: DateTime<Utc>,
     /// is the schedule date locked (i.e. no auto schedule)
     pub locked: bool,
     /// is the task completed
@@ -48,7 +51,7 @@ impl TaskDescription {
             start: None,
             due: None,
             schedule: None,
-            captured: Utc::now().naive_local(),
+            captured: Utc::now().into(),
             locked: false,
             completed: false,
         }

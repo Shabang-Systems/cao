@@ -21,6 +21,7 @@
     display: grid;
     grid-template-rows: auto auto auto auto auto auto auto;
     grid-template-columns: auto auto auto auto auto auto auto;
+    padding-left: 5px;
 }
 
 .dategrid-annotation {
@@ -40,7 +41,7 @@
 
 .dategrid-cell {
     position: relative;
-    width: 28px;
+    width: 29px;
     height: 30px;
     text-align: center;
     color: var(--foreground-color);
@@ -74,3 +75,32 @@
     font-size: 14px;
 }
 
+.datepicker-time {
+    padding: 12px 8px 8px 8px;
+    display: flex;
+    align-items: center;
+}
+
+.datepicker-time-input {
+    width: 100%;
+    border-radius: 2px;
+    background-color: var(--background-accent);
+    color: var(--foreground-color);
+    font-size: 14px;
+    padding: 3px 8px;
+}
+
+.datepicker-time-input:focus {
+    outline: 0;
+}
+
+.datepicker-symbol {
+    margin-left: 13px;
+    color: var(--foreground-decoration);
+    transition: 0.3s color;
+    cursor: pointer;
+}
+
+.datepicker-symbol:hover {
+    color: var(--foreground-color);
+}

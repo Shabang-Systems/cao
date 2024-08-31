@@ -12,7 +12,6 @@ const abtib = createAsyncThunk(
     },
 )
 
-
 // this is where the entire database is dumped
 export const tasksSlice = createSlice({
     name: "tasks",
