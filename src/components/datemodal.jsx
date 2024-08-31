@@ -5,7 +5,7 @@ import DatePicker from "./datepicker.jsx";
 
 import { useOutsideAlerter } from "./utils.js";
 
-export default forwardRef(function DateModal({ onDate, initialDate }, ref) {
+export default forwardRef(function DateModal({ onDate, initialDate, onClose }, ref) {
     let [open, setOpen] = useState(false);
     const wrapperRef = useRef(null);
 
@@ -15,7 +15,12 @@ export default forwardRef(function DateModal({ onDate, initialDate }, ref) {
         };
     }
 
-    useOutsideAlerter(wrapperRef, () => setOpen(false));
+    useOutsideAlerter(wrapperRef, () => {
+        if (typeof onClose == "function") {
+            onClose();
+        }
+        setOpen(false);
+    });
 
     return (
         <div className="datemodal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
@@ -25,6 +30,9 @@ export default forwardRef(function DateModal({ onDate, initialDate }, ref) {
                 onDone={(d) => {
                     if (typeof onDate == "function") {
                         onDate(d);
+                    }
+                    if (typeof onClose == "function") {
+                        onClose();
                     }
                     setOpen(false);
                 }} focus={open} />

@@ -29,6 +29,9 @@
 .task-action:hover {
     color: var(--foreground-color);
 }
+.task-action.accent {
+    color: var(--foreground-color);
+}
 .nohover {
     color: var(--foreground-decoration) !important;
 }

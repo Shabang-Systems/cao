@@ -27,24 +27,30 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
             let formatted = moment(nd_dateobj).format(strings.TIME_FORMAT);
             setTimeString(formatted);
 
+            let new_date;
+
             // don't store date if the date is entirely implied
             if (nd.impliedValues.day &&
                 nd.impliedValues.month &&
                 nd.impliedValues.year &&
                 !nd.knownValues.weekday) {
                 let d = date ? date : ref;
-                setDate(new Date(
+                new_date = new Date(
                     d.getFullYear(),
                     d.getMonth(),
                     d.getDate(),
                     nd_dateobj.getHours(),
                     nd_dateobj.getMinutes(),
                     nd_dateobj.getSeconds(),
-                ));
+                );
             } else {
-                setDate(nd_dateobj);
+                new_date = nd_dateobj;
                 setRef(new Date(nd_dateobj.getFullYear(), nd_dateobj.getMonth(), 1));
             }
+            if (new_date.getTime() == date.getTime()) {
+                onDone(new_date);
+            }
+            setDate(new_date);
         } catch (e) {
             console.log(e);
             let formatted = moment(date ? date : ref).format(strings.TIME_FORMAT);

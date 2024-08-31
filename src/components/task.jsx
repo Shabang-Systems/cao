@@ -20,7 +20,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     let [hasFocus, setHasFocus] = useState(initialFocus);
 
     const springs = useSpring({
-        maxHeight: hasFocus ? 100 : 0,
+        maxHeight: hasFocus ? 80 : 0,
         opacity: hasFocus ? 1 : 0,
         paddingTop: hasFocus ? 10 : 0,
         marginBottom: hasFocus ? 3 : 0,
@@ -38,7 +38,26 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     }, [hasFocus]);
 
     const dueRef = useRef(null);
+    const [dueOpen, setDueOpen] = useState(false);
+    useEffect(() => {
+        if (dueRef.current) {
+            dueRef.current.setOpen(dueOpen);
+        }
+    }, [dueOpen]);
     const deferRef = useRef(null);
+    const [deferOpen, setDeferOpen] = useState(false);
+    useEffect(() => {
+        if (deferRef.current) {
+            deferRef.current.setOpen(deferOpen);
+        }
+    }, [deferOpen]);
+    const scheduleRef = useRef(null);
+    const [scheduleOpen, setScheduleOpen] = useState(false);
+    useEffect(() => {
+        if (scheduleRef.current) {
+            scheduleRef.current.setOpen(scheduleOpen);
+        }
+    }, [scheduleOpen]);
 
     // useEffect(() => {
     //     if (initialFocus && cm.current && cm.current.editor) {
@@ -49,10 +68,20 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     return (
         <div className="task" ref={wrapperRef}>
             <DateModal
+                initialDate={task.schedule ? new Date(task.schedule) : null}
+                onDate={(d) => {
+                    dispatch(edit({id: task.id,
+                                   locked: d?true:false, // how to actually cast to bool?
+                                   schedule: d?d.getTime():null}));
+                }}
+                onClose={() => setScheduleOpen(false)}
+                ref={scheduleRef} />
+            <DateModal
                 initialDate={task.due ? new Date(task.due) : null}
                 onDate={(d) => {
                     dispatch(edit({id: task.id, due: d?d.getTime():null}));
                 }}
+                onClose={() => setDueOpen(false)}
                 ref={dueRef} />
             <DateModal
                 initialDate={task.start ? new Date(task.start) : null}
@@ -60,6 +89,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 onDate={(d) => {
                     dispatch(edit({id: task.id, start: d?d.getTime():null}));
                 }}
+                onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
             <div className="task-cm">
                 <Editor
@@ -81,14 +111,18 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     >
                         <i className="task-action fa-solid fa-check" style={{transform: "translateY(0.5px)"}} />
                     </div>
-                    <div className="task-action pr-5" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.SCHEDULED} data-tooltip-place={"bottom"}>
-                        {task.schedule ? moment.utc(task.schedule).fromNow() : strings.COMPONENTS__TASK__TAP_TO_SCHEDULE}
+                    <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
+                         onClick={() => setScheduleOpen(true)}
+                         data-tooltip-id={hasFocus? "rootp" : "notp"}
+                         data-tooltip-content={strings.TOOLTIPS.SCHEDULED}
+                         data-tooltip-place={"bottom"}>
+                        {task.schedule ?
+                         moment.utc(task.schedule).fromNow() : strings.COMPONENTS__TASK__TAP_TO_SCHEDULE}
                     </div>
                     {/* <div className="task-divider-outer"></div> */}
                     <div className="flex pr-5">
-                        <div className="task-action"
-                             onClick={() =>
-                                 deferRef.current?deferRef.current.setOpen(true):null}
+                        <div className={"task-action" + (deferOpen ? " accent": "")}
+                             onClick={() => setDeferOpen(true)}
                              data-tooltip-id={hasFocus? "rootp" : "notp"}
                              data-tooltip-content={strings.TOOLTIPS.START} data-tooltip-place={"bottom"}>
                             {task.start ?
@@ -98,10 +132,8 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                         <div className="task-action nohover cursor-default">
                             <i className="fa-solid fa-arrow-right-long" style={{padding: "0 3px", transform: "translateY(0.7px)"}}/>
                         </div>
-                        <div className="task-action"
-                             onClick={() =>
-                                 dueRef.current?dueRef.current.setOpen(true):null}
-
+                        <div className={"task-action" + (dueOpen ? " accent": "")}
+                             onClick={() => setDueOpen(true)}
                              data-tooltip-id={hasFocus? "rootp" : "notp"}
                              data-tooltip-content={strings.TOOLTIPS.DUE} data-tooltip-place={"bottom"}>
                             {task.due ?
