@@ -23,7 +23,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         maxHeight: hasFocus ? 80 : 0,
         opacity: hasFocus ? 1 : 0,
         paddingTop: hasFocus ? 10 : 0,
-        marginBottom: hasFocus ? 3 : 0,
+        marginBottom: hasFocus ? 2 : 0,
         pointerEvents: hasFocus ? "initial": "none",
         from: { maxHeight: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
         config: { mass: 1, friction: 35, tension: 300 }
@@ -59,12 +59,6 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         }
     }, [scheduleOpen]);
 
-    // useEffect(() => {
-    //     if (initialFocus && cm.current && cm.current.editor) {
-    //         cm.current.editor.focus();
-    //     }
-    // }, [initialFocus]);
-
     return (
         <div className="task" ref={wrapperRef}>
             <DateModal
@@ -91,7 +85,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
-            <div className="task-cm">
+            <div className={"task-cm"+(task.start && (new Date(task.start)) > new Date() ? " deferred" : "")}>
                 <Editor
                     ref={cm}
                     value={task.content}
@@ -101,6 +95,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     }
                     focus={initialFocus}
                 />
+
                 <animated.div className={"task-actions"} style={{...springs}}>
                     <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
                          onClick={() => {
@@ -114,7 +109,8 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
-                         data-tooltip-content={strings.TOOLTIPS.SCHEDULED}
+                         data-tooltip-content={task.schedule ? moment.utc(task.schedule).fromNow() :
+                                               strings.TOOLTIPS.SCHEDULED}
                          data-tooltip-place={"bottom"}>
                         {task.schedule ?
                          moment.utc(task.schedule).fromNow() : strings.COMPONENTS__TASK__TAP_TO_SCHEDULE}
@@ -124,9 +120,11 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                         <div className={"task-action" + (deferOpen ? " accent": "")}
                              onClick={() => setDeferOpen(true)}
                              data-tooltip-id={hasFocus? "rootp" : "notp"}
-                             data-tooltip-content={strings.TOOLTIPS.START} data-tooltip-place={"bottom"}>
+                             data-tooltip-content={task.start ? moment.utc(task.start).fromNow() :
+                                                   strings.TOOLTIPS.START}
+                             data-tooltip-place={"bottom"}>
                             {task.start ?
-                             moment.utc(task.start).fromNow() :
+                             moment(task.start).format(strings.DATETIME_FORMAT) :
                              strings.COMPONENTS__TASK__NO_START_DATE}
                         </div>
                         <div className="task-action nohover cursor-default">
@@ -135,7 +133,9 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                         <div className={"task-action" + (dueOpen ? " accent": "")}
                              onClick={() => setDueOpen(true)}
                              data-tooltip-id={hasFocus? "rootp" : "notp"}
-                             data-tooltip-content={strings.TOOLTIPS.DUE} data-tooltip-place={"bottom"}>
+                             data-tooltip-content={task.due ? moment.utc(task.due).fromNow() :
+                                                   strings.TOOLTIPS.DUE}
+                             data-tooltip-place={"bottom"}>
                             {task.due ?
                              moment(task.due).format(strings.DATETIME_FORMAT) :
                              strings.COMPONENTS__TASK__NO_DUE_DATE}
@@ -143,7 +143,9 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     </div>
                     {/* <div className="task-divider-outer"></div>  */}
                     <div className="flex-grow">
-                        <div className="task-tag-bar task-action nohover cursor-default w-full">
+                        <div
+                            style={{paddingTop: "2px", transform: "translateY(0.5px)"}}
+                            className="task-tag-bar task-action nohover cursor-default w-full">
                             <i className="fa-solid fa-tag"
                                 style={{
                                     paddingRight: "5px",

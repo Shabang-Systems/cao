@@ -47,12 +47,13 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                 new_date = nd_dateobj;
                 setRef(new Date(nd_dateobj.getFullYear(), nd_dateobj.getMonth(), 1));
             }
-            if (new_date.getTime() == date.getTime()) {
+            let d = date ? date : ref;
+            if (new_date.getTime() == d.getTime()) {
                 onDone(new_date);
             }
             setDate(new_date);
         } catch (e) {
-            console.log(e);
+            console.error(e);
             let formatted = moment(date ? date : ref).format(strings.TIME_FORMAT);
             setTimeString(formatted);
         }

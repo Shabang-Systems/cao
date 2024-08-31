@@ -6,6 +6,10 @@
     padding: 0;
 }
 
+.task-cm.deferred > .cm-mountpoint {
+    opacity: 0.3;
+}
+
 .task-actions {
     display: flex;
     flex-wrap: wrap;
@@ -17,10 +21,11 @@
 }
 
 .task-action {
+    white-space:nowrap;
     color: var(--foreground-decoration);
     cursor: pointer;
     margin-right: 5px;
-    /* padding-top: 5px; */
+    padding-top: 4px;
 }
 .task-action.right {
     margin-right: 0 !important;

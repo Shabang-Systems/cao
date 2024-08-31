@@ -261,6 +261,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "expanduser",
+ "regex",
  "serde",
  "serde-lexpr",
  "serde_json",
