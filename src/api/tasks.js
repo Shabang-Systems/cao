@@ -4,11 +4,71 @@ import { invoke } from '@tauri-apps/api/tauri';
 
 import { snapshot } from "@api/utils.js";
 
+// each of the thunks will do their usual job, and
+// also recompute the current query to update the current view
+// (if applicable); this could be entually smartert to only
+// recompute entries when its reasonably in scope
 const abtib = createAsyncThunk(
     'tasks/abtib',
 
-    async (tasks, thunkAPI) => {
-        return await invoke('parse_tasks', { captured: tasks });
+    async (tasks, { getState }) => {
+        let state = getState();
+        let results = await invoke('parse_tasks', { captured: tasks });
+        await Promise.all(results.map(async (i) =>
+            await invoke('upsert', { transaction: { Task: i }})));
+
+        return {
+            entries: await invoke('index', { query: state.tasks.query }),
+            db: state.tasks.db.concat(results)
+        }
+    },
+)
+
+const edit = createAsyncThunk(
+    'tasks/edit',
+
+    async (payload, { getState }) => {
+        let state = getState();
+        let db = [...state.tasks.db];
+        let idx = db
+            .map((x,i) => [x,i])
+            .filter(x => payload.id == x[0].id)[0][1];
+        db[idx] = {
+            ...db[idx],
+            ...payload
+        }
+        await invoke('upsert', { transaction: { Task: db[idx] }});
+        return {
+            entries: await invoke('index', { query: state.tasks.query }),
+            db
+        }
+    },
+)
+
+const remove = createAsyncThunk(
+    'tasks/remove',
+
+    async (payload, { getState }) => {
+        let state = getState();
+        let db = state.tasks.db
+            .filter(x => payload.id != x.id);
+        await invoke('delete', { transaction: { Task: payload.id }});
+        return {
+            db,
+            entries: await invoke('index', { query: state.tasks.query })
+        }
+    },
+)
+
+const query = createAsyncThunk(
+    'tasks/query',
+
+    async (query, thunkAPI) => {
+        let entries = await invoke('index', { query });
+        return {
+            entries,
+            query
+        }
     },
 )
 
@@ -16,60 +76,64 @@ const abtib = createAsyncThunk(
 export const tasksSlice = createSlice({
     name: "tasks",
     initialState: {
-        entries: [
-        ],
+        entries: [],
+        db: [],
+        query: {},
+        loading: true
     },
     reducers: {
-        edit: (state, { payload }) => {
-            let idx = state.entries
-                .map((x,i) => [x,i])
-                .filter(x => payload.id == x[0].id)[0][1];
-            state.entries[idx] = {
-                ...state.entries[idx],
-                ...payload
-            }
-            invoke('upsert', { transaction: { Task: state.entries[idx] }});
-        },
-        remove: (state, { payload }) => {
-            let entries = state.entries
-                .filter(x => payload.id != x.id);
-            invoke('delete', { transaction: { Task: payload.id }});
-
-            return {
-                ...state,
-                entries
-            }
-        }
     },
     extraReducers: (builder) => {
         builder
-            .addCase(abtib.fulfilled, (state, { payload }) => {
-                payload.forEach((i) => invoke('upsert', { transaction: { Task: i }}));
+            .addCase(edit.rejected, (state, { error }) => {
+                console.error(error)
+            })
+            .addCase(remove.rejected, (state, { error }) => {
+                console.error(error)
+            })
+            .addCase(query.rejected, (state, { error }) => {
+                console.error(error)
+            })
+            .addCase(edit.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
-                    entries: state.entries.concat(payload)
+                    ...payload
+                }
+            })
+            .addCase(remove.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    ...payload
+                }
+            })
+            .addCase(abtib.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    ...payload
+                }
+            })
+            .addCase(query.pending, (state) => {
+                return {
+                    ...state,
+                    loading: true
+                }
+            })
+            .addCase(query.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    loading: false,
+                    ...payload
                 }
             })
             .addCase(snapshot.fulfilled, (state, { payload } ) => {
                 return {
                     ...state,
-                    entries: payload.tasks
+                    db: payload.tasks
                 }
             })
     },
 });
 
-let allIncompleteTasksSelector = createSelector(
-    [(state) => state.tasks.entries],
-    (res) => {
-        res = res.filter((x) => !x.completed);
-        res.sort((a,b) => new Date(b.captured).getTime() -
-                 new Date(a.captured).getTime());
-        return res;
-    }
-);
-
-export { abtib, allIncompleteTasksSelector };
-export const { edit, remove } = tasksSlice.actions;
+export { abtib, query, edit, remove };
 export default tasksSlice.reducer;
 

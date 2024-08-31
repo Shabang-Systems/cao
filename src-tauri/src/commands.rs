@@ -1,3 +1,5 @@
+use crate::tasks::core::TaskDescription;
+use super::query::core::QueryRequest;
 use super::state::*;
 
 /// return a snapshot of the application state
@@ -13,6 +15,15 @@ pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
 #[tauri::command]
 pub fn upsert(transaction: Transaction, state: tauri::State<GlobalState>) {
     state.upsert(&transaction);
+}
+
+/// upsert a task into the database
+#[tauri::command]
+pub fn index(query: QueryRequest, state: tauri::State<GlobalState>) -> Result<Vec<TaskDescription>, String> {
+    match state.index(&query) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(e.to_string())
+    }
 }
 
 /// upsert a task into the database

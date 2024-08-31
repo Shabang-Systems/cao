@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 use super::tasks::{parse_tasks, core::TaskDescription};
+use super::query::core::QueryRequest;
 
 use anyhow::Result;
 use std::fs::File;
@@ -14,7 +15,8 @@ use serde_json::{to_string_pretty, from_str};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Transaction {
     Task(TaskDescription),
-    Board(Vec<String>)
+    Board(Vec<String>),
+    Search(Vec<QueryRequest>),
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Delete {
@@ -29,7 +31,9 @@ pub struct Cao {
     #[serde(default)]
     pub tasks: Vec<TaskDescription>,
     #[serde(default)]
-    pub scratchpads: Vec<String>
+    pub scratchpads: Vec<String>,
+    #[serde(default)]
+    pub searches: Vec<QueryRequest>,
 }
 
 /// Global shared application state
@@ -79,7 +83,7 @@ impl GlobalState {
                 let tasks = parse_tasks(vec!["# omg!\nI have an empty day.",
                                              "## what\nam I say this?.",
                                              "# what!\nshall"]);
-                let state = Cao { tasks: tasks, scratchpads: vec![] };
+                let state = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
                 Mutex::new(state)
             },
             path: test_path
@@ -105,6 +109,7 @@ impl GlobalState {
         match transaction {
             Transaction::Task(task) => self.upsert_td_(task),
             Transaction::Board(boards) => self.upsert_scratchpad_(boards),
+            Transaction::Search(search) => self.upsert_search_(search),
         }
         
         // commit to file
@@ -120,11 +125,21 @@ impl GlobalState {
         // commit to file
         let _ = self.save();
     }
+
+    /// upsert a particular task description into the system
+    pub fn index(&self, request: &QueryRequest) -> Result<Vec<TaskDescription>> {
+        let monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+        let tasks = &monitor.tasks;
+        let res = request.execute(&tasks)?;
+
+        Ok(res.iter().map(|&x| x.clone()).collect::<Vec<TaskDescription>>())
+    }
 }
 
 
 /// Type-specific CRUD Operatinos
 impl GlobalState {
+
     fn delete_task_(&self, id: &str) {
         let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
         let tasks = &mut monitor.tasks;
@@ -150,6 +165,13 @@ impl GlobalState {
             let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
             // TODO this is goofy fix it
             monitor.scratchpads = pads.clone();
+        }
+    }
+    fn upsert_search_(&self, queries: &Vec<QueryRequest>) {
+        {
+            let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+            // TODO this is goofy fix it
+            monitor.searches = queries.clone();
         }
     }
 }

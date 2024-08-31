@@ -1,8 +1,37 @@
 .capture-cm {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     display: flex;
     justify-content: center;
     align-content: center;
+}
+.capture-options-wrapper {
+    display: flex;
+    align-items: center;
+}
+.capture-options-wrapper > i {
+    color: var(--foreground-decoration);
+    transform: translateY(1px);
+}
+
+.capture-options {
+    margin-left: 5px;
+    margin-bottom: 25px;
+}
+
+.capture-options-select {
+    -webkit-appearance: none;
+    outline: none;
+    background: transparent;
+    color: var(--foreground-color);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 2px 8px;
+    margin-right: 16px;
+    border-radius: 3px;
+}
+
+.capture-options {
+    display: flex;
 }
 
 .capture-cm-box {

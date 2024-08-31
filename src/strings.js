@@ -1,7 +1,8 @@
 export default {
-    DATETIME_FORMAT: "MM/DD/YYYY h:mm a",
+    DATETIME_FORMAT: "MM/DD/YY h:mm a",
     YEARMONTH_FORMAT: "MMMM YYYY",
     TIME_FORMAT: "h:mm a",
+    VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
     COMPONENTS__EDITOR__CM_PLACEHOLDER: "Go on, capture something...",
     COMPONENTS__EDITOR__PARAGRAPH_HINT: "Tap between paragraphs to seperate into subtasks.",
     COMPONENTS__TAGBAR_EMPTY: "set some?",
