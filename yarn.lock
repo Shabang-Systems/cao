@@ -1317,6 +1317,13 @@ chokidar@^3.5.3:
   optionalDependencies:
     fsevents "~2.3.2"
 
+chrono-node@^1.4.9:
+  version "1.4.9"
+  resolved "https://registry.yarnpkg.com/chrono-node/-/chrono-node-1.4.9.tgz#9cc527ec14afd5f8a48b5b915f6e165297ef66f1"
+  integrity sha512-mz0jOeqJLDKlbiYUjTbncNdfqm9odeuKVlxRvY15ZkFcRsUsSVJ6Rsf7V7ME6kkcfxbcG+CqnIafqqx1nu9C7A==
+  dependencies:
+    dayjs "^1.8.19"
+
 classnames@^2.3.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
@@ -1387,6 +1394,11 @@ cssesc@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/cssesc/-/cssesc-3.0.0.tgz#37741919903b868565e1c09ea747445cd18983ee"
   integrity sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==
+
+dayjs@^1.8.19:
+  version "1.11.13"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.13.tgz#92430b0139055c3ebb60150aa13e860a4b5a366c"
+  integrity sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==
 
 debug@^4.1.0, debug@^4.3.1:
   version "4.3.6"
@@ -2092,18 +2104,6 @@ sucrase@^3.32.0:
     mz "^2.7.0"
     pirates "^4.0.1"
     ts-interface-checker "^0.1.9"
-
-sugar-core@^2.0.0:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/sugar-core/-/sugar-core-2.0.6.tgz#785e0cd64aa7302ea54d47bc1213efe52c006270"
-  integrity sha512-YmLFysR3Si6RImqL1+aB6JH81EXxvXn5iXhPf2PsjfoUYEwCxFDYCQY+zC3WqviuGWzxFaSkkJvkUE05Y03L5Q==
-
-sugar-date@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/sugar-date/-/sugar-date-2.0.6.tgz#cbfb25e1e1e5cfeec551aa9f302ed763a3778b02"
-  integrity sha512-5aPXcTl9pIgae3j8wOieRZOEbaowHHpL+MPgZwHHjXdhZz3FjzpacjzM+Aq7rZTjDsWyWuKHzkIALx2uUhnmyg==
-  dependencies:
-    sugar-core "^2.0.0"
 
 supports-color@^5.3.0:
   version "5.5.0"

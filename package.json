@@ -21,6 +21,7 @@
     "@uiw/codemirror-extensions-events": "^4.23.0",
     "@uiw/codemirror-theme-github": "^4.23.0",
     "@uiw/react-codemirror": "^4.23.0",
+    "chrono-node": "^1.4.9",
     "codemirror": "^6.0.1",
     "moment": "^2.30.1",
     "react": "^18.2.0",
@@ -31,7 +32,6 @@
     "react-router": "^6.26.1",
     "react-router-dom": "^6.26.1",
     "react-tooltip": "^5.28.0",
-    "sugar-date": "^2.0.6",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

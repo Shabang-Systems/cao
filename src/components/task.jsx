@@ -20,12 +20,12 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     let [hasFocus, setHasFocus] = useState(initialFocus);
 
     const springs = useSpring({
-        height: hasFocus ? 30 : 0,
+        maxHeight: hasFocus ? 100 : 0,
         opacity: hasFocus ? 1 : 0,
         paddingTop: hasFocus ? 10 : 0,
         marginBottom: hasFocus ? 3 : 0,
         pointerEvents: hasFocus ? "initial": "none",
-        from: { height: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
+        from: { maxHeight: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
         config: { mass: 1, friction: 35, tension: 300 }
     });
 
@@ -81,11 +81,11 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     >
                         <i className="task-action fa-solid fa-check" style={{transform: "translateY(0.5px)"}} />
                     </div>
-                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.SCHEDULED} data-tooltip-place={"bottom"}>
+                    <div className="task-action pr-5" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.SCHEDULED} data-tooltip-place={"bottom"}>
                         {task.schedule ? moment.utc(task.schedule).fromNow() : strings.COMPONENTS__TASK__TAP_TO_SCHEDULE}
                     </div>
-                    <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>
-                    <div className="flex">
+                    {/* <div className="task-divider-outer"></div> */}
+                    <div className="flex pr-5">
                         <div className="task-action"
                              onClick={() =>
                                  deferRef.current?deferRef.current.setOpen(true):null}
@@ -109,7 +109,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                              strings.COMPONENTS__TASK__NO_DUE_DATE}
                         </div>
                     </div>
-                    <div className="task-divider-outer"><div className="task-divider-inner">&nbsp;</div></div>
+                    {/* <div className="task-divider-outer"></div>  */}
                     <div className="flex-grow">
                         <div className="task-tag-bar task-action nohover cursor-default w-full">
                             <i className="fa-solid fa-tag"

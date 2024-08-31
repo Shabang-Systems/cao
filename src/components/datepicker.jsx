@@ -5,16 +5,52 @@ import strings from "@strings";
 
 import { hydrateCalendar } from "@api/utils/date";
 
-import Sugar from "sugar-date";
+import * as chrono from 'chrono-node';
+import moment from "moment";
+import { fromCodePoint } from '@uiw/react-codemirror';
 
 export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     // TODO will this break during day changes (i.e. 12am?)
     // probably best to have useSelector(today) eventually
     let [ref, setRef] = useState(initialDate ? initialDate : new Date());
     let [date, setDate] = useState(initialDate);
-    let [timeString, setTimeString] = useState(initialDate?Sugar.Date.format(initialDate, "%I:%M %p"):"");
+    let [timeString, setTimeString] = useState(initialDate?moment(initialDate).format(strings.TIME_FORMAT):"");
     let dateSeries = hydrateCalendar(ref.getFullYear(), ref.getMonth());
     let dateField = useRef(null);
+
+    const parseDate = useCallback((text) => {
+        try {
+            let parsed = chrono.parse(text, new Date(), { forwardDate: true });
+            let nd = parsed[0].start;
+
+            let nd_dateobj = nd.date();
+            let formatted = moment(nd_dateobj).format(strings.TIME_FORMAT);
+            setTimeString(formatted);
+
+            // don't store date if the date is entirely implied
+            if (nd.impliedValues.day &&
+                nd.impliedValues.month &&
+                nd.impliedValues.year &&
+                !nd.knownValues.weekday) {
+                let d = date ? date : ref;
+                setDate(new Date(
+                    d.getFullYear(),
+                    d.getMonth(),
+                    d.getDate(),
+                    nd_dateobj.getHours(),
+                    nd_dateobj.getMinutes(),
+                    nd_dateobj.getSeconds(),
+                ));
+            } else {
+                setDate(nd_dateobj);
+                setRef(new Date(nd_dateobj.getFullYear(), nd_dateobj.getMonth(), 1));
+            }
+        } catch (e) {
+            console.log(e);
+            let formatted = moment(date ? date : ref).format(strings.TIME_FORMAT);
+            setTimeString(formatted);
+        }
+    });
 
     useEffect(() => {
         if (focus && dateField.current) {
@@ -55,7 +91,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                 <div
                     onClick={() => setRef(new Date())}
                     className="datepicker-header-text cursor-pointer">
-                    {Sugar.Date.format(Sugar.Date.create(ref), "%B %Y")}
+                    {moment(ref).format(strings.YEARMONTH_FORMAT)}
                 </div>
                 <div onClick={forward}
                      style={{padding: 0, margin: 0}}
@@ -90,8 +126,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                                                 nd.getHours(),
                                                 nd.getMinutes(),
                                                 nd.getSeconds());
-                             let formatted = Sugar.Date.format(res, "%I:%M %p");
-                             setTimeString(formatted);
+                             setTimeString(moment(res).format(strings.TIME_FORMAT));
                              setDate(res);
                          }}
                          className={"dategrid-cell" +
@@ -112,28 +147,14 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
             <div className="datepicker-time">
                 <input
                     ref={dateField}
-                    placeholder={strings.COMPONENTS__DATEPICKER__PICK_TIME}
+                    placeholder={date ?
+                                 strings.COMPONENTS__DATEPICKER__PICK_TIME :
+                                 strings.COMPONENTS__DATEPICKER__PICK_DT}
                     value={timeString}
                     onChange={(e) => setTimeString(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                            try {
-                                let nd = Sugar.Date.create(e.target.value);
-                                let formatted = Sugar.Date.format(nd, "%I:%M %p");
-                                let d = date ? date : ref;
-                                setTimeString(formatted);
-                                setDate(new Date(
-                                    d.getFullYear(),
-                                    d.getMonth(),
-                                    d.getDate(),
-                                    nd.getHours(),
-                                    nd.getMinutes(),
-                                    nd.getSeconds(),
-                                ));
-                            } catch (e) {
-                                console.log(e);
-                                setTimeString(Sugar.Date.format(date ? date : ref, "%I:%M %p"));
-                            }
+                            parseDate(e.target.value);
                         } else if (e.key === "Escape") {
                             onDone(date);
                         }
@@ -152,6 +173,9 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                    data-tooltip-content={strings.TOOLTIPS.DONE}
                    onClick={() => {
                        if (typeof onDone == "function") {
+                           if (dateField.current) {
+                                parseDate(dateField.current.value);
+                           }
                            onDone(date);
                        }
                 }} />
