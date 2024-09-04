@@ -1,5 +1,5 @@
 //// utiltiies ////
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 
 //// routing ////
@@ -21,6 +21,7 @@ import { snapshot } from "@api/utils.js";
 //// views ////
 import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
+import Auth from "@views/Auth.jsx";
 
 //// components ////
 import Load from "@components/load.jsx";
@@ -33,6 +34,9 @@ import "./app.css";
 
 //// text ////
 import strings from "@strings";
+
+//// native ////
+import { invoke } from '@tauri-apps/api/tauri';
 
 function RoutableMain() {
     const loc = useLocation();
@@ -103,6 +107,7 @@ const router = createBrowserRouter([
 
 function App() {
     const [isDark, setIsDark] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         appWindow.theme().then((x) => {
@@ -112,10 +117,26 @@ function App() {
             setIsDark(theme == "dark");
         });
 
+        let workspace = localStorage.getItem("cao__workspace");
+        if (workspace) {
+            (async () => {
+                let success = await invoke("load", {path: workspace});
+                if (success) {
+                    setIsReady(true);
+                }
+            })();
+        }
+
         return () => {
             unlistenFuture.then((x) => x());
         };
     }, []);
+
+    let auth = useCallback((path) => {
+        localStorage.setItem("cao__workspace", path);
+        setIsReady(true);
+    });
+
 
     return (
         <Provider store={store}>
@@ -125,7 +146,11 @@ function App() {
                 <div id="theme-box" className={isDark ? "dark" : ""}>
                     <div className={"global w-screen h-screen"}>
                         <div id="top-hide"></div>
-                        <RouterProvider router={router}/>
+                        {
+                            isReady ?
+                                <RouterProvider router={router}/> :
+                            <Auth onAuth={auth} />
+                        }
                     </div>
 
                 </div>

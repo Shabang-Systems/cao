@@ -4,6 +4,22 @@ use super::state::*;
 
 /// return a snapshot of the application state
 #[tauri::command]
+pub fn bootstrap(path: &str, state: tauri::State<GlobalState>) {
+    return {
+        state.bootstrap(path)
+    }
+}
+
+/// return a snapshot of the application state
+#[tauri::command]
+pub fn load(path: &str, state: tauri::State<GlobalState>) -> bool {
+    return {
+        state.load(path).is_ok()
+    }
+}
+
+/// return a snapshot of the application state
+#[tauri::command]
 pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
     return {
         let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
