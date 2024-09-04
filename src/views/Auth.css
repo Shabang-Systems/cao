@@ -1,0 +1,23 @@
+.header-callout {
+    color: var(--foreground-color);
+}
+
+.header-head > span {
+    color: var(--foreground-accent);
+    font-weight: 500;
+}
+
+.header-subhead.data {
+    color: var(--foreground-decoration);
+    font-size: 13px;
+    font-weight: 500;
+    padding-top: 8px;
+}
+
+.copyright {
+    font-weight: 350;
+    font-size: 8px;
+    max-width: 50vw;
+    color: var(--foreground-decoration);
+}
+

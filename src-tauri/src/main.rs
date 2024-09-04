@@ -13,7 +13,7 @@ use state::*;
 #[tokio::main]
 async fn main() -> Result<()> {
     // TODO initial with actual stored state
-    let state = GlobalState::demo_init();
+    let state = GlobalState::new();
 
     // rock'n'roll
     tauri::Builder::default()
@@ -24,6 +24,8 @@ async fn main() -> Result<()> {
             commands::upsert,
             commands::delete,
             commands::index,
+            commands::load,
+            commands::bootstrap,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

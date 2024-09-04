@@ -21,6 +21,7 @@ import { snapshot } from "@api/utils.js";
 //// views ////
 import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
+import Auth from "@views/Auth.jsx";
 
 //// components ////
 import Load from "@components/load.jsx";
@@ -103,6 +104,7 @@ const router = createBrowserRouter([
 
 function App() {
     const [isDark, setIsDark] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         appWindow.theme().then((x) => {
@@ -125,7 +127,11 @@ function App() {
                 <div id="theme-box" className={isDark ? "dark" : ""}>
                     <div className={"global w-screen h-screen"}>
                         <div id="top-hide"></div>
-                        <RouterProvider router={router}/>
+                        {
+                            isReady ?
+                                <RouterProvider router={router}/> :
+                            <Auth onAuth={() => {}} />
+                        }
                     </div>
 
                 </div>

@@ -2,10 +2,9 @@ use serde::{Serialize, Deserialize};
 use super::tasks::{parse_tasks, core::TaskDescription};
 use super::query::core::QueryRequest;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
 
 use std::sync::Mutex;
 
@@ -26,7 +25,7 @@ pub enum Delete {
 /// Application registry
 /// This should contain everything about the application that
 /// includes user generated, non-instance-specific data
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Cao {
     #[serde(default)]
     pub tasks: Vec<TaskDescription>,
@@ -50,7 +49,9 @@ pub struct GlobalState {
     /// registry of the Cao state held in the monitor pattern  
     pub monitor: Mutex<Cao>,
     /// path of the state file
-    pub path: String
+    /// if `None`, it means that we haven't loaded anything
+    /// and hence the monitor should be empty
+    pub path: Mutex<Option<String>>,
 }
 
 impl From<tauri::State<'_, GlobalState>> for GlobalState {
@@ -58,41 +59,53 @@ impl From<tauri::State<'_, GlobalState>> for GlobalState {
         let state = value.monitor.lock().expect("aaa mutex poisoning TODO");
         Self {
             monitor: Mutex::new((*state).clone()),
-            path: value.path.clone()
+            path: Mutex::new(value.path.lock().expect("poisioning TODO").clone())
         } 
     }
 }
 
 /// Public Operatinos
 impl GlobalState {
-    /// a temporary global init scheme before more careful thinking transpires
-    /// TODO obviously can't go to production
-    pub fn demo_init() -> Self {
-        let test_path = expanduser::expanduser("~/Downloads/cao.json")
-            .unwrap().display().to_string();
-
-
+    pub fn new() -> Self {
         GlobalState {
-            monitor:
-            if Path::new(&test_path).exists() {
-                let mut file = File::open(&test_path).expect("whoops, can't read demo file");
-                let mut buf = String::new();
-                let _ = file.read_to_string(&mut buf);
-                from_str::<Mutex<Cao>>(&buf).expect("whoops, serialized format is wrong")
-            } else {
-                let tasks = parse_tasks(vec!["# omg!\nI have an empty day.",
-                                             "## what\nam I say this?.",
-                                             "# what!\nshall"]);
-                let state = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
-                Mutex::new(state)
-            },
-            path: test_path
+            monitor: Mutex::new(Cao::default()),
+            path: Mutex::new(None)
         }
     }
 
+    /// Seed the new global state with demo content + saving it to a file
+    pub fn bootstrap(&self, path: &str) {
+        let mut p = self.path.lock().expect("mutex poisoning TODO");
+        *p = Some(path.to_owned());
+
+        let mut m = self.monitor.lock().expect("mutex poisoning TODO");
+        let tasks = parse_tasks(vec!["# TODO this is demo content",
+                                     "## Wowee",
+                                     "# Yes."]);
+        *m = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
+    }
+
+    /// Load an existing file, if it could be serialized/loaded
+    pub fn load(&self, path: &str) -> Result<()> {
+        let mut m = self.monitor.lock().expect("mutex poisoning TODO");
+        *m = {
+            let mut file = File::open(&path)?;
+            let mut buf = String::new();
+            let _ = file.read_to_string(&mut buf);
+            from_str::<Mutex<Cao>>(&buf)?.lock().expect("poisionng TODO").clone()
+        };
+
+        Ok(())
+    }
+
+
     /// save to the predetermined save path, calls [GlobalState::save_to]
     pub fn save(&self) -> Result<()> {
-        self.save_to(&self.path)
+        self.save_to(&self.path
+                     .lock()
+                     .expect("mutex poisinong TODO")
+                     .clone()
+                     .ok_or(anyhow!("attempted to write to nonexistant state"))?)
     }
 
     /// save state to path
