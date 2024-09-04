@@ -25,7 +25,7 @@ import strings from "@strings";
 // than just having one of these nice global buffers
 var lineBuffer = [];
 
-export default forwardRef (function Editor({ onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange}, ref ) {
+export default forwardRef (function Editor({ onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange, strike }, ref ) {
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);

@@ -65,3 +65,7 @@
     display: flex;
     align-items: center;
 }
+
+.task-cm.completed .cm-mountpoint div {
+    text-decoration: line-through;
+}

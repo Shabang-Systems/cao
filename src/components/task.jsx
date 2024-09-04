@@ -87,8 +87,9 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
-            <div className={"task-cm"+(task.start && deffered ? " deferred" : "")}>
+            <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")}>
                 <Editor
+                    strike={task.completed}
                     ref={cm}
                     value={task.content}
                     onFocusChange={(x) => { if (x && !hasFocus) setHasFocus(true); }}
@@ -99,14 +100,15 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 />
 
                 <animated.div className={"task-actions"} style={{...springs}}>
-                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
+                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={task.completed ? strings.TOOLTIPS.UNCOMPLETE : strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
                          onClick={() => {
-                             setHasFocus(false);
                              // TODO completing tasks is a bit of a thing so
-                             // BE CAREFUL about it and do it
+                             // TODO supporting repeating tasks, etc.
+                             dispatch(edit({id: task.id, completed: !task.completed}));
+                             setHasFocus(false);
                          }}
                     >
-                        <i className="task-action fa-solid fa-check" style={{transform: "translateY(0.5px)"}} />
+                        <i className={task.completed ? "task-action fa-solid fa-circle-check" : "task-action fa-solid fa-check" } style={{transform: "translateY(0.5px)"}} />
                     </div>
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
                          onClick={() => setScheduleOpen(true)}
