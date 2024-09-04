@@ -95,16 +95,20 @@ impl GlobalState {
             from_str::<Mutex<Cao>>(&buf)?.lock().expect("poisionng TODO").clone()
         };
 
+        let mut p = self.path.lock().expect("mutex poisoning TODO");
+        *p = Some(path.to_owned());
+
         Ok(())
     }
 
 
     /// save to the predetermined save path, calls [GlobalState::save_to]
     pub fn save(&self) -> Result<()> {
-        self.save_to(&self.path
+        let path = self.path
                      .lock()
                      .expect("mutex poisinong TODO")
-                     .clone()
+                     .clone();
+        self.save_to(&path
                      .ok_or(anyhow!("attempted to write to nonexistant state"))?)
     }
 

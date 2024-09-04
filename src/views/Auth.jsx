@@ -32,12 +32,14 @@ export default function Auth( { onAuth } ) {
         });
         let success = await invoke("load", {path: res});
 
-        if (success) {
-            onAuth(res);
-        } else {
-            await message(strings.VIEWS__AUTH_MALFORM_SUBHEAD, {
-                title: strings.VIEWS__AUTH_MALFORM_HEAD, type: 'error'
-            });
+        if (res) {
+            if (success) {
+                onAuth(res);
+            } else {
+                await message(strings.VIEWS__AUTH_MALFORM_SUBHEAD, {
+                    title: strings.VIEWS__AUTH_MALFORM_HEAD, type: 'error'
+                });
+            }
         }
     });
 
@@ -49,8 +51,10 @@ export default function Auth( { onAuth } ) {
             }],
             multiple: false,
         });
-        await invoke("bootstrap", {path: res});
-        onAuth(res);
+        if (res) {
+            await invoke("bootstrap", {path: res});
+            onAuth(res);
+        }
     });
 
 

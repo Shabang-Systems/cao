@@ -1,5 +1,5 @@
 //// utiltiies ////
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 
 //// routing ////
@@ -34,6 +34,9 @@ import "./app.css";
 
 //// text ////
 import strings from "@strings";
+
+//// native ////
+import { invoke } from '@tauri-apps/api/tauri';
 
 function RoutableMain() {
     const loc = useLocation();
@@ -114,10 +117,26 @@ function App() {
             setIsDark(theme == "dark");
         });
 
+        let workspace = localStorage.getItem("cao__workspace");
+        if (workspace) {
+            (async () => {
+                let success = await invoke("load", {path: workspace});
+                if (success) {
+                    setIsReady(true);
+                }
+            })();
+        }
+
         return () => {
             unlistenFuture.then((x) => x());
         };
     }, []);
+
+    let auth = useCallback((path) => {
+        localStorage.setItem("cao__workspace", path);
+        setIsReady(true);
+    });
+
 
     return (
         <Provider store={store}>
@@ -130,7 +149,7 @@ function App() {
                         {
                             isReady ?
                                 <RouterProvider router={router}/> :
-                            <Auth onAuth={() => {}} />
+                            <Auth onAuth={auth} />
                         }
                     </div>
 
