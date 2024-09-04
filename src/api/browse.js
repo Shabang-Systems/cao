@@ -10,6 +10,7 @@ export const browseSlice = createSlice({
     },
     reducers: {
         set: (state, { payload }) => {
+            console.log(payload);
             state.searches[state.current] = payload;
         },
         view: (state, { payload }) => {

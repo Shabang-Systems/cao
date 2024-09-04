@@ -43,6 +43,8 @@ pub struct QueryRequest {
     pub tags: Vec<String>,
     #[serde(default)]
     pub query_regexp: Option<String>,
+    #[serde(default)]
+    pub query_text: Option<String>,
 }
 
 impl QueryRequest {
@@ -86,8 +88,6 @@ impl QueryRequest {
                 Availability::All => true,
             })
             .collect();
-
-        dbg!(&filtered);
 
         filtered.sort_by(|x, y| {
             match self.order.order {
