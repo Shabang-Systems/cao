@@ -31,16 +31,25 @@ export default function Browser() {
 
     const [searchValue, setSearchValue] = useState("");
 
+    const processQuery = (text) => {
+    };
+
+
     useEffect(() => {
-        setSearchValue(currentQuery.query_regexp ? currentQuery.query_regexp : "");
+        setSearchValue(currentQuery.query_text ? currentQuery.query_text : "");
         dispatch(query(currentQuery));
     }, [currentQuery]);
 
     const executeQuery = useCallback((e) => {
         let text = e.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+        setSearchValue(text);
+        let orig = text.repeat(1);
+
         let matches = text.match(/@([\w-_]+|"[\w -_]+")/g);
         let tags = matches ? matches.map(x => x.replace("@", "").replaceAll('"', "")) : [];
-        let rest = text;
+
+        // deep copy the string
+        let rest = text.repeat(1);
         if (matches) {
             matches.forEach((e) => {
                 rest = rest.replaceAll(e, "").trim();
@@ -50,11 +59,11 @@ export default function Browser() {
         let newQuery = {
             ...currentQuery,
             query_regexp: rest,
+            query_text: orig,
             tags
         };
 
         dispatch(set(newQuery));
-        setSearchValue(text);
     });
 
     const [availability, setAvailbility] = useState(currentQuery.availability ? currentQuery.availability : "Incomplete");
@@ -148,7 +157,7 @@ export default function Browser() {
                                                               paddingTop: 20, paddingRight: 5}}>
                 <div className="mb-3">
                     <div className="button" onClick={() => {
-                        if (!currentQuery.query_regexp) {
+                        if (!currentQuery.query_text) {
                             dispatch(pop());
                         } else {
                             dispatch(view(captureID-1));

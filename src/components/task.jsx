@@ -19,6 +19,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     let dispatch = useDispatch();
     let [hasFocus, setHasFocus] = useState(initialFocus);
 
+
     const springs = useSpring({
         maxHeight: hasFocus ? 80 : 0,
         opacity: hasFocus ? 1 : 0,
@@ -58,6 +59,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
             scheduleRef.current.setOpen(scheduleOpen);
         }
     }, [scheduleOpen]);
+    const deffered = (new Date(task.start) > new Date());
 
     return (
         <div className="task" ref={wrapperRef}>
@@ -85,7 +87,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
-            <div className={"task-cm"+(task.start && (new Date(task.start)) > new Date() ? " deferred" : "")}>
+            <div className={"task-cm"+(task.start && deffered ? " deferred" : "")}>
                 <Editor
                     ref={cm}
                     value={task.content}

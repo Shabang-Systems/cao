@@ -1,5 +1,19 @@
 @import url("./extern/fa/css/all.min.css");
 
+* {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+.cm-mountpoint {
+    user-select: auto !important;
+    -moz-user-select: auto !important;
+    -webkit-user-select: auto !important;
+}
+
+
+
 #rootp {
   padding: 4px 10px;
   border-radius: 3px;

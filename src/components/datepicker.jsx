@@ -18,6 +18,8 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     let dateSeries = hydrateCalendar(ref.getFullYear(), ref.getMonth());
     let dateField = useRef(null);
 
+    const today = new Date();
+
     const parseDate = useCallback((text) => {
         try {
             let parsed = chrono.parse(text, new Date(), { forwardDate: true });
@@ -139,7 +141,10 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                          className={"dategrid-cell" +
                                     (date && (ref.getFullYear() == date.getFullYear() &&
                                               ref.getMonth() == date.getMonth() &&
-                                              x == date.getDate()) ? " active" : "")}>
+                                              x == date.getDate()) ? " active" : "") +
+                                    ((ref.getFullYear() == (today).getFullYear() &&
+                                      ref.getMonth() == (today).getMonth() &&
+                                      x == (today).getDate()) ? " today" : "")}>
                         <div className="dategrid-cell-text">{x}</div>
                     </div>
                 )}

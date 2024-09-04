@@ -51,8 +51,14 @@
 }
 
 .dategrid-cell.active {
-    background-color: var(--background-accent);
-    color: var(--foreground-accent)
+    background-color: var(--background-accent) !important;
+    color: var(--foreground-accent) !important;
+}
+
+.dategrid-cell.today {
+    background-color: var(--background-decoration);
+    color: var(--foreground-accent);
+    border: 1px solid var(--background-accent);
 }
 
 .dategrid-cell.diminished {
