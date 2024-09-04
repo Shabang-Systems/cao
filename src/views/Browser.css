@@ -18,12 +18,16 @@
     margin-bottom: 25px;
 }
 
+.capture-options-option .capture-options-select {
+}
+
 .capture-options-select {
     -webkit-appearance: none;
     outline: none;
     background: transparent;
     color: var(--foreground-color);
-    font-weight: 500;
+    font-weight: 430;
+    transform: translateY(1.25px);
     font-size: 14px;
     padding: 2px 8px;
     margin-right: 16px;

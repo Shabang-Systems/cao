@@ -44,7 +44,7 @@
 
 .paragraph-hint {
     color: var(--foreground-decoration);
-    font-weight: 600;
+    font-weight: 500;
     font-size: 13px;
     opacity: 0.4;
     padding-left: 3px;
