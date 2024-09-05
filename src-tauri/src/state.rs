@@ -75,14 +75,17 @@ impl GlobalState {
 
     /// Seed the new global state with demo content + saving it to a file
     pub fn bootstrap(&self, path: &str) {
-        let mut p = self.path.lock().expect("mutex poisoning TODO");
-        *p = Some(path.to_owned());
+        {
+            let mut p = self.path.lock().expect("mutex poisoning TODO");
+            *p = Some(path.to_owned());
 
-        let mut m = self.monitor.lock().expect("mutex poisoning TODO");
-        let tasks = parse_tasks(vec!["# TODO this is demo content",
-                                     "## Wowee",
-                                     "# Yes."]);
-        *m = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
+            let mut m = self.monitor.lock().expect("mutex poisoning TODO");
+            let tasks = parse_tasks(vec!["# TODO this is demo content",
+                                         "## Wowee",
+                                         "# Yes."]);
+            *m = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
+        }
+        let _ = self.save();
     }
 
     /// Load an existing file, if it could be serialized/loaded

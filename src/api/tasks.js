@@ -18,11 +18,24 @@ const abtib = createAsyncThunk(
             await invoke('upsert', { transaction: { Task: i }})));
 
         return {
-            entries: await invoke('index', { query: state.tasks.query }),
             db: state.tasks.db.concat(results)
-        }
+        };
     },
-)
+);
+
+// each of the thunks will do their usual job, and
+// also recompute the current query to update the current view
+// (if applicable); this could be entually smartert to only
+// recompute entries when its reasonably in scope
+const insert = createAsyncThunk(
+    'tasks/insert',
+
+    async (task, { getState }) => {
+        let res = await invoke('insert', { task });
+        
+        return res;
+    },
+);
 
 const edit = createAsyncThunk(
     'tasks/edit',
@@ -36,14 +49,13 @@ const edit = createAsyncThunk(
         db[idx] = {
             ...db[idx],
             ...payload
-        }
+        };
         await invoke('upsert', { transaction: { Task: db[idx] }});
         return {
-            entries: await invoke('index', { query: state.tasks.query }),
             db
-        }
+        };
     },
-)
+);
 
 const remove = createAsyncThunk(
     'tasks/remove',
@@ -55,30 +67,15 @@ const remove = createAsyncThunk(
         await invoke('delete', { transaction: { Task: payload.id }});
         return {
             db,
-            entries: await invoke('index', { query: state.tasks.query })
-        }
+        };
     },
-)
-
-const query = createAsyncThunk(
-    'tasks/query',
-
-    async (query, thunkAPI) => {
-        let entries = await invoke('index', { query });
-        return {
-            entries,
-            query
-        }
-    },
-)
+);
 
 // this is where the entire database is dumped
 export const tasksSlice = createSlice({
     name: "tasks",
     initialState: {
-        entries: [],
         db: [],
-        query: {},
         loading: true
     },
     reducers: {
@@ -86,54 +83,54 @@ export const tasksSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(edit.rejected, (state, { error }) => {
-                console.error(error)
+                console.error(error);
             })
             .addCase(remove.rejected, (state, { error }) => {
-                console.error(error)
+                console.error(error);
             })
-            .addCase(query.rejected, (state, { error }) => {
-                console.error(error)
+            .addCase(abtib.rejected, (state, { error }) => {
+                console.error(error);
             })
-            .addCase(edit.fulfilled, (state, { payload }) => {
+            .addCase(insert.rejected, (state, { error }) => {
+                console.error(error);
+            })
+            .addCase(edit.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
-            .addCase(remove.fulfilled, (state, { payload }) => {
+            .addCase(remove.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
-            .addCase(abtib.fulfilled, (state, { payload }) => {
+            .addCase(abtib.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
-            .addCase(query.pending, (state) => {
+            .addCase(insert.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
-                    loading: true
-                }
-            })
-            .addCase(query.fulfilled, (state, { payload }) => {
-                return {
-                    ...state,
-                    loading: false,
-                    ...payload
-                }
+                    db: state.db.concat([payload])
+                };
             })
             .addCase(snapshot.fulfilled, (state, { payload } ) => {
                 return {
                     ...state,
                     db: payload.tasks
-                }
-            })
+                };
+            });
     },
 });
 
-export { abtib, query, edit, remove };
+export { abtib, edit, remove, insert };
 export default tasksSlice.reducer;
 

@@ -88,6 +88,8 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
         }
     }
 
+    const changeTimeout = useRef(null);
+
     useEffect(() => {
         setCode(value);
     }, [value]);
@@ -113,7 +115,17 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
                     highlightActiveLine: false
                 }}
                 onChange={(value, _) => {
-                    if (typeof onChange == "function" ) onChange(value);
+                    // we want to wait until the change happened
+                    // to fire the event for about a second
+                    if (changeTimeout.current) {
+                        clearTimeout(changeTimeout.current);
+                        changeTimeout.current = null;
+                    }
+                    if (typeof onChange == "function" ) {
+                        changeTimeout.current = setTimeout(() => {
+                            onChange(value);
+                        }, 1000);
+                    }
                     setCode(value);
                 }}
                 onStatistics={({selection: sel, selections, selectedText}) => {

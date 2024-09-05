@@ -2,7 +2,7 @@ use crate::tasks::core::TaskDescription;
 use super::query::core::QueryRequest;
 use super::state::*;
 
-/// return a snapshot of the application state
+/// initialize application state from nothing
 #[tauri::command]
 pub fn bootstrap(path: &str, state: tauri::State<GlobalState>) {
     return {
@@ -10,7 +10,7 @@ pub fn bootstrap(path: &str, state: tauri::State<GlobalState>) {
     }
 }
 
-/// return a snapshot of the application state
+/// load a snapshot of the application state
 #[tauri::command]
 pub fn load(path: &str, state: tauri::State<GlobalState>) -> bool {
     return {
@@ -27,10 +27,17 @@ pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
     }
 }
 
-/// upsert a task into the database
+/// upsert an object into the database
 #[tauri::command]
 pub fn upsert(transaction: Transaction, state: tauri::State<GlobalState>) {
     state.upsert(&transaction);
+}
+
+/// insert a **task** (only!) into the database
+#[tauri::command]
+pub fn insert(task: TaskDescription, state: tauri::State<GlobalState>) -> TaskDescription {
+    state.upsert(&Transaction::Task(task.clone()));
+    task
 }
 
 /// upsert a task into the database

@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 
-import { abtib, query } from "@api/tasks.js";
+import { abtib } from "@api/tasks.js";
 
 import Task from "@components/task.jsx";
 
@@ -14,7 +14,7 @@ import "./Capture.css";
 import { useEffect, useState, useCallback } from 'react';
 
 export default function Browser() {
-    let entries = useSelector((s) => s.tasks.entries);
+    let entries = useSelector((s) => s.browse.entries);
     const dispatch = useDispatch();
     const isLoading = useSelector((s) => s.tasks.loading);
     const currentQuery = useSelector(createSelector(
@@ -30,15 +30,6 @@ export default function Browser() {
     );
 
     const [searchValue, setSearchValue] = useState("");
-
-    const processQuery = (text) => {
-    };
-
-
-    useEffect(() => {
-        setSearchValue(currentQuery.query_text ? currentQuery.query_text : "");
-        dispatch(query(currentQuery));
-    }, [currentQuery]);
 
     const executeQuery = useCallback((e) => {
         let text = e.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
@@ -83,6 +74,13 @@ export default function Browser() {
         };
         dispatch(set(newQuery));
     }, [order, ascending]);
+
+    useEffect(() => {
+        setSearchValue(currentQuery.query_text ? currentQuery.query_text : "");
+        setOrder(currentQuery.order && currentQuery.order.order ? currentQuery.order.order : "Captured");
+        setAvailbility(currentQuery.availability ? currentQuery.availability : "Incomplete");
+        setAscending(currentQuery.order && currentQuery.order.ascending ? currentQuery.order.ascending : false);
+    }, [currentQuery]);
 
 
     // if we just abtib'd, we should set the initial focus of
@@ -136,10 +134,6 @@ export default function Browser() {
                     </div>
                 </div>
                 <div>
-                    <div className="task-divider" onClick={() => {
-                        setJustAbtibd(true);
-                        dispatch(abtib([""]));
-                    }}><div className="task-divider-line"></div></div>
                     {entries.map((x, indx) => (
                         <div key={x.id}>
                             <Task
@@ -147,9 +141,16 @@ export default function Browser() {
                                 initialFocus={justAbtibd && indx == 0}
                                 onFocusChange={(x) => {if (!x) setJustAbtibd(false);}}
                             />
-                            <div className="task-divider focused cursor-default"><div className="task-divider-line"></div></div>
+                            {indx != (entries.length-1) ?
+                             <div className="task-divider focused cursor-default"><div className="task-divider-line"></div></div> : <></>
+                            }
                         </div>
                     ))}
+                    <div className="task-divider" onClick={() => {
+                        setJustAbtibd(true);
+                        dispatch(abtib([""]));
+                    }}><div className="task-divider-line"></div></div>
+
                 </div>
             </div>
             <div className="absolute captureid-outer" style={{top: "10px", right: "10px",

@@ -1,5 +1,5 @@
 //// utiltiies ////
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext, createContext } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 
 //// routing ////
@@ -14,7 +14,7 @@ import {
 
 //// view controlling ////
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import { ThemeContext } from "./contexts.js";
+import { ThemeContext, ConfigContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
 
@@ -22,6 +22,7 @@ import { snapshot } from "@api/utils.js";
 import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
 import Auth from "@views/Auth.jsx";
+import Action from "@views/Action.jsx";
 
 //// components ////
 import Load from "@components/load.jsx";
@@ -38,7 +39,11 @@ import strings from "@strings";
 //// native ////
 import { invoke } from '@tauri-apps/api/tauri';
 
+const LogoutContext = createContext({logout: () => {}});
+
+
 function RoutableMain() {
+    const logout = useContext(LogoutContext).logout;
     const loc = useLocation();
 
     const ready = useSelector((state) => {
@@ -49,21 +54,27 @@ function RoutableMain() {
     // generate the initial snapshot
     useEffect(() => {
         dispatch(snapshot());
+        // we also want to update all queries every minute
+        // in order to make sure due days/alerts/etc. stay accurate
+        let ci = setInterval(() => {
+            dispatch({type: "global/reindex"});
+        }, 60000);
+
+        return () => clearInterval(ci);
     }, []);
 
     return (
         ready == true ?
             <div id="routable-main" className="h-full">
-                <Tooltip id="rootp" />
                 <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
                                                              zIndex: 20000}}>
-                    <Link to={"/"}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/executor" ? " active" : "")}>
+                    <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.ACTION}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
                             <i className="fa-solid fa-person-running"></i>
                         </div>
                     </Link>
-                    <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
+                    <Link to={"/capture"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/capture" ? " active" : "")}>
                             <i className="fa-solid fa-inbox"></i>
                         </div>
                     </Link>
@@ -72,6 +83,12 @@ function RoutableMain() {
                             <i className="fa-solid fa-layer-group"></i>
                         </div>
                     </Link>
+                    <div  data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.LOGOUT} onClick={logout}>
+                        <div className={"bottom-nav-button"}>
+                            <i className="fa-solid fa-person-through-window" />
+                        </div>
+                    </div>
+
                 </div>
                 <Outlet />
             </div> : (ready == false ? <Load /> :
@@ -95,6 +112,10 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/",
+                element: <Action/>
+            },
+            {
+                path: "/capture",
                 element: <Capture/>
             },
             {
@@ -104,6 +125,7 @@ const router = createBrowserRouter([
         ]
     },
 ]);
+
 
 function App() {
     const [isDark, setIsDark] = useState(false);
@@ -138,22 +160,33 @@ function App() {
     });
 
 
+
     return (
         <Provider store={store}>
             <ThemeContext.Provider value={{
                 dark: isDark
             }}>
-                <div id="theme-box" className={isDark ? "dark" : ""}>
-                    <div className={"global w-screen h-screen"}>
-                        <div id="top-hide"></div>
-                        {
-                            isReady ?
-                                <RouterProvider router={router}/> :
-                            <Auth onAuth={auth} />
-                        }
-                    </div>
+                <LogoutContext.Provider value={{logout:() => {
+                    setIsReady(false);
+                    localStorage.removeItem("cao__workspace");
+                }}}>
+                    <ConfigContext.Provider value={{
+                        dueSoonDays: 1
+                    }}>
+                        <Tooltip id="rootp" />
+                        <div id="theme-box" className={isDark ? "dark" : ""}>
+                            <div className={"global w-screen h-screen"}>
+                                <div id="top-hide"></div>
+                                {
+                                    isReady ?
+                                        <RouterProvider router={router}/> :
+                                    <Auth onAuth={auth} />
+                                }
+                            </div>
 
-                </div>
+                        </div>
+                    </ConfigContext.Provider>
+                </LogoutContext.Provider>
             </ThemeContext.Provider>
         </Provider>
     );

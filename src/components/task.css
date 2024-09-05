@@ -69,3 +69,10 @@
 .task-cm.completed .cm-mountpoint div {
     text-decoration: line-through;
 }
+
+.task-cm.due-soon .cm-line {
+    color: #eb9317 !important;
+}
+.task-cm.overdue .cm-line {
+    color: #f53d1d !important;
+}

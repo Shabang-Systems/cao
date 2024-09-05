@@ -53,6 +53,7 @@ export default function Auth( { onAuth } ) {
         });
         if (res) {
             await invoke("bootstrap", {path: res});
+            console.log(res);
             onAuth(res);
         }
     });

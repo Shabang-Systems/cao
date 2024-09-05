@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
 import { edit, remove } from "@api/tasks.js";
 import "./task.css";
+
+import { ConfigContext } from "../contexts.js";
 
 import strings from "@strings";
 import moment from "moment";
@@ -59,7 +61,25 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
             scheduleRef.current.setOpen(scheduleOpen);
         }
     }, [scheduleOpen]);
-    const deffered = (new Date(task.start) > new Date());
+
+    const [today, setToday] = useState(new Date());
+
+    useEffect(() => {
+        let ci = setInterval(() => {
+            setToday(new Date());
+        }, 5000);
+
+        return () => clearInterval(ci);
+    }, []);
+
+    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
+    let dueSoon =  (moment(task.due) <= 
+                    new Date(today.getFullYear(),
+                             today.getMonth(),
+                             (today.getDate()+dueSoonDays), 0,0,0));
+    let overdue =  (moment(task.due) <= today);
+
+    const deffered = (task.start && new Date(task.start) > today);
 
     return (
         <div className="task" ref={wrapperRef}>
@@ -87,7 +107,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
-            <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")}>
+            <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")+(dueSoon && !overdue ? " due-soon" : "")+(overdue ? " overdue" : "")}>
                 <Editor
                     strike={task.completed}
                     ref={cm}

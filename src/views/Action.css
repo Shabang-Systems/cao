@@ -1,0 +1,67 @@
+.action-main {
+    margin-top: 40px;
+    padding: 10px 40px 10px 60px;
+}
+
+.action-datelabel {
+    font-size: 15px;
+    padding-bottom: 4px;
+    color: var(--background-accent);
+}
+
+.action-datelabel.active {
+    color: var(--foreground-decoration);
+}
+
+.greeting {
+    padding-top: 10px;
+    color: var(--foreground-decoration);
+}
+
+.greeting-head {
+    color: var(--foreground-color);
+}
+
+.free-day {
+    color: var(--background-accent);
+    padding-left: 5px;
+}
+
+.subgreeting {
+    margin-left: -1px;
+    color: var(--foreground-color);
+    opacity: 0.5;
+}
+
+.action-abtib {
+    opacity: 0.01;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    border: 1px dashed var(--background-decoration);
+    border-radius: 5px;
+    color: var(--background-decoration);
+    margin-right: 50px;
+    cursor: pointer;
+    transition: opacity 0.5s;
+    margin-top: 10px;
+}
+
+.action-abtib:hover {
+    opacity: 1;
+}
+
+.due-soon-box {
+    /* margin: 20px 0; */
+    border-radius: 5px;
+}
+
+.due-soon-header {
+    padding-left: 5px;
+    color: var(--foreground-decoration);
+    opacity: 0.7;
+    font-size: 13px;
+    padding-top: 10px;
+    padding-bottom: 6px;
+}
