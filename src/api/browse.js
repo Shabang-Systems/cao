@@ -18,7 +18,7 @@ export const browseSlice = createSlice({
                 return {
                     ...state,
                     current: payload
-                }
+                };
             }
         },
         grow: (state) => {

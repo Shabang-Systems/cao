@@ -1,8 +1,10 @@
 export default {
     DATETIME_FORMAT: "MM/DD/YY h:mm a",
+    DATETIME_FORMAT_LONG: "dddd, MMMM DD, YYYY  h:mm a",
     YEARMONTH_FORMAT: "MMMM YYYY",
     TIME_FORMAT: "h:mm a",
     VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
+    VIEWS__ACTION: "it's ",
     VIEWS__AUTH_WELCOME: ", and welcome to cao!",
     VIEWS__AUTH_HAPPY: "We are happy that you are here;",
     VIEWS__AUTH_PLEASE: "please, ",
@@ -22,6 +24,7 @@ export default {
     COMPONENTS__DATEPICKER__PICK_DT: "Date or time here!",
     COMPONENTS__DATEPICKER__PICK_TIME: "Pick a time here!",
     TOOLTIPS: {
+        ACTION: "Action",
         DONE: "Done",
         RESET: "Reset",
         COMPLETE: "Complete Task",
@@ -36,6 +39,9 @@ export default {
         CANCEL: "Cancel",
         PREVIOUS_SHEET: "Previous Sheet",
         NEXT_SHEET: "Next Sheet",
+        PREVIOUS_DAY: "Previous Day",
+        NEXT_DAY: "Next Day",
+
     },
     DAYS_OF_WEEK_SHORT: {
         1: "M",

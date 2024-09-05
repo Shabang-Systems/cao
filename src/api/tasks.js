@@ -20,9 +20,9 @@ const abtib = createAsyncThunk(
         return {
             entries: await invoke('index', { query: state.tasks.query }),
             db: state.tasks.db.concat(results)
-        }
+        };
     },
-)
+);
 
 const edit = createAsyncThunk(
     'tasks/edit',
@@ -36,14 +36,14 @@ const edit = createAsyncThunk(
         db[idx] = {
             ...db[idx],
             ...payload
-        }
+        };
         await invoke('upsert', { transaction: { Task: db[idx] }});
         return {
             entries: await invoke('index', { query: state.tasks.query }),
             db
-        }
+        };
     },
-)
+);
 
 const remove = createAsyncThunk(
     'tasks/remove',
@@ -56,9 +56,9 @@ const remove = createAsyncThunk(
         return {
             db,
             entries: await invoke('index', { query: state.tasks.query })
-        }
+        };
     },
-)
+);
 
 const query = createAsyncThunk(
     'tasks/query',
@@ -68,9 +68,9 @@ const query = createAsyncThunk(
         return {
             entries,
             query
-        }
+        };
     },
-)
+);
 
 // this is where the entire database is dumped
 export const tasksSlice = createSlice({
@@ -86,51 +86,51 @@ export const tasksSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(edit.rejected, (state, { error }) => {
-                console.error(error)
+                console.error(error);
             })
             .addCase(remove.rejected, (state, { error }) => {
-                console.error(error)
+                console.error(error);
             })
             .addCase(query.rejected, (state, { error }) => {
-                console.error(error)
+                console.error(error);
             })
             .addCase(edit.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
             .addCase(remove.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
             .addCase(abtib.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
                     ...payload
-                }
+                };
             })
             .addCase(query.pending, (state) => {
                 return {
                     ...state,
                     loading: true
-                }
+                };
             })
             .addCase(query.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
                     loading: false,
                     ...payload
-                }
+                };
             })
             .addCase(snapshot.fulfilled, (state, { payload } ) => {
                 return {
                     ...state,
                     db: payload.tasks
-                }
-            })
+                };
+            });
     },
 });
 

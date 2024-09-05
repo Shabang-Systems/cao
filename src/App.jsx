@@ -22,6 +22,7 @@ import { snapshot } from "@api/utils.js";
 import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
 import Auth from "@views/Auth.jsx";
+import Action from "@views/Action.jsx";
 
 //// components ////
 import Load from "@components/load.jsx";
@@ -57,13 +58,13 @@ function RoutableMain() {
                 <Tooltip id="rootp" />
                 <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
                                                              zIndex: 20000}}>
-                    <Link to={"/"}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/executor" ? " active" : "")}>
+                    <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.ACTION}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
                             <i className="fa-solid fa-person-running"></i>
                         </div>
                     </Link>
-                    <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/" ? " active" : "")}>
+                    <Link to={"/capture"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/capture" ? " active" : "")}>
                             <i className="fa-solid fa-inbox"></i>
                         </div>
                     </Link>
@@ -95,6 +96,10 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/",
+                element: <Action/>
+            },
+            {
+                path: "/capture",
                 element: <Capture/>
             },
             {
