@@ -1,10 +1,18 @@
 export default {
     DATETIME_FORMAT: "MM/DD/YY h:mm a",
     DATETIME_FORMAT_LONG: "dddd, MMMM DD, YYYY  h:mm a",
+    DATE_FORMAT_LONG: "dddd, MMMM DD, YYYY",
     YEARMONTH_FORMAT: "MMMM YYYY",
     TIME_FORMAT: "h:mm a",
+    VIEWS__ACTION_FREE: [
+        "Ho, ho, ho! You've got a free day :)",
+        "Empty day? Nice.",
+        "You have nothing planned! Congrats!",
+    ],
     VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
     VIEWS__ACTION: "it's ",
+    VIEWS__ACTION_YOUR_SCHEDULE: "here are your tasks for ",
+    VIEWS__ACTION_THE_FUTURE: "the future",
     VIEWS__AUTH_WELCOME: ", and welcome to cao!",
     VIEWS__AUTH_HAPPY: "We are happy that you are here;",
     VIEWS__AUTH_PLEASE: "please, ",

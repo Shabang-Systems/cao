@@ -18,7 +18,6 @@ const abtib = createAsyncThunk(
             await invoke('upsert', { transaction: { Task: i }})));
 
         return {
-            entries: await invoke('index', { query: state.tasks.query }),
             db: state.tasks.db.concat(results)
         };
     },
@@ -39,7 +38,6 @@ const edit = createAsyncThunk(
         };
         await invoke('upsert', { transaction: { Task: db[idx] }});
         return {
-            entries: await invoke('index', { query: state.tasks.query }),
             db
         };
     },
@@ -55,19 +53,6 @@ const remove = createAsyncThunk(
         await invoke('delete', { transaction: { Task: payload.id }});
         return {
             db,
-            entries: await invoke('index', { query: state.tasks.query })
-        };
-    },
-);
-
-const query = createAsyncThunk(
-    'tasks/query',
-
-    async (query, thunkAPI) => {
-        let entries = await invoke('index', { query });
-        return {
-            entries,
-            query
         };
     },
 );
@@ -76,9 +61,7 @@ const query = createAsyncThunk(
 export const tasksSlice = createSlice({
     name: "tasks",
     initialState: {
-        entries: [],
         db: [],
-        query: {},
         loading: true
     },
     reducers: {
@@ -89,9 +72,6 @@ export const tasksSlice = createSlice({
                 console.error(error);
             })
             .addCase(remove.rejected, (state, { error }) => {
-                console.error(error);
-            })
-            .addCase(query.rejected, (state, { error }) => {
                 console.error(error);
             })
             .addCase(edit.fulfilled, (state, { payload }) => {
@@ -112,19 +92,6 @@ export const tasksSlice = createSlice({
                     ...payload
                 };
             })
-            .addCase(query.pending, (state) => {
-                return {
-                    ...state,
-                    loading: true
-                };
-            })
-            .addCase(query.fulfilled, (state, { payload }) => {
-                return {
-                    ...state,
-                    loading: false,
-                    ...payload
-                };
-            })
             .addCase(snapshot.fulfilled, (state, { payload } ) => {
                 return {
                     ...state,
@@ -134,6 +101,6 @@ export const tasksSlice = createSlice({
     },
 });
 
-export { abtib, query, edit, remove };
+export { abtib, edit, remove };
 export default tasksSlice.reducer;
 

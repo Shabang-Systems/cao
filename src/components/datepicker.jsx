@@ -77,7 +77,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     const oldDate = useRef(null);
 
     useEffect(() => {
-        if (oldDate.current != date) {
+        if (oldDate.current != date && date != initialDate) {
             if (typeof onDate == "function")  {
                 onDate(date);
                 oldDate.current = date;
