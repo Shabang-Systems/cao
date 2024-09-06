@@ -51,7 +51,7 @@ export default {
         NEXT_SHEET: "Next Sheet",
         PREVIOUS_DAY: "Previous Day",
         NEXT_DAY: "Next Day",
-
+        LOGOUT: "Logout",
     },
     DAYS_OF_WEEK_SHORT: {
         1: "M",

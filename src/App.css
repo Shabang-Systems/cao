@@ -72,7 +72,7 @@
     font-size: 13px;
     padding: 0 5px 88px 3px;
     justify-content: space-between;
-    height: 80px;
+    height: 115px;
 }
 
 .buttom-nav {
@@ -80,6 +80,7 @@
 
 .bottom-nav-button {
     padding: 5px 0;
+    cursor: pointer;
 }
 
 .bottom-nav-button.active {
@@ -87,3 +88,15 @@
 }
 
 
+#logout {
+    color: var(--background-decoration);
+    cursor: pointer;
+    position: absolute;
+    font-size: 13px;
+    bottom: 15px;
+    right: 16px;
+}
+
+#logout:hover {
+    color: var(--foreground-decoration);
+}

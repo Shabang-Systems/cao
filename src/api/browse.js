@@ -69,7 +69,11 @@ export const browseSlice = createSlice({
                 console.error(error);
             })
             .addCase(snapshot.fulfilled, (state, { payload, asyncDispatch } ) => {
-                asyncDispatch(query(unroll(payload.searches[state.current])));
+                if (payload.searches.length > 0)  {
+                    asyncDispatch(query(unroll(payload.searches[state.current])));
+                } else {
+                    asyncDispatch(query({}));
+                }
                 return {
                     ...state,
                     searches: payload.searches

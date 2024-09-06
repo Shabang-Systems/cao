@@ -1,5 +1,5 @@
 //// utiltiies ////
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext, createContext } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 
 //// routing ////
@@ -39,7 +39,11 @@ import strings from "@strings";
 //// native ////
 import { invoke } from '@tauri-apps/api/tauri';
 
+const LogoutContext = createContext({logout: () => {}});
+
+
 function RoutableMain() {
+    const logout = useContext(LogoutContext).logout;
     const loc = useLocation();
 
     const ready = useSelector((state) => {
@@ -62,7 +66,6 @@ function RoutableMain() {
     return (
         ready == true ?
             <div id="routable-main" className="h-full">
-                <Tooltip id="rootp" />
                 <div className="bottom-nav absolute" style={{bottom: "10px", left: "10px",
                                                              zIndex: 20000}}>
                     <Link to={"/"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.ACTION}>
@@ -80,6 +83,12 @@ function RoutableMain() {
                             <i className="fa-solid fa-layer-group"></i>
                         </div>
                     </Link>
+                    <div  data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.LOGOUT} onClick={logout}>
+                        <div className={"bottom-nav-button"}>
+                            <i className="fa-solid fa-person-through-window" />
+                        </div>
+                    </div>
+
                 </div>
                 <Outlet />
             </div> : (ready == false ? <Load /> :
@@ -117,6 +126,7 @@ const router = createBrowserRouter([
     },
 ]);
 
+
 function App() {
     const [isDark, setIsDark] = useState(false);
     const [isReady, setIsReady] = useState(false);
@@ -150,27 +160,33 @@ function App() {
     });
 
 
+
     return (
         <Provider store={store}>
             <ThemeContext.Provider value={{
                 dark: isDark
             }}>
-                <ConfigContext.Provider value={{
-                    dueSoonDays: 1
-                }}>
+                <LogoutContext.Provider value={{logout:() => {
+                    setIsReady(false);
+                    localStorage.removeItem("cao__workspace");
+                }}}>
+                    <ConfigContext.Provider value={{
+                        dueSoonDays: 1
+                    }}>
+                        <Tooltip id="rootp" />
+                        <div id="theme-box" className={isDark ? "dark" : ""}>
+                            <div className={"global w-screen h-screen"}>
+                                <div id="top-hide"></div>
+                                {
+                                    isReady ?
+                                        <RouterProvider router={router}/> :
+                                    <Auth onAuth={auth} />
+                                }
+                            </div>
 
-                    <div id="theme-box" className={isDark ? "dark" : ""}>
-                        <div className={"global w-screen h-screen"}>
-                            <div id="top-hide"></div>
-                            {
-                                isReady ?
-                                    <RouterProvider router={router}/> :
-                                <Auth onAuth={auth} />
-                            }
                         </div>
-
-                    </div>
-                </ConfigContext.Provider>
+                    </ConfigContext.Provider>
+                </LogoutContext.Provider>
             </ThemeContext.Provider>
         </Provider>
     );
