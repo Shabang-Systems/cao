@@ -18,15 +18,15 @@ export const captureSlice = createSlice({
                 return {
                     ...state,
                     current: payload
-                }
-            }
+                };
+            } else return state;
         },
         grow: (state) => {
             return {
                 ...state,
                 scratchpads: [...state.scratchpads, ""],
                 current: state.scratchpads.length
-            }
+            };
         },
         pop: (state) => {
             if (state.current > 0) {
@@ -35,14 +35,14 @@ export const captureSlice = createSlice({
                     ...state,
                     scratchpads: scratch,
                     current: state.current-1
-                }
-            }
+                };
+            } else return state;
         },
         select: (state, { payload: text }) => {
             return {
                 ...state,
                 selection: text
-            }
+            };
         },
     },
     extraReducers: (builder) => {
@@ -51,7 +51,7 @@ export const captureSlice = createSlice({
                 return {
                     ...state,
                     scratchpads: payload.scratchpads
-                }
+                };
             })
             .addMatcher(
                 (action) => (action.type.startsWith("capture") &&
@@ -59,7 +59,7 @@ export const captureSlice = createSlice({
                 (state, action) => {
                     invoke('upsert', { transaction: { Board: state.scratchpads }});
                 }
-            )
+            );
     },
 });
 

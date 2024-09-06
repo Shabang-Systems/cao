@@ -134,10 +134,6 @@ export default function Browser() {
                     </div>
                 </div>
                 <div>
-                    <div className="task-divider" onClick={() => {
-                        setJustAbtibd(true);
-                        dispatch(abtib([""]));
-                    }}><div className="task-divider-line"></div></div>
                     {entries.map((x, indx) => (
                         <div key={x.id}>
                             <Task

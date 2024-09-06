@@ -14,7 +14,7 @@ import {
 
 //// view controlling ////
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import { ThemeContext } from "./contexts.js";
+import { ThemeContext, ConfigContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
 
@@ -50,6 +50,13 @@ function RoutableMain() {
     // generate the initial snapshot
     useEffect(() => {
         dispatch(snapshot());
+        // we also want to update all queries every minute
+        // in order to make sure due days/alerts/etc. stay accurate
+        let ci = setInterval(() => {
+            dispatch({type: "global/reindex"});
+        }, 60000);
+
+        return () => clearInterval(ci);
     }, []);
 
     return (
@@ -148,17 +155,22 @@ function App() {
             <ThemeContext.Provider value={{
                 dark: isDark
             }}>
-                <div id="theme-box" className={isDark ? "dark" : ""}>
-                    <div className={"global w-screen h-screen"}>
-                        <div id="top-hide"></div>
-                        {
-                            isReady ?
-                                <RouterProvider router={router}/> :
-                            <Auth onAuth={auth} />
-                        }
-                    </div>
+                <ConfigContext.Provider value={{
+                    dueSoonDays: 1
+                }}>
 
-                </div>
+                    <div id="theme-box" className={isDark ? "dark" : ""}>
+                        <div className={"global w-screen h-screen"}>
+                            <div id="top-hide"></div>
+                            {
+                                isReady ?
+                                    <RouterProvider router={router}/> :
+                                <Auth onAuth={auth} />
+                            }
+                        </div>
+
+                    </div>
+                </ConfigContext.Provider>
             </ThemeContext.Provider>
         </Provider>
     );

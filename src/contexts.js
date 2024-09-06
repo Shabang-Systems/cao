@@ -4,6 +4,11 @@ const ThemeContext = createContext({
     "dark": false
 });
 
-export { ThemeContext };
+const ConfigContext = createContext({
+    "dueSoonDays": 1
+});
+
+
+export { ThemeContext, ConfigContext };
 
 

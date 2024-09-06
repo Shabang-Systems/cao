@@ -26,6 +26,7 @@ async fn main() -> Result<()> {
             commands::index,
             commands::load,
             commands::bootstrap,
+            commands::insert,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

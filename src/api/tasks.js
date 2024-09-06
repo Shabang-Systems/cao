@@ -23,6 +23,20 @@ const abtib = createAsyncThunk(
     },
 );
 
+// each of the thunks will do their usual job, and
+// also recompute the current query to update the current view
+// (if applicable); this could be entually smartert to only
+// recompute entries when its reasonably in scope
+const insert = createAsyncThunk(
+    'tasks/insert',
+
+    async (task, { getState }) => {
+        let res = await invoke('insert', { task });
+        
+        return res;
+    },
+);
+
 const edit = createAsyncThunk(
     'tasks/edit',
 
@@ -74,22 +88,38 @@ export const tasksSlice = createSlice({
             .addCase(remove.rejected, (state, { error }) => {
                 console.error(error);
             })
-            .addCase(edit.fulfilled, (state, { payload }) => {
+            .addCase(abtib.rejected, (state, { error }) => {
+                console.error(error);
+            })
+            .addCase(insert.rejected, (state, { error }) => {
+                console.error(error);
+            })
+            .addCase(edit.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(remove.fulfilled, (state, { payload }) => {
+            .addCase(remove.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(abtib.fulfilled, (state, { payload }) => {
+            .addCase(abtib.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
                     ...payload
+                };
+            })
+            .addCase(insert.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
+                return {
+                    ...state,
+                    db: state.db.concat([payload])
                 };
             })
             .addCase(snapshot.fulfilled, (state, { payload } ) => {
@@ -101,6 +131,6 @@ export const tasksSlice = createSlice({
     },
 });
 
-export { abtib, edit, remove };
+export { abtib, edit, remove, insert };
 export default tasksSlice.reducer;
 

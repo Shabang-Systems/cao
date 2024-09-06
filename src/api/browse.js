@@ -2,8 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { snapshot } from "@api/utils.js";
 import { invoke } from '@tauri-apps/api/tauri';
 
-import { edit, remove, abtib } from "@api/tasks.js";
-
 const query = createAsyncThunk(
     'browse/query',
 
@@ -77,15 +75,6 @@ export const browseSlice = createSlice({
                     searches: payload.searches
                 };
             })
-            .addCase(edit.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch(query(unroll(state.searches[state.current])));
-            })
-            .addCase(abtib.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch(query(unroll(state.searches[state.current])));
-            })
-            .addCase(remove.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch(query(unroll(state.searches[state.current])));
-            })
             .addMatcher(
                 (action) => {
                     return (action.type.startsWith("browse") &&
@@ -93,6 +82,12 @@ export const browseSlice = createSlice({
                 },
                 (state, action) => {
                     invoke('upsert', { transaction: { Search: state.searches }});
+                }
+            )
+            .addMatcher(
+                (action) => (action.type == "global/reindex"),
+                (state, action) => {
+                    action.asyncDispatch(query(unroll(state.searches[state.current])));
                 }
             );
     },

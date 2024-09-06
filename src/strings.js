@@ -9,6 +9,8 @@ export default {
         "Empty day? Nice.",
         "You have nothing planned! Congrats!",
     ],
+    VIEWS__DUE_SOON: "Due Soon",
+    VIEWS__SCHEDULED: "Scheduled",
     VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
     VIEWS__ACTION: "it's ",
     VIEWS__ACTION_YOUR_SCHEDULE: "here are your tasks for ",
