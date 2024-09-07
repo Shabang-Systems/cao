@@ -65,3 +65,9 @@
     padding-top: 10px;
     padding-bottom: 6px;
 }
+
+.action-right {
+    font-size: 10px;
+    padding-left: 4px;
+    color: var(--background-decoration);
+}

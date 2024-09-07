@@ -10,7 +10,7 @@ export default {
         "You have nothing planned! Congrats!",
     ],
     VIEWS__DUE_SOON: "due soon",
-    VIEWS__DUE_ON_DATE: "due on that date",
+    VIEWS__DUE_ON_DATE: "unscheduled, due on that date",
     VIEWS__SCHEDULED: "scheduled",
     VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
     VIEWS__ACTION: "it's ",
