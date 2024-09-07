@@ -3,6 +3,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { invoke } from '@tauri-apps/api/tauri';
 
 import { snapshot } from "@api/utils.js";
+import * as chrono from 'chrono-node';
 
 // each of the thunks will do their usual job, and
 // also recompute the current query to update the current view
@@ -12,8 +13,24 @@ const abtib = createAsyncThunk(
     'tasks/abtib',
 
     async (tasks, { getState }) => {
+        let times = tasks.map((x) => {
+            let parsed = chrono.parse(x)[0];
+            if (parsed) {
+                return {
+                    start: (parsed.start && parsed.end) ? parsed.start.date().getTime() : null,
+                    end: parsed.end ? parsed.end.date().getTime() : (
+                        (parsed.start) ? parsed.start.date().getTime() : null)
+                };
+            } else {
+                return {start: null, end: null};
+            }
+            
+        });
         let state = getState();
-        let results = await invoke('parse_tasks', { captured: tasks });
+        let results = await invoke('parse_tasks', {
+            captured: tasks,
+            dates: times
+        });
         await Promise.all(results.map(async (i) =>
             await invoke('upsert', { transaction: { Task: i }})));
 

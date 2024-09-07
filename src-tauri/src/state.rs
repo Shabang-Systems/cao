@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use super::tasks::{parse_tasks, core::TaskDescription};
+use super::tasks::{core::TaskDescription};
 use super::query::core::QueryRequest;
 
 use anyhow::{Result, anyhow};
@@ -80,10 +80,7 @@ impl GlobalState {
             *p = Some(path.to_owned());
 
             let mut m = self.monitor.lock().expect("mutex poisoning TODO");
-            let tasks = parse_tasks(vec!["# TODO this is demo content",
-                                         "## Wowee",
-                                         "# Yes."]);
-            *m = Cao { tasks: tasks, scratchpads: vec![], searches: vec![] };
+            *m = Cao { tasks: vec![], scratchpads: vec![], searches: vec![] };
         }
         let _ = self.save();
     }
