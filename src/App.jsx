@@ -1,6 +1,7 @@
 //// utiltiies ////
 import { useState, useEffect, useCallback, useContext, createContext } from "react";
 import { appWindow } from "@tauri-apps/api/window";
+import { confirm } from '@tauri-apps/api/dialog';
 
 //// routing ////
 import {
@@ -166,9 +167,12 @@ function App() {
             <ThemeContext.Provider value={{
                 dark: isDark
             }}>
-                <LogoutContext.Provider value={{logout:() => {
-                    setIsReady(false);
-                    localStorage.removeItem("cao__workspace");
+                <LogoutContext.Provider value={{logout: async () => {
+                    const confirmed = await confirm('', 'Do you want to logout?');
+                    if (confirmed) {
+                        setIsReady(false);
+                        localStorage.removeItem("cao__workspace");
+                    }
                 }}}>
                     <ConfigContext.Provider value={{
                         dueSoonDays: 1
