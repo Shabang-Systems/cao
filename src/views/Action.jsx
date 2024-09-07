@@ -76,7 +76,13 @@ export default function Action({}) {
             });
             return [...Array(9).keys()].map(sel => {
                 return filtered.filter(x => {
-                    if (sel <= 8) {
+                    if (sel == 0) {
+                        return (moment(x.schedule) <
+                             new Date(today.getFullYear(),
+                                      today.getMonth(),
+                                      (today.getDate()+sel)+1, 0,0,0));
+
+                    } else if (sel <= 8) {
                         return (moment(x.schedule) >=
                                 new Date(today.getFullYear(),
                                          today.getMonth(),
