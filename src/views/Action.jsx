@@ -27,7 +27,7 @@ function getGreeting(time) {
 
 export default function Action({}) {
     const [today, setToday] = useState(new Date());
-    const nextDays = [...Array(7).keys()].concat([-1]);
+    const nextDays = [...Array(8).keys()].concat([-1]);
     const [selection, setSelection] = useState(0);
 
     const free = useRef(strings.VIEWS__ACTION_FREE[
@@ -44,13 +44,23 @@ export default function Action({}) {
         [(state) => state.tasks.db],
         (res) => res.filter(x => {
             if (!x.due) return false;
-            if (x.complete) return false;
+            if (x.completed) return false;
             if (new Date(x.start) > today) return false;
             
-            return (moment(x.due) <= 
-                    new Date(today.getFullYear(),
-                             today.getMonth(),
-                             (today.getDate()+dueSoonDays), 0,0,0));
+            if (selection == 0) {
+                return (moment(x.due) <= 
+                        new Date(today.getFullYear(),
+                                 today.getMonth(),
+                                 (today.getDate()+dueSoonDays), 0,0,0));
+            } else if (selection < 8) {
+                // otherwise its not due soon but due "on"
+                let due = new Date(x.due);
+                return (due.getFullYear() == selectionDate.getFullYear() &&
+                        due.getMonth() == selectionDate.getMonth() &&
+                        due.getDate() == selectionDate.getDate());
+            } else {
+                return (moment(x.due) >= selectionDate);
+            }
         }).sort((a,b) => new Date(a.due).getTime() - new Date(b.due).getTime()))
     );
     const dueSoonIDs = dueSoon.map(x => x.id);
@@ -59,7 +69,7 @@ export default function Action({}) {
         (res) => res.filter(x => {
                 if (!x.schedule) return false;
                 if (dueSoonIDs.includes(x.id)) return false;
-                if (selection <= 6) {
+                if (selection <= 7) {
                     return (moment(x.schedule) >=
                             new Date(today.getFullYear(),
                                      today.getMonth(),
@@ -72,7 +82,7 @@ export default function Action({}) {
                     return (moment(x.schedule) >=
                             new Date(today.getFullYear(),
                                      today.getMonth(),
-                                     (today.getDate()+7), 0,0,0));
+                                     (today.getDate()+8), 0,0,0));
                 }
             }),
         {devModeChecks: {identityFunctionCheck: 'never'}}
@@ -94,12 +104,12 @@ export default function Action({}) {
                     <div className="greeting-head">{getGreeting(today)},</div>
                     {(selection == 0) ?
                      <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}</div>:
-                     <div className="subgreeting">{strings.VIEWS__ACTION_YOUR_SCHEDULE}{selection < 7 ? moment(selectionDate).format(strings.DATE_FORMAT_LONG): strings.VIEWS__ACTION_THE_FUTURE}</div>}
+                     <div className="subgreeting">{strings.VIEWS__ACTION_YOUR_SCHEDULE}{selection < 8 ? moment(selectionDate).format(strings.DATE_FORMAT_LONG): strings.VIEWS__ACTION_THE_FUTURE}</div>}
                 </div>
                 <div style={{marginRight: "60px", marginLeft: "-6px", marginTop: "20px"}}>
                     <div className="due-soon-box"
-                         style={{display: (selection == 0 && dueSoon.length > 0) ? "block" : "none"}}>
-                        <div className="due-soon-header" style={{paddingTop: 0}}>{strings.VIEWS__DUE_SOON}</div>
+                         style={{display: (dueSoon.length > 0) ? "block" : "none"}}>
+        <div className="due-soon-header" style={{paddingTop: 0}}>{(selection == 0) ? strings.VIEWS__DUE_SOON:strings.VIEWS__DUE_ON_DATE }</div>
                         {
                             (dueSoon.length > 0) ? dueSoon.map((x, indx) => (
                                 <div key={x.id}>
@@ -153,7 +163,7 @@ export default function Action({}) {
                         <i className="fa-solid fa-chevron-up"></i>
                     </div>
                     <div className="button" onClick={() => {
-                        setSelection((selection != 7) ? selection + 1 : 7);
+                        setSelection((selection != 8) ? selection + 1 : 8);
                     }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.NEXT_DAY} data-tooltip-place="left">
                         <i className="fa-solid fa-chevron-down"></i>
                     </div>
