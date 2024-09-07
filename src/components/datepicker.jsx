@@ -176,9 +176,10 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                    data-tooltip-id={"rootp"}
                    data-tooltip-content={strings.TOOLTIPS.RESET}
                    onClick={() => {
-                    setTimeString("");
-                    setDate(null);
-                }} />
+                       setTimeString("");
+                       setDate(null);
+                       if (typeof onDate == "function") onDate(null);
+                   }} />
                 <i className="fa-solid fa-check datepicker-symbol"
                    style={{transform: "translateY(-0.5px)"}}
                    data-tooltip-id={"rootp"}
