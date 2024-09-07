@@ -210,6 +210,9 @@ export default function Action({}) {
                         nextDays.map((x, i) => {
                             return (
                                 <div
+                                    data-tooltip-id={i < horizon ? "rootp" : "nootp"}
+                                    data-tooltip-content={moment(today).add(x, "days").format(strings.DATE_FORMAT_SHORT)}
+
                                     key={x}
                                     className={"action-datelabel " + (
                                         i == selection ? "active" : ""

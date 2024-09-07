@@ -25,7 +25,7 @@ import strings from "@strings";
 // than just having one of these nice global buffers
 var lineBuffer = [];
 
-export default forwardRef (function Editor({ onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange, strike }, ref ) {
+export default forwardRef (function Editor({ onChange, onSelectionChange, defaultValue, value, chunkMode, bindChunckCallback, onFocusChange, strike, capture }, ref ) {
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);
@@ -115,16 +115,20 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
                     highlightActiveLine: false
                 }}
                 onChange={(value, _) => {
-                    // we want to wait until the change happened
-                    // to fire the event for about a second
-                    if (changeTimeout.current) {
-                        clearTimeout(changeTimeout.current);
-                        changeTimeout.current = null;
-                    }
-                    if (typeof onChange == "function" ) {
-                        changeTimeout.current = setTimeout(() => {
-                            onChange(value);
-                        }, 1000);
+                    if (capture) {
+                        onChange(value);
+                    } else {
+                        // we want to wait until the change happened
+                        // to fire the event for about a second
+                        if (changeTimeout.current) {
+                            clearTimeout(changeTimeout.current);
+                            changeTimeout.current = null;
+                        }
+                        if (typeof onChange == "function" ) {
+                            changeTimeout.current = setTimeout(() => {
+                                onChange(value);
+                            }, 1000);
+                        }
                     }
                     setCode(value);
                 }}
