@@ -29,6 +29,7 @@ export const browseSlice = createSlice({
         },
         view: (state, { payload, asyncDispatch }) => {
             if (payload < state.searches.length && payload >= 0) { 
+                asyncDispatch(query(unroll(state.searches[payload])));
                 return {
                     ...state,
                     current: payload

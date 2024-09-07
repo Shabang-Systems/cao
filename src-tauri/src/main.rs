@@ -7,6 +7,7 @@ mod tasks;
 mod state;
 mod query;
 mod commands;
+mod scheduling;
 
 use state::*;
 
