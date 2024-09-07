@@ -133,7 +133,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
-                         data-tooltip-content={task.schedule ? moment.utc(task.schedule).fromNow() :
+                         data-tooltip-content={task.schedule ? moment.utc(task.schedule).format(strings.DATETIME_FORMAT) :
                                                strings.TOOLTIPS.SCHEDULED}
                          data-tooltip-place={"bottom"}>
                         {task.schedule ?

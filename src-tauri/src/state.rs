@@ -16,10 +16,15 @@ pub enum Transaction {
     Task(TaskDescription),
     Board(Vec<String>),
     Search(Vec<QueryRequest>),
+    Horizon(usize),
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Delete {
     Task(String),
+}
+
+fn eight() -> usize {
+    return 8;
 }
 
 /// Application registry
@@ -33,6 +38,9 @@ pub struct Cao {
     pub scratchpads: Vec<String>,
     #[serde(default)]
     pub searches: Vec<QueryRequest>,
+    #[serde(default="eight")]
+    pub horizon: usize,
+
 }
 
 /// Global shared application state
@@ -80,7 +88,7 @@ impl GlobalState {
             *p = Some(path.to_owned());
 
             let mut m = self.monitor.lock().expect("mutex poisoning TODO");
-            *m = Cao { tasks: vec![], scratchpads: vec![], searches: vec![] };
+            *m = Cao { tasks: vec![], scratchpads: vec![], searches: vec![], horizon: 8 };
         }
         let _ = self.save();
     }
@@ -127,6 +135,7 @@ impl GlobalState {
             Transaction::Task(task) => self.upsert_td_(task),
             Transaction::Board(boards) => self.upsert_scratchpad_(boards),
             Transaction::Search(search) => self.upsert_search_(search),
+            Transaction::Horizon(horizon) => self.set_horizon_(*horizon),
         }
         
         // commit to file
@@ -189,6 +198,13 @@ impl GlobalState {
             let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
             // TODO this is goofy fix it
             monitor.searches = queries.clone();
+        }
+    }
+    fn set_horizon_(&self, horizon: usize) {
+        {
+            let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+            // TODO this is goofy fix it
+            monitor.horizon = horizon;
         }
     }
 }

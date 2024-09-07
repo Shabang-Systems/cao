@@ -6,6 +6,10 @@
     --foreground-decoration: #c7c7c7;
     --foreground-color: #404040;
     --foreground-accent: black;
+
+    --due-soon: #eb9317;
+    --due-soon-softer: #eb9317;
+    --overdue: #f53d1d;
 }
 
 #theme-box.dark {
@@ -16,6 +20,10 @@
     --foreground-decoration: #7787a3;
     --foreground-color: #abb2bf;
     --foreground-accent: white;
+
+    --due-soon: #e0a95c;
+    --due-soon-softer: #cc8625;
+    --overdue: #f53d1d;
 }
 
 

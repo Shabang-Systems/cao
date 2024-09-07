@@ -2,6 +2,7 @@ export default {
     DATETIME_FORMAT: "MM/DD/YY h:mm a",
     DATETIME_FORMAT_LONG: "dddd, MMMM DD, YYYY  h:mm a",
     DATE_FORMAT_LONG: "dddd, MMMM DD, YYYY",
+    DATE_FORMAT_SHORT: "YYYY.MM.DD",
     YEARMONTH_FORMAT: "MMMM YYYY",
     TIME_FORMAT: "h:mm a",
     VIEWS__ACTION_FREE: [
@@ -10,7 +11,7 @@ export default {
         "You have nothing planned! Congrats!",
     ],
     VIEWS__DUE_SOON: "due soon",
-    VIEWS__DUE_ON_DATE: "due on that date",
+    VIEWS__DUE_ON_DATE: "unscheduled, due on that date",
     VIEWS__SCHEDULED: "scheduled",
     VIEWS__BROWSER: "you can filter by tags @likeso and use .* regex",
     VIEWS__ACTION: "it's ",
@@ -52,7 +53,20 @@ export default {
         NEXT_SHEET: "Next Sheet",
         PREVIOUS_DAY: "Previous Day",
         NEXT_DAY: "Next Day",
+        INCREASE_HORIZON: "Increase Horizon",
+        DECREASE_HORIZON: "Decrease Horizon",
         LOGOUT: "Logout",
+    },
+    DAYS_OF_WEEK_VERY_SHORT: {
+        1: "M",
+        2: "T",
+        3: "W",
+        4: "T",
+        5: "F",
+        6: "S",
+        // sad, but matches indexing scheme of
+        // js. we should probably fix eventually
+        0: "S",
     },
     DAYS_OF_WEEK_SHORT: {
         1: "M",

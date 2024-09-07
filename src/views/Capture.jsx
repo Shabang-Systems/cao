@@ -37,6 +37,7 @@ export default function Capture() {
     return (
         <div className="cursor-text w-full h-full">
             <Editor
+                capture={true}
                 value={scratchpad}
                 onChange={(x) => dispatch(set(x))}
                 chunkMode={isCapturing}
