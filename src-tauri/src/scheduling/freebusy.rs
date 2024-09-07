@@ -10,6 +10,7 @@ use anyhow::{Result, anyhow};
 use futures::future::join_all;
 
 
+#[allow(dead_code)]
 async fn load_ical_file(calendar: &str) -> Result<Calendar> {
     let resp = reqwest::get(calendar).await?.text().await?;
     let cal = match resp.parse::<Calendar>() {
@@ -20,6 +21,7 @@ async fn load_ical_file(calendar: &str) -> Result<Calendar> {
     Ok(cal)
 }
 
+#[allow(dead_code)]
 fn resolve_date_perhaps(dpt: DatePerhapsTime) -> DateTime<Utc> {
     match dpt {
         DatePerhapsTime::Date(d) => {
@@ -41,11 +43,14 @@ fn resolve_date_perhaps(dpt: DatePerhapsTime) -> DateTime<Utc> {
 /// temporary, non published freebusy event calculation scratch object
 #[derive(Clone, Debug, Default)]
 struct FBEvent {
+    #[allow(dead_code)]
     start: DateTime<Utc>,
+    #[allow(dead_code)]
     end: DateTime<Utc>,
 }
 
 /// given a list of calendars, find possible gaps between 
+#[allow(dead_code)]
 async fn find_availability(calendars: &[&str]) -> Result<Vec<Gap>> {
     // download all the calendars
     let cals = join_all(
