@@ -223,7 +223,7 @@ export default function Action({}) {
                                 >
                                     <div style={{textAlign: "right", maxWidth: "20px", direction: "rtl"}}>
                                         <span className="action-left">{x >= 0 ? strings.DAYS_OF_WEEK_SHORT[(x+today.getDay())%7] : "Future"}</span>
-                                        <span className="action-right">{entries[i].length}</span>
+                                        <span className="action-right">{entries[i].length+dueSoon[i].length}</span>
 
                                     </div>
                                 </div>
