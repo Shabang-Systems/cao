@@ -71,8 +71,8 @@
 }
 
 .task-cm.due-soon .cm-line {
-    color: #eb9317 !important;
+    color: var(--due-soon) !important;
 }
 .task-cm.overdue .cm-line {
-    color: #f53d1d !important;
+    color: var(--overdue) !important;
 }
