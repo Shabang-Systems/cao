@@ -90,9 +90,14 @@
 
 
 .action-datelabel.ds {
-    color: var(--due-soon-softer);
+    /* color: var(--due-soon-softer); */
+}
+
+.action-datelabel.ds .action-left {
+    border-bottom: 0.1px solid var(--background-decoration);
+    padding-bottom: 1px;
 }
 
 .action-datelabel.ds.active {
-    color: var(--due-soon) !important;
+    /* color: var(--due-soon) !important; */
 }
