@@ -5,6 +5,7 @@ import { ConfigContext } from "../contexts.js";
 
 import { compute } from "@api/action.js";
 import { insert } from "@api/tasks.js";
+import { getEvents } from "@api/events.js";
 
 import moment from "moment";
 import { createSelector } from '@reduxjs/toolkit';
@@ -41,6 +42,31 @@ export default function Action({}) {
     const selectionDate = new Date(today.getFullYear(),
                                    today.getMonth(),
                                    (today.getDate()+selection), 0,0,0);
+
+    const workslots = useSelector(createSelector(
+        [(state) => state.events.entries],
+        (res) => {
+            return res.filter(x => {
+                let d = new Date(x.start);
+                return (d.getFullYear() == selectionDate.getFullYear() &&
+                        d.getMonth() == selectionDate.getMonth() &&
+                        d.getDate() == selectionDate.getDate());
+            }).map (x => {
+                let start = moment(x.start);
+                let end = moment(x.end);
+                return {
+                    start,
+                    end,
+                    duration: end.diff(start, "minutes", true),
+                    type: "event",
+                    name: x.name,
+                    // to make the .key prop happy
+                    id: Math.random()
+                };
+            });
+        }
+    ));
+
     const dueSoonDays = useContext(ConfigContext).dueSoonDays;
 
     const dispatch = useDispatch();
@@ -117,11 +143,33 @@ export default function Action({}) {
                                          today.getMonth(),
                                          (today.getDate()+horizon), 0,0,0));
                     }
-                });
+                }).map((x) => ({...x, type: "task"}));
             });
         },
         {devModeChecks: {identityFunctionCheck: 'never'}}
     ));
+
+
+    const display = entries[selection].concat(workslots).sort((a,b) => {
+        let aTime = null;
+        let bTime = null;
+
+        if (a.type == "task") {
+            aTime = new Date(a.schedule).getTime();
+        } else {
+            aTime = new Date(a.start).getTime();
+        }
+
+        if (b.type == "task") {
+            bTime = new Date(b.schedule).getTime();
+        } else {
+            bTime = new Date(b.start).getTime();
+        }
+
+        return aTime-bTime;
+    });
+
+
     let [justAbtibd, setJustAbtibd] = useState(false);
     useEffect(() => {
         let ci = setInterval(() => {
@@ -129,7 +177,14 @@ export default function Action({}) {
         }, 5000);
         dispatch(compute());
 
-        return () => clearInterval(ci);
+        let ca = setInterval(() => {
+            dispatch(getEvents());
+        }, 60000);
+
+        return () => {
+            clearInterval(ci);
+            clearInterval(ca);
+        };
     }, []);
     
     return (
@@ -147,32 +202,40 @@ export default function Action({}) {
                         <div className={"due-soon-header top"+(selection !=0 ? " ds" : "")} style={{paddingTop: 0}}>{(selection == 0) ? strings.VIEWS__DUE_SOON:strings.VIEWS__DUE_ON_DATE }</div>
                         {
                             (dueSoon[selection].length > 0) ? dueSoon[selection].map((x, indx) => (
-                                <div key={x.id}>
+                                <div key={x.id} className="task-holder">
                                     <Task
                                         task={x}
                                     />
-                                    <div style={{paddingBottom: "15px"}}></div>
+                                    {/* <div style={{paddingBottom: "10px"}}></div> */}
                                 </div>
                             )): <></>
                         }
                         <div className="due-soon-header">{strings.VIEWS__SCHEDULED}</div>
                     </div>
-                    {(entries[selection].length > 0) ? entries[selection].map((x, indx) => (
-                        <div key={x.id}>
+                    {(display.length > 0) ? display.map((x, indx) => (
+                        x.type == "task" ?
+                        <div key={x.id} className="task-holder">
                             <Task
                                 task={x}
-                                initialFocus={justAbtibd && indx == entries[selection].length-1}
+                                initialFocus={justAbtibd && (x.id == entries[selection][entries[selection].length-1].id)}
                                 onFocusChange={(x) => {if (!x) setJustAbtibd(false);}}
                             />
-                            <div style={{paddingBottom: "15px"}}></div>
+                            {/* <div style={{paddingBottom: "2px"}}></div> */}
+                        </div>:
+                        <div key={x.id} className="calendar-entry"
+                             style={{height: x.duration}}>
+                            <div className="calendar-time top">{moment(x.start).format(strings.TIME_FORMAT)} - {moment(x.end).format(strings.TIME_FORMAT)}</div>
+                            <div className="calendar-description">{x.name}</div>
                         </div>
                     )): <div className="free-day">
                                                    {free.current}
                                                </div>}
                 </div>
                 <div className="action-abtib" onClick={() => { 
-                    if (entries[selection].length > 0) {
-                        dispatch(insert({schedule:new Date(entries[selection][entries[selection].length-1].schedule).getTime(),
+                    if (display.length > 0) {
+                        dispatch(insert({schedule:
+                                         display[display.length-1].type == "task" ?
+                                         new Date(entries[selection][entries[selection].length-1].schedule).getTime() : new Date(display[display.length-1].end).getTime(),
                                          content: ""}));
                     } else {
                         dispatch(insert({schedule: selectionDate.getTime(),

@@ -1,3 +1,4 @@
+use super::scheduling::Event;
 use crate::tasks::core::TaskDescription;
 use super::query::core::QueryRequest;
 use super::state::*;
@@ -7,6 +8,21 @@ use super::state::*;
 pub fn bootstrap(path: &str, state: tauri::State<GlobalState>) {
     return {
         state.bootstrap(path)
+    }
+}
+
+/// get the user's events 
+#[tauri::command]
+pub fn events(state: tauri::State<GlobalState>) -> Vec<Event> {
+    return {
+        let res = {
+            let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
+            monitor.work_slots.clone()
+        };
+
+        let _ = state.save();
+
+        res
     }
 }
 
