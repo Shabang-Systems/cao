@@ -60,6 +60,8 @@ export default {
         NEXT_DAY: "Next Day",
         INCREASE_HORIZON: "Increase Horizon",
         DECREASE_HORIZON: "Decrease Horizon",
+        TASKS_MODE: "Show Tasks Only",
+        CALENDAR_MODE: "Show Tasks and Events",
         LOGOUT: "Logout",
         SETTINGS: "Settings",
     },

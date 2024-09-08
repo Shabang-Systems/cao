@@ -11,9 +11,6 @@ import { LogoutContext }  from "../contexts.js";
 import { useContext, useEffect, useState } from "react";
 import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
 
-
-const appVersion = await getVersion();
-
 export default function Settings({}) {
     const [version, setVersion] = useState("");
     const [tauriVersion, setTauriVersion] = useState("");

@@ -32,6 +32,7 @@ export default function Action({}) {
     const horizon = useSelector((state) => state.ui.horizon);
 
     const [today, setToday] = useState(new Date());
+    const [tasksMode, setTasksMode] = useState(true);
     const nextDays = [...Array(horizon).keys()].concat([-1]);
     const [selection, setSelection] = useState(0);
 
@@ -46,7 +47,7 @@ export default function Action({}) {
     const workslots = useSelector(createSelector(
         [(state) => state.events.entries],
         (res) => {
-            return res.filter(x => {
+            let tmp = res.filter(x => {
                 let d = new Date(x.start);
                 return (d.getFullYear() == selectionDate.getFullYear() &&
                         d.getMonth() == selectionDate.getMonth() &&
@@ -63,6 +64,15 @@ export default function Action({}) {
                     // to make the .key prop happy
                     id: Math.random()
                 };
+            });
+            let seen = {};
+            return tmp.filter(x => {
+                if (seen[x.start+x.end+x.name]) {
+                    return false;
+                } else {
+                    seen[x.start+x.end+x.name] = true;
+                    return true;
+                }
             });
         }
     ));
@@ -150,7 +160,7 @@ export default function Action({}) {
     ));
 
 
-    const display = entries[selection].concat(selection < horizon ? workslots : []).sort((a,b) => {
+    const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots : []).sort((a,b) => {
         let aTime = null;
         let bTime = null;
 
@@ -295,16 +305,16 @@ export default function Action({}) {
                     }
                 </ul> 
                 <div className="horizon-switch">
-                    <div className="button" onClick={() => {
-                        setHorizon(horizon <= 1 ? 1 : horizon -1);
-                    }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.DECREASE_HORIZON}>
-                        <i className="fa-solid fa-minus"></i>
+                    <div className={"button"+((!tasksMode) ? " disabled" : "")} onClick={() => {
+                        setTasksMode(true);
+                    }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.TASKS_MODE}>
+                        <i className="fa-solid fa-list-check"></i>
                     </div>
                     <div
-                        className="button" onClick={() => {
-                        setHorizon(horizon+1);
-                    }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.INCREASE_HORIZON}>
-                        <i className="fa-solid fa-plus"></i>
+                        className={"button"+(tasksMode ? " disabled" : "")} onClick={() => {
+                            setTasksMode(false);
+                    }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.CALENDAR_MODE}>
+                        <i className="fa-regular fa-calendar"></i>
                     </div>
 
                 </div>
