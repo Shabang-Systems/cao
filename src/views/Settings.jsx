@@ -57,13 +57,13 @@ export default function Settings({}) {
                                 copy.pop();
                                 dispatch(setCalendars(copy));
                             }
-                        }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.DECREASE_HORIZON}>
+                        }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.DECREASE_CAL}>
                             <i className="fa-solid fa-minus"></i>
                         </div>
                         <div
                             className="button" onClick={() => {
                                 dispatch(setCalendars(calendars.concat([""])));
-                            }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.INCREASE_HORIZON}>
+                            }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.INCREASE_CAL}>
                             <i className="fa-solid fa-plus"></i>
                         </div>
 

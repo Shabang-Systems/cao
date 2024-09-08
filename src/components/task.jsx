@@ -76,7 +76,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     let dueSoon =  (moment(task.due) <= 
                     new Date(today.getFullYear(),
                              today.getMonth(),
-                             (today.getDate()+dueSoonDays), 0,0,0));
+                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
     let overdue =  (moment(task.due) <= today);
 
     const deffered = (task.start && new Date(task.start) > today);
