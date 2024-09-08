@@ -32,7 +32,7 @@ import { ErrorBoundary, GlobalErrorModal } from "@components/error.jsx";
 
 //// styles ////
 import "./theme.css";
-import "./app.css";
+import "./App.css";
 
 //// text ////
 import strings from "@strings";
