@@ -4,6 +4,7 @@ import capture from "./capture.js";
 import tasks from "./tasks.js";
 import browse from "./browse.js";
 import action from "./action.js";
+import events from "./events.js";
 
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -91,7 +92,8 @@ export default configureStore({
         tasks,
         ui: ui.reducer,
         browse,
-        action
+        action,
+        events
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat([asyncDispatchMiddleware])
 });

@@ -9,6 +9,8 @@ const ConfigContext = createContext({
 });
 
 
-export { ThemeContext, ConfigContext };
+const LogoutContext = createContext({logout: () => {}});
+
+export { ThemeContext, ConfigContext, LogoutContext };
 
 

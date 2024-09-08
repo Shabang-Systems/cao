@@ -1,0 +1,56 @@
+.settings-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+.settings-inner {
+    max-width: 70vw;
+}
+
+.callout {
+    color: var(--foreground-decoration);
+    font-weight: 500;
+}
+
+.settings-entry {
+    padding-top: 5px;
+}
+
+.settings-entry span {
+    padding-right: 20px;
+    color: var(--foreground-color);
+}
+
+.settings-entry input {
+    background-color: var(--background-decoration);
+    border-radius: 5px;
+    color: var(--foreground-color);
+    padding: 2px 5px 2px 10px;
+    font-size: 13px;
+}
+
+
+.settings-entry input:focus {
+    outline: 0;
+}
+
+.settings-bottom {
+    color: var(--background-decoration);
+    max-width: 20px;
+    font-size: 9px;
+    padding: 0;
+}
+
+.logout {
+    margin: 20px 0 0 -1px !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
+    float: right;
+}
+
+.icon {
+    transform: translateY(2px);
+}

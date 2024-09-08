@@ -1,9 +1,14 @@
 export default {
     DATETIME_FORMAT: "MM/DD/YY h:mm a",
     DATETIME_FORMAT_LONG: "dddd, MMMM DD, YYYY  h:mm a",
+    TIME_FORMAT: "h:mm a",
     DATE_FORMAT_LONG: "dddd, MMMM DD, YYYY",
     DATE_FORMAT_SHORT: "YYYY.MM.DD",
     YEARMONTH_FORMAT: "MMMM YYYY",
+    VIEWS__SETTINGS_SETTINGS: "Settings",
+    VIEWS__SETTINGS_LOGOUT: "Logout",
+    VIEWS__SETTINGS_HORIZON: "Horizon (days)",
+    VIEWS__SETTINGS_CALENDARS: "Calendar .ics",
     TIME_FORMAT: "h:mm a",
     VIEWS__ACTION_FREE: [
         "Press below me to schedule something!",
@@ -55,7 +60,10 @@ export default {
         NEXT_DAY: "Next Day",
         INCREASE_HORIZON: "Increase Horizon",
         DECREASE_HORIZON: "Decrease Horizon",
+        TASKS_MODE: "Show Tasks Only",
+        CALENDAR_MODE: "Show Tasks and Events",
         LOGOUT: "Logout",
+        SETTINGS: "Settings",
     },
     DAYS_OF_WEEK_VERY_SHORT: {
         1: "M",

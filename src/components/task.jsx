@@ -26,7 +26,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         maxHeight: hasFocus ? 80 : 0,
         opacity: hasFocus ? 1 : 0,
         paddingTop: hasFocus ? 10 : 0,
-        marginBottom: hasFocus ? 2 : 0,
+        marginBottom: hasFocus ? 5 : 0,
         pointerEvents: hasFocus ? "initial": "none",
         from: { maxHeight: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
         config: { mass: 1, friction: 35, tension: 300 }

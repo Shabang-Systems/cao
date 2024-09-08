@@ -15,7 +15,7 @@ import {
 
 //// view controlling ////
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import { ThemeContext, ConfigContext } from "./contexts.js";
+import { ThemeContext, ConfigContext, LogoutContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
 
@@ -24,6 +24,7 @@ import Capture from "@views/Capture.jsx";
 import Browser from "@views/Browser.jsx";
 import Auth from "@views/Auth.jsx";
 import Action from "@views/Action.jsx";
+import Settings from "@views/Settings.jsx";
 
 //// components ////
 import Load from "@components/load.jsx";
@@ -40,7 +41,6 @@ import strings from "@strings";
 //// native ////
 import { invoke } from '@tauri-apps/api/tauri';
 
-const LogoutContext = createContext({logout: () => {}});
 
 
 function RoutableMain() {
@@ -84,11 +84,11 @@ function RoutableMain() {
                             <i className="fa-solid fa-layer-group"></i>
                         </div>
                     </Link>
-                    <div  data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.LOGOUT} onClick={logout}>
-                        <div className={"bottom-nav-button"}>
-                            <i className="fa-solid fa-person-through-window" />
+                    <Link to={"/settings"} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.SETTINGS}>
+                            <div className={"bottom-nav-button"+(loc.pathname == "/settings" ? " active" : "")}>
+                            <i className="fa-solid fa-cog"></i>
                         </div>
-                    </div>
+                    </Link>
 
                 </div>
                 <Outlet />
@@ -122,6 +122,10 @@ const router = createBrowserRouter([
             {
                 path: "/browse",
                 element: <Browser/>
+            },
+            {
+                path: "/settings",
+                element: <Settings/>
             },
         ]
     },
