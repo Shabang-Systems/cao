@@ -20,8 +20,6 @@ pub fn events(state: tauri::State<GlobalState>) -> Vec<Event> {
             monitor.work_slots.clone()
         };
 
-        let _ = state.save();
-
         res
     }
 }

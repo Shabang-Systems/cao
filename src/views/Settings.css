@@ -6,6 +6,9 @@
     width: 100%;
 }
 
+.settings-inner {
+    max-width: 70vw;
+}
 
 .callout {
     color: var(--foreground-decoration);
@@ -38,6 +41,7 @@
     color: var(--background-decoration);
     max-width: 20px;
     font-size: 9px;
+    padding: 0;
 }
 
 .logout {

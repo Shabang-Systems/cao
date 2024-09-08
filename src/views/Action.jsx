@@ -179,7 +179,7 @@ export default function Action({}) {
 
         let ca = setInterval(() => {
             dispatch(getEvents());
-        }, 60000);
+        }, 2500);
 
         return () => {
             clearInterval(ci);

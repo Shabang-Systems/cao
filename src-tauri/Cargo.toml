@@ -25,6 +25,8 @@ icalendar = "0.16.5"
 reqwest = { version = "0.11", features = ["json"] }
 futures = "0.3.30"
 chrono-tz = "0.9.0"
+localzone = { version = "0.3.1", features = ["win_zones"] }
+rrule = { version = "0.13.0", features = ["serde"] }
 
 [dependencies.uuid]
 version = "1.10.0"
