@@ -150,7 +150,7 @@ export default function Action({}) {
     ));
 
 
-    const display = entries[selection].concat(workslots).sort((a,b) => {
+    const display = entries[selection].concat(selection < horizon ? workslots : []).sort((a,b) => {
         let aTime = null;
         let bTime = null;
 
@@ -179,7 +179,7 @@ export default function Action({}) {
 
         let ca = setInterval(() => {
             dispatch(getEvents());
-        }, 2500);
+        }, 5000);
 
         return () => {
             clearInterval(ci);
@@ -223,7 +223,7 @@ export default function Action({}) {
                             {/* <div style={{paddingBottom: "2px"}}></div> */}
                         </div>:
                         <div key={x.id} className="calendar-entry"
-                             style={{height: x.duration}}>
+                             style={{height: x.duration*1.5}}>
                             <div className="calendar-time top">{moment(x.start).format(strings.TIME_FORMAT)} - {moment(x.end).format(strings.TIME_FORMAT)}</div>
                             <div className="calendar-description">{x.name}</div>
                         </div>
