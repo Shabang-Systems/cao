@@ -8,7 +8,7 @@ export default {
     VIEWS__SETTINGS_SETTINGS: "Settings",
     VIEWS__SETTINGS_LOGOUT: "Logout",
     VIEWS__SETTINGS_HORIZON: "Horizon (days)",
-    VIEWS__SETTINGS_CALENDARS: "Calendar .ics (comma seperated)",
+    VIEWS__SETTINGS_CALENDARS: "Calendar .ics",
     TIME_FORMAT: "h:mm a",
     VIEWS__ACTION_FREE: [
         "Press below me to schedule something!",

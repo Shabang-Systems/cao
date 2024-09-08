@@ -13,7 +13,7 @@ const setCalendars = createAsyncThunk(
     'events/set',
 
     async (payload, thunkAPI) => {
-        await invoke('upsert', { transaction: { Calendars:  payload }});
+        await invoke('upsert', { transaction: { Calendars:  payload.map(x => x.trim()).filter(x => x!="") }});
         return payload;
     },
 );
