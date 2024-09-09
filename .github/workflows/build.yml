@@ -48,7 +48,7 @@ jobs:
 
       - uses: tauri-apps/tauri-action@v0
         with:
-          args: ${{ matrix.settings.args }}
+          args: ${{ matrix.args }}
       - uses: actions/upload-artifact@v4
         with:
           name: cao-nightly-${{ matrix.platform }}
