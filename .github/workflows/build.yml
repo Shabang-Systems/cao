@@ -52,4 +52,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cao-nightly-${{ matrix.platform }}
-          path: src-tauri/target/release/bundle
+          path: ${{ matrix.platform == 'macos-latest' && 'src-tauri/target/universal-apple-darwin/release/bundle' || 'src-tauri/target/release/bundle' }}
