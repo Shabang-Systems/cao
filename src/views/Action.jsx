@@ -104,7 +104,7 @@ export default function Action({}) {
                         return (moment(x.due) <= 
                                 new Date(today.getFullYear(),
                                          today.getMonth(),
-                                         (today.getDate()+dueSoonDays), 0,0,0));
+                                         (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
                     } else if (sel < horizon) {
 
                         if (x.schedule) return false;

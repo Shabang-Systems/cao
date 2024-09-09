@@ -21,8 +21,6 @@ jobs:
             args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
             args: ''
-          - platform: 'windows-latest'
-            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -51,3 +49,13 @@ jobs:
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
 
       - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: '#!/cao v__VERSION__'
+          releaseBody: 'TODO.'
+          releaseDraft: true
+          prerelease: true
+          args: ${{ matrix.args }}
+
