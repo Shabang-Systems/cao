@@ -34,7 +34,11 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
 
     const wrapperRef = useRef(null);
     const cm = useRef(null);
-    useOutsideAlerter(wrapperRef, () => setHasFocus(false));
+    useOutsideAlerter(wrapperRef, () => {
+        if (!hasFocus) {
+            setHasFocus(false);
+        }
+    });
 
     useEffect(() => {
         if (typeof onFocusChange == "function") onFocusChange(hasFocus);
