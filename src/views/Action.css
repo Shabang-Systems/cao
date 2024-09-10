@@ -33,6 +33,10 @@
     opacity: 0.5;
 }
 
+.greeting-subhead {
+    padding-right: 30px;
+}
+
 .action-abtib {
     opacity: 0.01;
     display: flex;
