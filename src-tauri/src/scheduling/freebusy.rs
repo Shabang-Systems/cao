@@ -62,8 +62,8 @@ pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
     cals.into_iter().for_each(|x| {
         x.components.into_iter().for_each(|y| {
             if let CalendarComponent::Event(e) = y {
-                if let Some(start) = e.get_start() {
-                    if let Some(end) = e.get_end() {
+                if let Some(start @ DatePerhapsTime::DateTime(_)) = e.get_start() {
+                    if let Some(end @ DatePerhapsTime::DateTime(_)) = e.get_end() {
                         let stringified = e.try_into_string().unwrap();
                         let split = stringified.split("\n");
                         let filtered = split.filter(|&x| x.split([';', ':'])
