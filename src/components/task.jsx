@@ -82,7 +82,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     const deffered = (task.start && new Date(task.start) > today);
 
     return (
-        <div className="task" ref={wrapperRef}>
+        <div className="task group" ref={wrapperRef}>
             <DateModal
                 initialDate={task.schedule ? new Date(task.schedule) : null}
                 onDate={(d) => {
@@ -107,6 +107,20 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
+
+            <div className="task-action floating-task-action opacity-0 group-hover:opacity-100 transition-opacity" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={task.completed ? strings.TOOLTIPS.UNCOMPLETE : strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
+                    onClick={() => {
+                        // TODO completing tasks is a bit of a thing so
+                        // TODO supporting repeating tasks, etc.
+                        dispatch(edit({id: task.id, completed: !task.completed}));
+                        setHasFocus(false);
+                    }}
+            >
+                <i className={task.completed ? "task-action fa-solid fa-circle-check" : "task-action fa-solid fa-check" } style={{transform: "translateY(-4px)"}} />
+            </div>
+
+
+            
             <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")+(dueSoon && !overdue ? " due-soon" : "")+(overdue ? " overdue" : "")}>
                 <Editor
                     strike={task.completed}
