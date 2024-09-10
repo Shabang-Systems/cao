@@ -92,7 +92,9 @@ export const browseSlice = createSlice({
             .addMatcher(
                 (action) => (action.type == "global/reindex"),
                 (state, action) => {
-                    action.asyncDispatch(query(unroll(state.searches[state.current])));
+                    if (state.searches[state.current]) {
+                        action.asyncDispatch(query(unroll(state.searches[state.current])));
+                    }
                 }
             );
     },
