@@ -1,3 +1,7 @@
+.task {
+    position: relative;
+}
+
 .task-cm > .cm-mountpoint {
     padding: 0;
 }
@@ -31,6 +35,11 @@
 }
 .task-action.right {
     margin-right: 0 !important;
+}
+
+.floating-task-action {
+    position: absolute;
+    transform: translateX(-18px) scale(0.8);
 }
 
 .task-action:hover {
