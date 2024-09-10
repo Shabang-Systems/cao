@@ -62,51 +62,53 @@ pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
     cals.into_iter().for_each(|x| {
         x.components.into_iter().for_each(|y| {
             if let CalendarComponent::Event(e) = y {
-                if let Some(start @ DatePerhapsTime::DateTime(_)) = e.get_start() {
-                    if let Some(end @ DatePerhapsTime::DateTime(_)) = e.get_end() {
-                        let stringified = e.try_into_string().unwrap();
-                        let split = stringified.split("\n");
-                        let filtered = split.filter(|&x| x.split([';', ':'])
-                                                    .next().map_or(false, |x|
-                                                                   x == "EXDATE" ||
-                                                                   x == "RRULE" ||
-                                                                   x == "EXRULE" ||
-                                                                   x == "DTSTART"))
-                            .map(|x| x.trim())
-                            .collect::<Vec<_>>();
-                        
-                        let mut filtered_string = filtered.join("\n").to_string();
-                        ZONE_MAPPINGS.iter().for_each(|x| {
-                            filtered_string = filtered_string.replace(x.windows, x.iana[0]);
-                        });
+                if let (Some(start), Some(end)) = (e.get_start(), e.get_end()) {
+                    let stringified = e.try_into_string().unwrap();
+                    let split = stringified.split("\n");
+                    let filtered = split.filter(|&x| x.split([';', ':'])
+                                                .next().map_or(false, |x|
+                                                                x == "EXDATE" ||
+                                                                x == "RRULE" ||
+                                                                x == "EXRULE" ||
+                                                                x == "DTSTART"))
+                        .map(|x| x.trim())
+                        .collect::<Vec<_>>();
+                    
+                    let mut filtered_string = filtered.join("\n").to_string();
+                    ZONE_MAPPINGS.iter().for_each(|x| {
+                        filtered_string = filtered_string.replace(x.windows, x.iana[0]);
+                    });
 
-                        let rrule:Result<RRuleSet, RRuleError> = filtered_string.parse();
+                    let rrule:Result<RRuleSet, RRuleError> = filtered_string.parse();
 
-                        let start_res = resolve_date_perhaps(start);
-                        let end_res = resolve_date_perhaps(end);
-                        let duration = start_res - end_res;
+                    // ASSUME: Date and DATE is is all day, DateTime and DateTimeTime is not
+                    let is_all_day = matches!(&start, DatePerhapsTime::Date(_)) && matches!(&end, DatePerhapsTime::Date(_));    
+                    let start_res = resolve_date_perhaps(start);
+                    let end_res = resolve_date_perhaps(end);
+                    let duration = start_res - end_res;
 
-                        match rrule.ok() {
-                            Some(x) => {
-                                let now = Utc::now().naive_utc();
-                                let cast = RTz::UTC.from_local_datetime(&now).unwrap();
-                                x.after(cast).all(100).dates.iter().for_each(|d| {
-                                    let true_start = d;
-                                    let true_end = d.checked_sub_signed(duration).unwrap();
-                                    events.push(Event {
-                                        start: true_start.to_utc(),
-                                        end: true_end.to_utc(),
-                                        name: e.get_summary().unwrap_or("").to_string()
-                                    })
-                                });
-                            },
-                            None => events.push(Event {
-                                start: start_res,
-                                end: end_res,
-                                name: e.get_summary().unwrap_or("").to_string()
-                            })
-                        };
-                    }
+                    match rrule.ok() {
+                        Some(x) => {
+                            let now = Utc::now().naive_utc();
+                            let cast = RTz::UTC.from_local_datetime(&now).unwrap();
+                            x.after(cast).all(100).dates.iter().for_each(|d| {
+                                let true_start = d;
+                                let true_end = d.checked_sub_signed(duration).unwrap();
+                                events.push(Event {
+                                    start: true_start.to_utc(),
+                                    end: true_end.to_utc(),
+                                    is_all_day: is_all_day,
+                                    name: e.get_summary().unwrap_or("").to_string()
+                                })
+                            });
+                        },
+                        None => events.push(Event {
+                            start: start_res,
+                            end: end_res,
+                            is_all_day: is_all_day,
+                            name: e.get_summary().unwrap_or("").to_string()
+                        })
+                    };
                 }
             }
         })

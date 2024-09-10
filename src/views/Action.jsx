@@ -51,7 +51,9 @@ export default function Action({}) {
                 let d = new Date(x.start);
                 return (d.getFullYear() == selectionDate.getFullYear() &&
                         d.getMonth() == selectionDate.getMonth() &&
-                        d.getDate() == selectionDate.getDate());
+                        d.getDate() == selectionDate.getDate() &&
+                        !x.is_all_day
+                    );
             }).map (x => {
                 let start = moment(x.start);
                 let end = moment(x.end);
