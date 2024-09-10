@@ -22,6 +22,7 @@ export default {
     VIEWS__ACTION: "it's ",
     VIEWS__ACTION_YOUR_SCHEDULE: "here are your tasks for ",
     VIEWS__ACTION_THE_FUTURE: "the future",
+    VIEWS__ACTION_TODAY_IS: "today is ",
     VIEWS__AUTH_WELCOME: ", and welcome to cao!",
     VIEWS__AUTH_HAPPY: "We are happy that you are here;",
     VIEWS__AUTH_PLEASE: "please, ",

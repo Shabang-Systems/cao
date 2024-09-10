@@ -43,6 +43,21 @@ export default function Action({}) {
     const selectionDate = new Date(today.getFullYear(),
                                    today.getMonth(),
                                    (today.getDate()+selection), 0,0,0);
+    
+    const allDayEvents = useSelector(createSelector(
+        [(state) => state.events.entries],
+        (res) => {
+            let tmp = res.filter(x => {
+                let d = new Date(x.start);
+                return (d.getFullYear() == selectionDate.getFullYear() &&
+                        d.getMonth() == selectionDate.getMonth() &&
+                        d.getDate() == selectionDate.getDate() &&
+                        x.is_all_day
+                    );
+            }).map (x => x.name);
+            return tmp;
+        }
+    ));
 
     const workslots = useSelector(createSelector(
         [(state) => state.events.entries],
@@ -198,6 +213,12 @@ export default function Action({}) {
             clearInterval(ca);
         };
     }, []);
+
+    const events_str = (() => {
+        if (allDayEvents.length == 0 || tasksMode) return ""; 
+        if (allDayEvents.length == 1) return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents[0];
+        if (allDayEvents.length > 1)  return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents.slice(0, -1).join(", ") + " and " + allDayEvents[allDayEvents.length-1];
+    })();
     
     return (
         <div>
@@ -205,7 +226,7 @@ export default function Action({}) {
                 <div className="greeting">
                     <div className="greeting-head">{getGreeting(today)},</div>
                     {(selection == 0) ?
-                     <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}</div>:
+                     <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}{events_str}</div>:
                      <div className="subgreeting">{strings.VIEWS__ACTION_YOUR_SCHEDULE}{selection < horizon ? moment(selectionDate).format(strings.DATE_FORMAT_LONG): strings.VIEWS__ACTION_THE_FUTURE}</div>}
                 </div>
                 <div style={{marginRight: "60px", marginLeft: "-6px", marginTop: "20px"}}>
