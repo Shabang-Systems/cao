@@ -93,7 +93,8 @@
 }
 
 .action-datelabel.ds .action-left {
-    border-bottom: 0.1px solid var(--due-soon-softer);
+    border-bottom: 2px solid var(--background-decoration);
+    margin-right: 2px;
     padding-bottom: 0.5px;
 }
 

@@ -50,6 +50,9 @@ function RoutableMain() {
     const ready = useSelector((state) => {
         return state.ui.ready;
     });
+    const captures = useSelector((state) => {
+        return state.capture.scratchpads;
+    });
     const dispatch = useDispatch();
 
     // generate the initial snapshot
@@ -75,7 +78,7 @@ function RoutableMain() {
                         </div>
                     </Link>
                     <Link to={"/capture"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/capture" ? " active" : "")}>
+                        <div className={"bottom-nav-button"+(loc.pathname == "/capture" ? " active" : "")+(captures.filter(x => x.trim() != "").length > 0 ? " ds" : "")}>
                             <i className="fa-solid fa-inbox"></i>
                         </div>
                     </Link>
