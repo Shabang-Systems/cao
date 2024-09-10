@@ -16,10 +16,12 @@ export default forwardRef(function DateModal({ onDate, initialDate, onClose }, r
     }
 
     useOutsideAlerter(wrapperRef, () => {
-        if (typeof onClose == "function") {
-            onClose();
+        if (!open) {
+            if (typeof onClose == "function") {
+                onClose();
+            }
+            setOpen(false);
         }
-        setOpen(false);
     });
 
     return (
