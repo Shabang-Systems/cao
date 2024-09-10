@@ -14,11 +14,10 @@ use state::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // TODO initial with actual stored state
     let state = GlobalState::new();
     let calendar_listen_handle = state.calendar_listen();
 
-    // rock'n'roll
+        // rock'n'roll
     tauri::Builder::default()
         .manage(state)
         .invoke_handler(tauri::generate_handler![

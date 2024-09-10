@@ -25,6 +25,10 @@ export default function Browser() {
     const length = useSelector((state) =>
         state.browse.searches.length
     );
+    const searches = useSelector((state) =>
+        state.browse.searches
+    );
+
     const captureID = useSelector((state) =>
         state.browse.current
     );
@@ -180,9 +184,14 @@ export default function Browser() {
                 </div>
                 <ul className="captureid-wrapper">
                     {
-                        [...Array(length).keys()].map((x) => {
+                        [...Array(length).keys()].map((x, i) => {
                             return (
-                                <li key={x} className={"captureid-dot " + (
+                                <li data-tooltip-id="rootp" onClick={() => {
+                                    if (!currentQuery.query_text && captureID == length-1) {
+                                        dispatch(pop());
+                                    } 
+                                    dispatch(view(i));
+                                }} data-tooltip-content={searches[i].query_text} data-tooltip-place="left" key={x} className={"cursor-pointer captureid-dot " + (
                                     x == captureID ? "active" : ""
                                 )}></li>
                             );

@@ -79,8 +79,12 @@
 }
 
 .bottom-nav-button {
-    padding: 5px 0;
+    margin: 5px 0;
     cursor: pointer;
+}
+
+.bottom-nav-button.ds {
+    border-bottom: 2px solid var(--background-decoration);
 }
 
 .bottom-nav-button.active {
@@ -100,3 +104,4 @@
 #logout:hover {
     color: var(--foreground-decoration);
 }
+
