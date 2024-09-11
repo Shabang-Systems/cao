@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useContext } from 'react';
+import { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
 import { edit, remove } from "@api/tasks.js";
 import "./task.css";
 
+import { useDetectClickOutside } from 'react-detect-click-outside';
 import { ConfigContext } from "../contexts.js";
 
 import strings from "@strings";
@@ -11,7 +12,7 @@ import moment from "moment";
 
 import { animated, useSpring } from '@react-spring/web';
 
-import { useOutsideAlerter } from "./utils.js";
+import { useOutsideClick } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
 
@@ -32,13 +33,14 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         config: { mass: 1, friction: 35, tension: 300 }
     });
 
-    const wrapperRef = useRef(null);
     const cm = useRef(null);
-    useOutsideAlerter(wrapperRef, () => {
-        if (!hasFocus) {
+    const focus = useRef(hasFocus);
+
+    const wrapperRef = useDetectClickOutside({ onTriggered: () => {
+        if (hasFocus) {
             setHasFocus(false);
         }
-    });
+    }});
 
     useEffect(() => {
         if (typeof onFocusChange == "function") onFocusChange(hasFocus);
@@ -66,6 +68,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         }
     }, [scheduleOpen]);
 
+    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
     const [today, setToday] = useState(new Date());
 
     useEffect(() => {
@@ -76,14 +79,18 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         return () => clearInterval(ci);
     }, []);
 
-    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
-    let dueSoon =  (moment(task.due) <= 
+    let [dueSoon, setDueSoon] = useState(false);
+    let [overdue, setOverdue] = useState(false);
+    let [deffered, setDeffered] = useState(false);
+
+    useEffect(() => {
+        setDueSoon((moment(task.due) <= 
                     new Date(today.getFullYear(),
                              today.getMonth(),
-                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
-    let overdue =  (moment(task.due) <= today);
-
-    const deffered = (task.start && new Date(task.start) > today);
+                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds())));
+        setOverdue((moment(task.due) <= today));
+        setDeffered((task.start && new Date(task.start) > today));
+    }, [today, task]);
 
     return (
         <div className="task group" ref={wrapperRef}>

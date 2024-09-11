@@ -94,12 +94,6 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
         setCode(value);
     }, [value]);
 
-    useEffect(() => {
-        if (typeof onSelectionChange == "function") {
-            onSelectionChange(selection);
-        }
-    }, [selection]);
-
     return (
         <div className="cm-mountpoint" onClick={() => { if (cm.current) {
             cm.current.editor.focus();
@@ -131,14 +125,6 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
                         }
                     }
                     setCode(value);
-                }}
-                onStatistics={({selection: sel, selections, selectedText}) => {
-                    if (!selectedText && selection && selection[0]) {
-                        setSelection(null);
-                    } else if (selectedText && (!selection ||
-                                                selections[0] != selection[0])) {
-                        setSelection([selections[0], sel.ranges[0]]);
-                    } 
                 }}
                 extensions={[
                     EditorView.lineWrapping,

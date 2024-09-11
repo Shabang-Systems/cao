@@ -3,11 +3,10 @@ import { useState, useRef, forwardRef } from "react";
 import "./datemodal.css";
 import DatePicker from "./datepicker.jsx";
 
-import { useOutsideAlerter } from "./utils.js";
+import { useDetectClickOutside } from 'react-detect-click-outside';
 
 export default forwardRef(function DateModal({ onDate, initialDate, onClose }, ref) {
     let [open, setOpen] = useState(false);
-    const wrapperRef = useRef(null);
 
     if (ref) {
         ref.current = {
@@ -15,7 +14,7 @@ export default forwardRef(function DateModal({ onDate, initialDate, onClose }, r
         };
     }
 
-    useOutsideAlerter(wrapperRef, () => {
+    const wrapperRef = useDetectClickOutside(() => {
         if (!open) {
             if (typeof onClose == "function") {
                 onClose();
