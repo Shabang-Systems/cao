@@ -68,6 +68,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         }
     }, [scheduleOpen]);
 
+    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
     const [today, setToday] = useState(new Date());
 
     useEffect(() => {
@@ -78,14 +79,18 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         return () => clearInterval(ci);
     }, []);
 
-    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
-    let dueSoon =  (moment(task.due) <= 
+    let [dueSoon, setDueSoon] = useState(false);
+    let [overdue, setOverdue] = useState(false);
+    let [deffered, setDeffered] = useState(false);
+
+    useEffect(() => {
+        setDueSoon((moment(task.due) <= 
                     new Date(today.getFullYear(),
                              today.getMonth(),
-                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
-    let overdue =  (moment(task.due) <= today);
-
-    const deffered = (task.start && new Date(task.start) > today);
+                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds())));
+        setOverdue((moment(task.due) <= today));
+        setDeffered((task.start && new Date(task.start) > today));
+    }, [today, task]);
 
     return (
         <div className="task group" ref={wrapperRef}>
