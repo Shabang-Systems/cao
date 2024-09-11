@@ -132,14 +132,6 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
                     }
                     setCode(value);
                 }}
-                onStatistics={({selection: sel, selections, selectedText}) => {
-                    if (!selectedText && selection && selection[0]) {
-                        setSelection(null);
-                    } else if (selectedText && (!selection ||
-                                                selections[0] != selection[0])) {
-                        setSelection([selections[0], sel.ranges[0]]);
-                    } 
-                }}
                 extensions={[
                     EditorView.lineWrapping,
                     indentUnit.of("    "),
