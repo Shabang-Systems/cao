@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, forwardRef } from 'react';
 
 import "./datepicker.css";
 import strings from "@strings";
@@ -9,7 +9,7 @@ import * as chrono from 'chrono-node';
 import moment from "moment";
 import { fromCodePoint } from '@uiw/react-codemirror';
 
-export default function DatePicker({ onDate, onDone, focus, initialDate }) {
+export default forwardRef(function DatePicker({ onDate, onDone, focus, initialDate }, ref1) {
     // TODO will this break during day changes (i.e. 12am?)
     // probably best to have useSelector(today) eventually
     let [ref, setRef] = useState(initialDate ? initialDate : new Date());
@@ -86,7 +86,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     }, [date]);
 
     return (
-        <div className="datepicker">
+        <div className="datepicker" ref={ref1}>
             <div className="datepicker-header">
                 <div onClick={backward}
                      style={{padding: 0, margin: 0}}
@@ -197,4 +197,4 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
             </div>
         </div>
     );
-}
+});

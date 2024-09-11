@@ -71,7 +71,7 @@ pub struct GlobalState {
 
 impl Cao {
     pub async fn read_pool(pool: &SqlitePool) -> Result<Cao> {
-        let tasks: Vec<TaskDescription> = sqlx::query_as("SELECT * FROM tasks ORDER BY captured").fetch_all(pool).await?;
+        let tasks: Vec<TaskDescription> = sqlx::query_as("SELECT * FROM tasks ORDER BY id").fetch_all(pool).await?;
         let scratchpads: Vec<(String, )> = sqlx::query_as("SELECT content FROM scratchpads ORDER BY id").fetch_all(pool).await?;
         let searches: Vec<(sqlx::types::Json<BrowseRequest>, )> = sqlx::query_as("SELECT request FROM searches ORDER BY id").fetch_all(pool).await?;
         let work_slots: Vec<Event> = sqlx::query_as("SELECT * FROM events").fetch_all(pool).await?;
