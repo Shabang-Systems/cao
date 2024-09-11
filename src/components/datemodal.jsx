@@ -14,14 +14,14 @@ export default forwardRef(function DateModal({ onDate, initialDate, onClose }, r
         };
     }
 
-    const wrapperRef = useDetectClickOutside(() => {
-        if (!open) {
+    const wrapperRef = useDetectClickOutside({ onTriggered: () => {
+        if (open) {
             if (typeof onClose == "function") {
                 onClose();
             }
             setOpen(false);
         }
-    });
+    }});
 
     return (
         <div className="datemodal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
