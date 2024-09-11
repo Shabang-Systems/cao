@@ -108,7 +108,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
 
-            <div className="task-action floating-task-action opacity-0 group-hover:opacity-100 transition-opacity" 
+            <div className={`task-action floating-task-action ${hasFocus ? "opacity-1" : "opacity-0" } group-hover:opacity-100 transition-opacity` }
                     onClick={() => {
                         // TODO completing tasks is a bit of a thing so
                         // TODO supporting repeating tasks, etc.
