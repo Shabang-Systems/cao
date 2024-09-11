@@ -7,7 +7,7 @@ pub struct Gap {
     pub end: Option<DateTime<Utc>>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
 pub struct Event {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,

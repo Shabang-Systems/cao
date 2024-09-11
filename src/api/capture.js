@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, current } from '@reduxjs/toolkit';
 import { snapshot } from "@api/utils.js";
 import { invoke } from '@tauri-apps/api/tauri';
 

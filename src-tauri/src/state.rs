@@ -1,12 +1,13 @@
 use futures::FutureExt;
 use serde::{Serialize, Deserialize};
 use std::panic::AssertUnwindSafe;
+use std::str::FromStr;
 use tokio::task::JoinHandle;
 use futures::future::join_all;
 use super::tasks::{core::TaskDescription};
 use super::query::core::BrowseRequest;
 use super::scheduling::{Event, freebusy::find_events};
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use tokio::time::{sleep, Duration};
 use anyhow::{Result};
 use std::sync::Arc;
@@ -60,14 +61,34 @@ pub struct Cao {
 /// Recall, [GlobalState] does **not** leave the Rust backend
 /// and the view controller only gets a JSON snapshot of [Cao]
 pub struct GlobalState {
-    /// registry of the Cao state held in the monitor pattern  
-    pub monitor: Arc<Mutex<Cao>>,
     /// the connection
     pub pool: Arc<RwLock<Option<SqlitePool>>>,
     /// path of the state file
     /// if `None`, it means that we haven't loaded anything
-    /// and hence the monitor should be empty
+    /// and hence the pool should be empty
     pub path: Arc<Mutex<Option<String>>>,
+}
+
+impl Cao {
+    pub async fn read_pool(pool: &SqlitePool) -> Result<Cao> {
+        let tasks: Vec<TaskDescription> = sqlx::query_as("SELECT * FROM tasks ORDER BY captured").fetch_all(pool).await?;
+        let scratchpads: Vec<(String, )> = sqlx::query_as("SELECT content FROM scratchpads ORDER BY id").fetch_all(pool).await?;
+        let searches: Vec<(sqlx::types::Json<BrowseRequest>, )> = sqlx::query_as("SELECT request FROM searches ORDER BY id").fetch_all(pool).await?;
+        let work_slots: Vec<Event> = sqlx::query_as("SELECT * FROM events").fetch_all(pool).await?;
+        let calendars: Vec<(String, )> = sqlx::query_as("SELECT content FROM calendars ORDER BY id").fetch_all(pool).await?;
+        let horizon: (u32,) = sqlx::query_as("SELECT horizon FROM configuration LIMIT 1").fetch_one(pool).await?;
+
+        let cao = Cao {
+            tasks,
+            scratchpads: scratchpads.into_iter().map(|x| x.0).collect(),
+            searches: searches.into_iter().map(|x| x.0.0).collect(),
+            work_slots,
+            calendars: calendars.into_iter().map(|x| x.0).collect(),
+            horizon: horizon.0 as usize
+        };
+
+        Ok(cao)
+    }
 }
 
 /// Public Operatinos
@@ -75,14 +96,19 @@ impl GlobalState {
     pub async fn new() -> Self {
         GlobalState {
             pool: Arc::new(RwLock::new(None)),
-            monitor: Arc::new(Mutex::new(Cao::default())),
-            path: Arc::new(Mutex::new(None)),
+            path: Arc::new(Mutex::new(None))
         }
     }
 
     /// Load an existing file, if it could be serialized/loaded
     pub async fn load(&self, path: &str) -> Result<()> {
-        let pool = SqlitePoolOptions::new().connect(path).await?;
+        let mut path_final = "sqlite://".to_string();
+        path_final.push_str(path);
+        let pool = SqlitePoolOptions::new()
+            .connect_with(
+                SqliteConnectOptions::from_str(&path_final)?
+                    .create_if_missing(true)
+            ).await?;
         sqlx::migrate!("./migrations")
             .run(&pool)
             .await?;
@@ -122,19 +148,16 @@ impl GlobalState {
     }
 
     /// drop something from the system
-    pub fn delete(&self, transaction: &Delete) {
+    pub async fn delete(&self, transaction: &Delete) {
         let _ = match transaction {
             Delete::Task(task) => self.delete_task_(&task),
         };
-        
-        // commit to file
-        let _ = self.save();
     }
 
     /// upsert a particular task description into the system
-    pub fn index(&self, request: &BrowseRequest) -> Result<Vec<TaskDescription>> {
-        let monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
-        let tasks = &monitor.tasks;
+    pub async fn index(&self, request: &BrowseRequest) -> Result<Vec<TaskDescription>> {
+        let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
+        let tasks: Vec<TaskDescription> = sqlx::query_as("SELECT * FROM tasks").fetch_all(&pool).await?;
         let res = request.execute(&tasks)?;
 
         Ok(res.iter().map(|&x| x.clone()).collect::<Vec<TaskDescription>>())
@@ -153,7 +176,7 @@ impl GlobalState {
         let events = find_events(&calendars).await?;
 
         // delete the old events
-        sqlx::query("TRUNCATE TABLE events")
+        sqlx::query("DELETE FROM events")
             .execute(pool).await?;
 
         // pop all events in
@@ -165,7 +188,7 @@ impl GlobalState {
                          .bind(x.is_all_day)
                          .bind(x.name)
                          .execute(pool)
-                 }).collect::<Vec<_>>());
+                 }).collect::<Vec<_>>()).await;
                                
         Ok(())
     }
@@ -215,19 +238,19 @@ impl GlobalState {
 /// Type-specific CRUD Operatinos
 impl GlobalState {
 
-    fn delete_task_(&self, id: &str) {
-        let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
-        let tasks = &mut monitor.tasks;
-        match tasks.iter().position(|x| x.id == id) {
-            Some(idx) => { tasks.remove(idx); },
-            None => (),
-        };
+    async fn delete_task_(&self, id: &str)  -> Result<()> {
+        let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
+        sqlx::query("DELETE FROM tasks WHERE id = ?")
+            .bind(id)
+            .execute(&pool).await?;
+
+        Ok(())
     }
 
     async fn upsert_td_(&self, desc: &TaskDescription) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
         sqlx::query("INSERT OR REPLACE INTO tasks
-                   (id capture content tags rrule priority effort start due schedule captured locked completed)
+                   (id, capture, content, tags, rrule, priority, effort, start, due, schedule, captured, locked, completed)
                    VALUES
                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 .bind(desc.id.clone()).bind(desc.capture.clone())
@@ -244,25 +267,32 @@ impl GlobalState {
 
     async fn set_scratchpad_(&self, pads: &Vec<String>) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
-        sqlx::query("TRUNCATE TABLE scratchpads").execute(&pool).await?;
+        sqlx::query("DELETE FROM scratchpads").execute(&pool).await?;
         let _ = join_all(pads.into_iter()
-                         .map(|x| {
-                             sqlx::query("INSERT INTO scratchpads (content) VALUES (?)")
+                         .enumerate()
+                         .map(|(i, x)| {
+                             sqlx::query("INSERT INTO scratchpads (id,content) VALUES (?,?)")
+                                 .bind(i as u32)
                                  .bind(x)
                                  .execute(&pool)
-                         }).collect::<Vec<_>>());
+                         }).collect::<Vec<_>>()).await;
 
         Ok(())
     }
     async fn set_search_(&self, queries: &Vec<BrowseRequest>) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
-        sqlx::query("TRUNCATE TABLE searches").execute(&pool).await?;
-        let _ = join_all(queries.into_iter()
-                         .map(|x| {
-                             sqlx::query("INSERT INTO searches (request) VALUES (?)")
-                                 .bind(sqlx::types::Json(x))
-                                 .execute(&pool)
-                         }).collect::<Vec<_>>());
+        sqlx::query("DELETE FROM searches").execute(&pool).await?;
+        let _ = queries.into_iter()
+            .enumerate()
+            .map(|(i, x)| { 
+                let pc = pool.clone();
+                async move {
+                    sqlx::query("INSERT INTO searches (id,request) VALUES (?)")
+                        .bind(i as u32)
+                        .bind(sqlx::types::Json(x))
+                        .execute(&pc).await
+                }
+            });
 
         Ok(())
     }
@@ -275,13 +305,18 @@ impl GlobalState {
     }
     async fn set_calendars_(&self, calendars: &Vec<String>) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
-        sqlx::query("TRUNCATE TABLE calendars").execute(&pool).await?;
-        let _ = join_all(calendars.into_iter()
-                         .map(|x| {
-                             sqlx::query("INSERT INTO calendars (content) VALUES (?)")
-                                 .bind(x)
-                                 .execute(&pool)
-                         }).collect::<Vec<_>>());
+        sqlx::query("DELETE FROM calendars").execute(&pool).await?;
+        let _ = calendars.into_iter()
+            .enumerate()
+            .map(|(i,x)| { 
+                let pc = pool.clone();
+                async move {
+                    sqlx::query("INSERT INTO calendars (id,content) VALUES (?,?)")
+                        .bind(i as u32)
+                        .bind(x)
+                        .execute(&pc).await
+                }
+            });
 
         Ok(())
     }

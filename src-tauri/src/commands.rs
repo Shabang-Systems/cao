@@ -1,3 +1,5 @@
+use sqlx::Sqlite;
+
 use super::scheduling::Event;
 use crate::tasks::core::TaskDescription;
 use super::query::core::BrowseRequest;
@@ -7,41 +9,41 @@ use std::result::Result;
 
 /// initialize application state from nothing
 #[tauri::command]
-pub async fn bootstrap(path: String, state: tauri::State<'_, GlobalState>) -> Result<(), String> {
+pub async fn bootstrap(path: String, state: tauri::State<'_, GlobalState>) -> Result<bool, String> {
     match state.load(&path).await {
-        Ok(_) => Ok(()),
-        Err(_) => Err("failed to load file".to_owned())
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
     }
 }
 
 /// load a snapshot of the application state
 #[tauri::command]
-pub async fn load(path: String, state: tauri::State<'_, GlobalState>) -> Result<(), String> {
+pub async fn load(path: String, state: tauri::State<'_, GlobalState>) -> Result<bool, String> {
     match state.load(&path).await {
-        Ok(_) => Ok(()),
-        Err(_) => Err("failed to load file".to_owned())
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
     }
 }
 
 /// get the user's events 
 #[tauri::command]
-pub fn events(state: tauri::State<GlobalState>) -> Vec<Event> {
-    return {
-        let res = {
-            let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
-            monitor.work_slots.clone()
-        };
+pub async fn events(state: tauri::State<'_, GlobalState>) -> Result<Vec<Event>, String> {
+    let pool = state.pool.read().expect("poisoning... TODO!").clone().unwrap();
+    let work_slots: Result<Vec<Event>, String> = match sqlx::query_as::<Sqlite, Event>("SELECT * FROM events").fetch_all(&pool).await {
+        Ok(v) => Ok(v),
+        Err(e) => Err(e.to_string())
+    };
 
-        res
-    }
+    work_slots
 }
 
 /// return a snapshot of the application state
 #[tauri::command]
-pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
-    return {
-        let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
-        (*monitor).clone()
+pub async fn snapshot(state: tauri::State<'_, GlobalState>) -> Result<Cao, String> {
+    let pool = state.pool.read().expect("poisoning... TODO!").clone().unwrap();
+    match Cao::read_pool(&pool).await {
+        Ok(x) => Ok(x),
+        Err(e) => Err(e.to_string())
     }
 }
 
@@ -50,7 +52,7 @@ pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
 pub async fn upsert(transaction: Transaction, state: tauri::State<'_, GlobalState>) -> Result<(), String> {
     match state.upsert(&transaction).await {
         Ok(_) => Ok(()),
-        Err(_) => Err("upsert failed".to_owned())
+        Err(e) => Err(e.to_string())
     }
 }
 
@@ -59,14 +61,14 @@ pub async fn upsert(transaction: Transaction, state: tauri::State<'_, GlobalStat
 pub async fn insert(task: TaskDescription, state: tauri::State<'_, GlobalState>) -> Result<TaskDescription, String> {
     match state.upsert(&Transaction::Task(task.clone())).await {
         Ok(_) => Ok(task),
-        Err(_) => Err("insert failed".to_owned())
+        Err(e) => Err(e.to_string())
     }
 }
 
 /// upsert a task into the database
 #[tauri::command]
-pub fn index(query: BrowseRequest, state: tauri::State<GlobalState>) -> Result<Vec<TaskDescription>, String> {
-    match state.index(&query) {
+pub async fn index(query: BrowseRequest, state: tauri::State<'_, GlobalState>) -> Result<Vec<TaskDescription>, String> {
+    match state.index(&query).await {
         Ok(x) => Ok(x),
         Err(e) => Err(e.to_string())
     }
@@ -74,6 +76,8 @@ pub fn index(query: BrowseRequest, state: tauri::State<GlobalState>) -> Result<V
 
 /// upsert a task into the database
 #[tauri::command]
-pub fn delete(transaction: Delete, state: tauri::State<GlobalState>) {
-    state.delete(&transaction);
+pub async fn delete(transaction: Delete, state: tauri::State<'_, GlobalState>) -> Result<(), ()> {
+    state.delete(&transaction).await;
+
+    Ok(())
 }
