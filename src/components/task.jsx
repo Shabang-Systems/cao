@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useContext } from 'react';
+import { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
 import { edit, remove } from "@api/tasks.js";
 import "./task.css";
 
+import { useDetectClickOutside } from 'react-detect-click-outside';
 import { ConfigContext } from "../contexts.js";
 
 import strings from "@strings";
@@ -11,7 +12,7 @@ import moment from "moment";
 
 import { animated, useSpring } from '@react-spring/web';
 
-import { useOutsideAlerter } from "./utils.js";
+import { useOutsideClick } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
 
@@ -32,13 +33,14 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         config: { mass: 1, friction: 35, tension: 300 }
     });
 
-    const wrapperRef = useRef(null);
     const cm = useRef(null);
-    useOutsideAlerter(wrapperRef, () => {
-        if (!hasFocus) {
+    const focus = useRef(hasFocus);
+
+    const wrapperRef = useDetectClickOutside({ onTriggered: () => {
+        if (hasFocus) {
             setHasFocus(false);
         }
-    });
+    }});
 
     useEffect(() => {
         if (typeof onFocusChange == "function") onFocusChange(hasFocus);
