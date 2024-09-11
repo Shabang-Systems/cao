@@ -14,7 +14,7 @@ fn now() -> DateTime<Utc> {
     Utc::now()
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
 pub struct TaskDescription {
     //// task ID 
     #[doc(hidden)]
@@ -28,7 +28,7 @@ pub struct TaskDescription {
     pub content: String,
     /// tags (MD headers above and inside the content)
     #[serde(default)]
-    pub tags: Vec<String>,
+    pub tags: sqlx::types::Json<Vec<String>>,
     /// RFC5545 recurrence rule
     #[serde(default)]
     pub rrule: Option<String>,
@@ -67,7 +67,7 @@ impl TaskDescription {
             id: Uuid::new_v4().to_string(),
             capture: capture_id,
             content: String::new(),
-            tags: vec![],
+            tags: vec![].into(),
             rrule: None,
             priority: 0,
             effort: 1.0,

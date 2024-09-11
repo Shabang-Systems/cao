@@ -14,7 +14,7 @@ use state::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let state = GlobalState::new();
+    let state = GlobalState::new().await;
     let calendar_listen_handle = state.calendar_listen();
 
         // rock'n'roll

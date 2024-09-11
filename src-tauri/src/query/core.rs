@@ -34,7 +34,7 @@ pub struct OrderRequest {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct QueryRequest {
+pub struct BrowseRequest {
     #[serde(default)]
     pub availability: Availability,
     #[serde(default)]
@@ -47,7 +47,7 @@ pub struct QueryRequest {
     pub query_text: Option<String>,
 }
 
-impl QueryRequest {
+impl BrowseRequest {
     fn compare_fn_dateoptions(main_a: Option<DateTime<Utc>>,
                               main_b: Option<DateTime<Utc>>,
                               backup_a: DateTime<Utc>,
@@ -92,13 +92,13 @@ impl QueryRequest {
         filtered.sort_by(|x, y| {
             match self.order.order {
                 OrderType::Captured => x.captured.timestamp_millis().cmp(&y.captured.timestamp_millis()),
-                OrderType::Start => QueryRequest::compare_fn_dateoptions(
+                OrderType::Start => BrowseRequest::compare_fn_dateoptions(
                     x.start, y.start, x.captured, y.captured
                 ),
-                OrderType::Due => QueryRequest::compare_fn_dateoptions(
+                OrderType::Due => BrowseRequest::compare_fn_dateoptions(
                     x.due, y.due, x.captured, y.captured
                 ),
-                OrderType::Scheduled => QueryRequest::compare_fn_dateoptions(
+                OrderType::Scheduled => BrowseRequest::compare_fn_dateoptions(
                     x.schedule, y.schedule, x.captured, y.captured
                 )
             }
