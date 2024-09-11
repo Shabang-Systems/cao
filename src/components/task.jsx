@@ -119,7 +119,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 <i className={task.completed ? "task-action fa-solid fa-circle-check" : "task-action fa-solid fa-check" } style={{transform: "translateY(-4px)"}} />
             </div>
 
-            <div className="h-full w-[25px] absolute translate-x-[-25px] opacity-0"> </div>
+            <div className="h-full w-[25px] absolute translate-x-[-25px] opacity-0 pointer-events-none"> </div>
 
             
             <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")+(dueSoon && !overdue ? " due-soon" : "")+(overdue ? " overdue" : "")}>
