@@ -32,7 +32,7 @@ fn watch(path: String, write_time: Arc<AtomicU64>, window: Window, load: impl Fn
     let mut watcher = Box::new(notify::recommended_watcher(move |res: Result<NE, _> | {
         match res {
             Ok(ref k) => {
-                if let EventKind::Modify(notify::event::ModifyKind::Data(_)) = k.kind {
+                if let EventKind::Modify(_) = k.kind {
                     let now = match get_time(&p) {
                         Ok(r) => r,
                         Err(_) => 0
