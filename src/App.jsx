@@ -40,7 +40,7 @@ import strings from "@strings";
 
 //// native ////
 import { invoke } from '@tauri-apps/api/tauri';
-
+import { listen } from '@tauri-apps/api/event';
 
 
 function RoutableMain() {
@@ -64,7 +64,14 @@ function RoutableMain() {
             dispatch({type: "global/reindex"});
         }, 60000);
 
-        return () => clearInterval(ci);
+        listen("refresh", (event) => {
+            dispatch(snapshot());
+            dispatch({type: "global/reindex"});
+        });
+
+        return () => {
+            clearInterval(ci);
+        };
     }, []);
 
     return (
