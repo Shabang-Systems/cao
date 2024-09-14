@@ -1,18 +1,19 @@
 use futures::FutureExt;
 use serde::{Serialize, Deserialize};
 use std::panic::AssertUnwindSafe;
+use std::sync::atomic::{AtomicU64};
+use std::time::SystemTime;
 use tokio::task::JoinHandle;
 use super::tasks::{core::TaskDescription};
 use super::query::core::QueryRequest;
 use super::scheduling::{Event, freebusy::find_events};
-
 use tokio::time::{sleep, Duration};
 
 use anyhow::{Result, anyhow};
 use std::fs::File;
 use std::io::prelude::*;
 
-use std::sync::Arc;
+use std::sync::{Arc};
 
 
 use std::sync::Mutex;
@@ -74,16 +75,8 @@ pub struct GlobalState {
     /// if `None`, it means that we haven't loaded anything
     /// and hence the monitor should be empty
     pub path: Arc<Mutex<Option<String>>>,
-}
-
-impl From<tauri::State<'_, GlobalState>> for GlobalState {
-    fn from(value: tauri::State<GlobalState>) -> Self {
-        let state = value.monitor.lock().expect("aaa mutex poisoning TODO");
-        Self {
-            monitor: Arc::new(Mutex::new((*state).clone())),
-            path: Arc::new(Mutex::new(value.path.lock().expect("poisioning TODO").clone()))
-        } 
-    }
+    /// last time we wrote to the file
+    pub write_time: Arc<AtomicU64>,
 }
 
 /// Public Operatinos
@@ -91,7 +84,8 @@ impl GlobalState {
     pub fn new() -> Self {
         GlobalState {
             monitor: Arc::new(Mutex::new(Cao::default())),
-            path: Arc::new(Mutex::new(None))
+            path: Arc::new(Mutex::new(None)),
+            write_time: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -143,11 +137,15 @@ impl GlobalState {
     /// save to the predetermined save path, calls [GlobalState::save_to]
     pub fn save(&self) -> Result<()> {
         let path = self.path
-                     .lock()
-                     .expect("mutex poisinong TODO")
-                     .clone();
-        self.save_to(&path
-                     .ok_or(anyhow!("attempted to write to nonexistant state"))?)
+            .lock()
+            .expect("mutex poisinong TODO")
+            .clone()
+            .ok_or(anyhow!("attempted to write to nonexistant state"))?;
+        self.write_time.store(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs(),
+                              std::sync::atomic::Ordering::Release);
+        let res = self.save_to(&path);
+
+        res
     }
 
     /// save state to path

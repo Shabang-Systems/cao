@@ -67,11 +67,6 @@ const ui = createSlice({
                     horizon: payload
                 };
             })
-            .addCase(snapshot.pending, (state) => {
-                return {
-                    ready: false
-                };
-            })
             .addCase(snapshot.rejected, (state, {error}) => {
                 return {
                     ready: error
