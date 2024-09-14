@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 
 import { abtib } from "@api/tasks.js";
+import { insert } from "@api/tasks.js";
 
 import Task from "@components/task.jsx";
 
@@ -34,6 +35,22 @@ export default function Browser() {
     );
 
     const [searchValue, setSearchValue] = useState("");
+
+    const contextualDispatch = useCallback(() => {
+        let tags = [];
+        if (currentQuery.tags) {
+            tags = currentQuery.tags.map(x => x.trim());
+        }
+        let text = "";
+        if (currentQuery.query_regexp) {
+            text = currentQuery.query_regexp.trim();
+        }
+        dispatch(insert({
+            tags: tags,
+            content: text,
+            completed: currentQuery.availability == "Done"
+        }));
+    });
 
     const executeQuery = useCallback((e) => {
         let text = e.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
@@ -138,6 +155,13 @@ export default function Browser() {
                     </div>
                 </div>
                 <div>
+                    <div className="task-divider"
+                         style={{padding: "0 0 10px 0"}}
+                         onClick={() => {
+                        setJustAbtibd(true);
+                        contextualDispatch();
+                    }}><div className="task-divider-line"></div></div>
+
                     {entries.map((x, indx) => (
                         <div key={x.id}>
                             <Task
@@ -150,9 +174,11 @@ export default function Browser() {
                             }
                         </div>
                     ))}
-                    <div className="task-divider" onClick={() => {
+                    <div className="task-divider"
+                        style={{padding: "10px 0 0 0"}}
+                         onClick={() => {
                         setJustAbtibd(true);
-                        dispatch(abtib([""]));
+                        contextualDispatch();
                     }}><div className="task-divider-line"></div></div>
 
                 </div>

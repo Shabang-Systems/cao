@@ -87,7 +87,10 @@ pub fn load(path: &str, state: tauri::State<GlobalState>, window: Window) -> boo
 
     let c = state.monitor.clone();
 
-    let p = path.to_owned().unwrap();
+    let p = match path.to_owned() {
+        Some(n) => n,
+        None => return false
+    };
     let pc = p.clone();
 
     let load = move | | {
