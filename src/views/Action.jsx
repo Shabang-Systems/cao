@@ -102,78 +102,16 @@ export default function Action({}) {
         dispatch(sh(i));
     });
     const dueSoon = useSelector(createSelector(
-        [(state) => state.tasks.db],
+        [(state) => state.action.dueSoon],
         (res) => {
-            let filtered = res.filter(x => {
-                if (!x.due) return false;
-                if (x.completed) return false;
-                if (new Date(x.start) > today) return false;
-                return true;
-            });
-
-            return [...Array(horizon+1).keys()].map(sel => {
-                return filtered.filter(x => {
-                    let sd = new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate()+sel), 0,0,0);
-
-                    if (sel == 0) {
-                        return (moment(x.due) <= 
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
-                    } else if (sel < horizon) {
-
-                        if (x.schedule) return false;
-                        // otherwise its not due soon but due "on"
-                        let due = new Date(x.due);
-                        return (due.getFullYear() == sd.getFullYear() &&
-                                due.getMonth() == sd.getMonth() &&
-                                due.getDate() == sd.getDate());
-                    } else {
-                        if (x.schedule) return false;
-                        return (moment(x.due) >= sd);
-                    }
-                }).sort((a,b) => new Date(a.due).getTime() -
-                        new Date(b.due).getTime());
-            });
-        }));
-    const dueSoonIDs = dueSoon[0].map(x => x.id);
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+        }
+    ));
     const entries = useSelector(createSelector(
         [(state) => state.action.entries],
         (res) => {
-            let filtered = res.filter(x => {
-                if (!x.schedule) return false;
-                if (dueSoonIDs.includes(x.id)) return false;
-                return true;
-            });
-            return [...Array(horizon+1).keys()].map(sel => {
-                return filtered.filter(x => {
-                    if (sel == 0) {
-                        return (moment(x.schedule) <
-                             new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate())+1, 0,0,0));
-
-                    } else if (sel < horizon) {
-                        return (moment(x.schedule) >=
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+sel), 0,0,0)) &&
-                            (moment(x.schedule) <
-                             new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate()+sel)+1, 0,0,0));
-                    } else {
-                        return (moment(x.schedule) >=
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+horizon), 0,0,0));
-                    }
-                }).map((x) => ({...x, type: "task"}));
-            });
-        },
-        {devModeChecks: {identityFunctionCheck: 'never'}}
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+        }
     ));
 
 

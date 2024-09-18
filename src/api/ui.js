@@ -29,13 +29,15 @@ const ui = createSlice({
     initialState: {
         ready: false,
         horizon: 8,
+        dueSoonDays: 1,
         clock: (new Date()).getTime()
     },
     reducers: {
-        tick: (state, {}) => {
+        tick: (state, {payload}) => {
             return {
                 ...state,
-                clock: (new Date()).getTime()
+                clock: (new Date()).getTime(),
+                dueSoonDays: payload
             }
         }
     },

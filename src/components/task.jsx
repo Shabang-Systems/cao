@@ -31,7 +31,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         marginBottom: hasFocus ? 5 : 0,
         pointerEvents: hasFocus ? "initial": "none",
         from: { maxHeight: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
-        config: { mass: 1, friction: 35, tension: 300 }
+        config: { mass: 1, friction: 35, tension: 400 }
     });
 
     const cm = useRef(null);

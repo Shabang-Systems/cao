@@ -46,6 +46,7 @@ import { listen } from '@tauri-apps/api/event';
 
 function RoutableMain() {
     const logout = useContext(LogoutContext).logout;
+    const ds = useContext(ConfigContext).dueSoonDays;
     const loc = useLocation();
 
     const ready = useSelector((state) => {
@@ -67,8 +68,8 @@ function RoutableMain() {
         }, 60000);
 
         let t = setInterval(() => {
-            dispatch(tick());
-        }, 1000);
+            dispatch(tick(ds));
+        }, 5000);
 
 
         listen("refresh", (event) => {
