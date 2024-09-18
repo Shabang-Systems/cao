@@ -3,7 +3,7 @@ import "./Action.css";
 
 import strings from "@strings";
 
-import { setHorizon } from "@api/store.js";
+import { setHorizon } from "@api/ui.js";
 import { setCalendars } from "@api/events.js";
 import { useDispatch, useSelector } from "react-redux";
 
