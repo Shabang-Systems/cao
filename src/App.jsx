@@ -18,6 +18,7 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { ThemeContext, ConfigContext, LogoutContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
+import { tick } from "@api/ui.js";
 
 //// views ////
 import Capture from "@views/Capture.jsx";
@@ -58,11 +59,17 @@ function RoutableMain() {
     // generate the initial snapshot
     useEffect(() => {
         dispatch(snapshot());
+
         // we also want to update all queries every minute
         // in order to make sure due days/alerts/etc. stay accurate
         let ci = setInterval(() => {
             dispatch({type: "global/reindex"});
         }, 60000);
+
+        let t = setInterval(() => {
+            dispatch(tick());
+        }, 1000);
+
 
         listen("refresh", (event) => {
             dispatch(snapshot());
@@ -71,6 +78,7 @@ function RoutableMain() {
 
         return () => {
             clearInterval(ci);
+            clearInterval(t);
         };
     }, []);
 

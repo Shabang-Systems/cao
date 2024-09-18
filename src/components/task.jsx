@@ -15,6 +15,7 @@ import { animated, useSpring } from '@react-spring/web';
 import { useOutsideClick } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
+import { now } from "@api/ui.js";
 
 import DateModal from "@components/datemodal.jsx";
 
@@ -69,16 +70,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
     }, [scheduleOpen]);
 
     const dueSoonDays = useContext(ConfigContext).dueSoonDays;
-    const [today, setToday] = useState(new Date());
-
-    useEffect(() => {
-        let ci = setInterval(() => {
-            setToday(new Date());
-        }, 5000);
-
-        return () => clearInterval(ci);
-    }, []);
-
+    const today = useSelector(now);
     let [dueSoon, setDueSoon] = useState(false);
     let [overdue, setOverdue] = useState(false);
     let [deffered, setDeffered] = useState(false);

@@ -16,7 +16,7 @@ import "../components/task.css";
 
 import Task from "@components/task.jsx";
 
-import { setHorizon as sh } from "@api/store.js";
+import { setHorizon as sh, now } from "@api/ui.js";
 
 function getGreeting(time) {
     if (time.getHours() < 12) {
@@ -30,8 +30,8 @@ function getGreeting(time) {
 
 export default function Action({}) {
     const horizon = useSelector((state) => state.ui.horizon);
+    const today = useSelector(now);
 
-    const [today, setToday] = useState(new Date());
     const [tasksMode, setTasksMode] = useState(true);
     const nextDays = [...Array(horizon).keys()].concat([-1]);
     const [selection, setSelection] = useState(0);
@@ -199,9 +199,6 @@ export default function Action({}) {
 
     let [justAbtibd, setJustAbtibd] = useState(false);
     useEffect(() => {
-        let ci = setInterval(() => {
-            setToday(new Date());
-        }, 5000);
         dispatch(compute());
 
         let ca = setInterval(() => {
@@ -209,7 +206,6 @@ export default function Action({}) {
         }, 5000);
 
         return () => {
-            clearInterval(ci);
             clearInterval(ca);
         };
     }, []);
