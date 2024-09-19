@@ -5,7 +5,7 @@ use crate::tasks::core::TaskDescription;
 use super::query::core::QueryRequest;
 use super::state::*;
 
-use notify::{event::Event as NE, EventKind};
+use notify::{event::Event as NE};
 use tauri::window::Window;
 
 use std::fs::File;
@@ -31,18 +31,18 @@ fn watch(path: String, write_time: Arc<AtomicU64>, window: Window, load: impl Fn
     // hook a notification daemon
     let mut watcher = Box::new(notify::recommended_watcher(move |res: Result<NE, _> | {
         match res {
-            Ok(ref k) => {
-                if let EventKind::Modify(_) = k.kind {
-                    let now = match get_time(&p) {
-                        Ok(r) => r,
-                        Err(_) => 0
-                    };
-                    let wt = write_time.load(std::sync::atomic::Ordering::SeqCst);
-                    if (now - wt) != 0 {
-                        let _ = load();
-                        refresh();
-                    }
+            Ok(_) => {
+                // if let EventKind::Modify(_) = k.kind {
+                let now = match get_time(&p) {
+                    Ok(r) => r,
+                    Err(_) => 0
+                };
+                let wt = write_time.load(std::sync::atomic::Ordering::SeqCst);
+                if (now - wt) != 0 {
+                    let _ = load();
+                    refresh();
                 }
+                // }
             },
             Err(_) => (),
         }
