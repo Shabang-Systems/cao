@@ -60,41 +60,18 @@ export default function Action({}) {
     ));
 
     const workslots = useSelector(createSelector(
-        [(state) => state.events.entries],
+        [(state) => state.action.workslots],
         (res) => {
-            let tmp = res.filter(x => {
-                let d = new Date(x.start);
-                return (d.getFullYear() == selectionDate.getFullYear() &&
-                        d.getMonth() == selectionDate.getMonth() &&
-                        d.getDate() == selectionDate.getDate() &&
-                        !x.is_all_day
-                    );
-            }).map (x => {
-                let start = moment(x.start);
-                let end = moment(x.end);
-                return {
-                    start,
-                    end,
-                    duration: end.diff(start, "minutes", true),
-                    type: "event",
-                    name: x.name,
-                    // to make the .key prop happy
-                    id: Math.random()
-                };
-            });
-            let seen = {};
-            return tmp.filter(x => {
-                if (seen[x.start+x.end+x.name]) {
-                    return false;
-                } else {
-                    seen[x.start+x.end+x.name] = true;
-                    return true;
-                }
-            });
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
         }
     ));
 
-    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
+    const {dueSoonDays, workHours} = useContext(ConfigContext);
+
+    const [hours, setHours] = useState([...Array(horizon+1).keys()].map(_ => workHours));
+    useEffect(() => {
+        setHours(workslots.map(x => x.map(y => y.duration).reduce((x,y)=>x+y, 0)).map(x => workHours-x/60));
+    }, [workslots]);
 
     const dispatch = useDispatch();
     const setHorizon = useCallback((i) => {
@@ -115,7 +92,7 @@ export default function Action({}) {
     ));
 
 
-    const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots : []).sort((a,b) => {
+    const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots[selection] : []).sort((a,b) => {
         let aTime = null;
         let bTime = null;
 
@@ -138,6 +115,7 @@ export default function Action({}) {
     let [justAbtibd, setJustAbtibd] = useState(false);
     useEffect(() => {
         dispatch(compute());
+        dispatch(getEvents());
 
         let ca = setInterval(() => {
             dispatch(getEvents());
@@ -152,6 +130,7 @@ export default function Action({}) {
         if (allDayEvents.length == 0 || tasksMode) return ""; 
         if (allDayEvents.length == 1) return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents[0];
         if (allDayEvents.length > 1)  return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents.slice(0, -1).join(", ") + " and " + allDayEvents[allDayEvents.length-1];
+        return "";
     })();
     
     return (
@@ -238,6 +217,7 @@ export default function Action({}) {
                 <ul className="captureid-wrapper cursor-pointer">
                     {
                         nextDays.map((x, i) => {
+                            let hl = (entries[i].length+dueSoon[i].length)/hours[i];
                             return (
                                 <div
                                     data-tooltip-id={i < horizon ? "rootp" : "nootp"}
@@ -251,9 +231,14 @@ export default function Action({}) {
                                     )}
                                     onClick={() => setSelection(i)}
                                 >
-                                    <div style={{textAlign: "right", maxWidth: "20px", direction: "rtl"}}>
+                                    <div style={{textAlign: "right", maxWidth: "50px",
+                                                 direction: "rtl", marginRight: 15, transform:"translateY(-5px)"}}>
+                                        {(i < horizon) ?
+                                         <div className="bar-outer"><div  className="bar-inner"
+                                                                         style={{maxHeight: `${hl*20}px`}}></div></div>
+                                         :<></>}
                                         <span className="action-left">{x >= 0 ? strings.DAYS_OF_WEEK_SHORT[(x+today.getDay())%7] : "Future"}</span>
-                                        <span className="action-right">{entries[i].length+dueSoon[i].length}</span>
+                                        <span className="action-right">{(entries[i].length+dueSoon[i].length)}</span>
 
                                     </div>
                                 </div>

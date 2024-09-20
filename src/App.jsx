@@ -198,7 +198,8 @@ function App() {
                     }
                 }}}>
                     <ConfigContext.Provider value={{
-                        dueSoonDays: 1
+                        dueSoonDays: 1,
+                        workHours: 15
                     }}>
                         <Tooltip id="rootp" />
                         <div id="theme-box" className={isDark ? "dark" : ""}>

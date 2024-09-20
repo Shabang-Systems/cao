@@ -4,6 +4,58 @@ import { invoke } from '@tauri-apps/api/tauri';
 
 import moment from "moment";
 import { tick } from './ui';
+import { getEvents } from "./events.js";
+
+const workslots = createAsyncThunk(
+    'action/events',
+
+    async (_, { getState }) => {
+        let state = getState();
+        let tasks = state.tasks.db;
+        let horizon = state.ui.horizon;
+        let today = new Date(state.ui.clock);
+        let dueSoonDays = state.ui.dueSoonDays;
+
+        let workslots = [...Array(horizon+1).keys()].map(sel => {
+            let selectionDate = new Date(today.getFullYear(),
+                                         today.getMonth(),
+                                         (today.getDate()+sel), 0,0,0);
+
+            let tmp = state.events.entries.filter(x => {
+                let d = new Date(x.start);
+                return (d.getFullYear() == selectionDate.getFullYear() &&
+                        d.getMonth() == selectionDate.getMonth() &&
+                        d.getDate() == selectionDate.getDate() &&
+                        !x.is_all_day
+                       );
+            }).map (x => {
+                let start = moment(x.start);
+                let end = moment(x.end);
+                return {
+                    start,
+                    end,
+                    duration: end.diff(start, "minutes", true),
+                    type: "event",
+                    name: x.name,
+                    // to make the .key prop happy
+                    id: Math.random()
+                };
+            });
+            let seen = {};
+            return tmp.filter(x => {
+                if (seen[x.start+x.end+x.name]) {
+                    return false;
+                } else {
+                    seen[x.start+x.end+x.name] = true;
+                    return true;
+                }
+            });
+        });
+
+
+        return { workslots };
+    });
+
 
 const compute = createAsyncThunk(
     'action/dispatch',
@@ -103,22 +155,35 @@ export const actionSlice = createSlice({
     initialState: {
         entries: [],
         dueSoon: [],
+        workslots: [],
     },
     reducers: {
     },
     extraReducers: (builder) => {
         builder
+            .addCase(workslots.rejected, (state, { error }) => {
+                console.error(error);
+            })
             .addCase(compute.rejected, (state, { error }) => {
                 console.error(error);
             })
             .addCase(tick, (state, { payload, asyncDispatch }) => {
                 asyncDispatch(compute());
             })
+            .addCase(workslots.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    ...payload
+                };
+            })
             .addCase(compute.fulfilled, (state, { payload }) => {
                 return {
                     ...state,
                     ...payload
                 };
+            })
+            .addCase(getEvents.fulfilled, (state, { asyncDispatch, payload }) => {
+                asyncDispatch(workslots());
             })
             .addMatcher(
                 (action) => (action.type == "global/reindex"),
@@ -130,6 +195,6 @@ export const actionSlice = createSlice({
 });
 
 export const { } = actionSlice.actions;
-export { compute };
+export { compute, workslots };
 export default actionSlice.reducer;
 

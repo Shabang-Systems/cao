@@ -5,7 +5,8 @@ const ThemeContext = createContext({
 });
 
 const ConfigContext = createContext({
-    "dueSoonDays": 1
+    "dueSoonDays": 1,
+    "workHours": 16
 });
 
 
