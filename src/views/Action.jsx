@@ -66,7 +66,7 @@ export default function Action({}) {
         }
     ));
 
-    const {dueSoonDays, workHours} = useContext(ConfigContext);
+    const {dueSoonDays, workHours, blockSize} = useContext(ConfigContext);
 
     const [hours, setHours] = useState([...Array(horizon+1).keys()].map(_ => workHours));
     useEffect(() => {
@@ -217,7 +217,7 @@ export default function Action({}) {
                 <ul className="captureid-wrapper cursor-pointer">
                     {
                         nextDays.map((x, i) => {
-                            let hl = (entries[i].length+dueSoon[i].length)/hours[i];
+                            let hl = ((entries[i].length+dueSoon[i].length)*blockSize)/hours[i];
                             return (
                                 <div
                                     data-tooltip-id={i < horizon ? "rootp" : "nootp"}

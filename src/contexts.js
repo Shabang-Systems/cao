@@ -6,7 +6,8 @@ const ThemeContext = createContext({
 
 const ConfigContext = createContext({
     "dueSoonDays": 1,
-    "workHours": 16
+    "workHours": 15,
+    "blockSize": 2.5
 });
 
 
