@@ -109,6 +109,9 @@ impl TaskDescription {
             let res = next.unwrap().to_utc();
             self.due = Some(res);
 
+            // make the user schedule it again
+            self.schedule = None;
+
             // if distance exists, move start date as well
             if let Some(d) = distance {
                 self.start = Some(self.due.unwrap().checked_sub_signed(d).unwrap());
