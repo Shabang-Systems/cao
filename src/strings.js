@@ -46,6 +46,7 @@ export default {
         DONE: "Done",
         RESET: "Reset",
         COMPLETE: "Complete Task",
+        REPEAT: "Set Repeating",
         UNCOMPLETE: "Uncomplete Task",
         DELETE: "Delete Task",
         SCHEDULED: "Set Scheduled Date",

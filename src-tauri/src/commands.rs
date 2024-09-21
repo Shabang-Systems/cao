@@ -159,3 +159,9 @@ pub fn index(query: QueryRequest, state: tauri::State<GlobalState>) -> Result<Ve
 pub fn delete(transaction: Delete, state: tauri::State<GlobalState>) {
     state.delete(&transaction);
 }
+
+/// complete a task
+#[tauri::command]
+pub fn complete(id: String, state: tauri::State<GlobalState>) -> Option<TaskDescription> {
+    state.complete(&id)
+}
