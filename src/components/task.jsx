@@ -156,7 +156,7 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 />
 
                 <animated.div className={"task-actions"} style={{...springs}}>
-                    <div className="task-action mr-4" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.REPEAT} data-tooltip-place={"bottom"}
+                    <div className={"task-action mr-4"+(task.rrule ?" focus": "")} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.TOOLTIPS.REPEAT} data-tooltip-place={"bottom"}
                          onClick={() => setRruleOpen(true)}
                     >
                         <i className={"fa-solid fa-repeat"} style={{transform: "translateY(0.5px)"}} />

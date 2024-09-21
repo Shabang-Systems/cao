@@ -85,3 +85,7 @@
 .task-cm.overdue .cm-line {
     color: var(--overdue) !important;
 }
+
+.task-action.focus {
+    color: var(--foreground-color);
+}
