@@ -40,6 +40,14 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
         };
     }
 
+    const rruleBox = useRef(null);
+
+    useEffect(() => {
+        if (open && rruleBox.current) {
+            rruleBox.current.focus();
+        }
+    }, [open]);
+
     const wrapperRef = useDetectClickOutside({ onTriggered: () => {
         if (open) {
             if (typeof onClose == "function") {
@@ -53,7 +61,7 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
     return (
         <div className="datemodal rrule-modal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
             <div className="header">{strings.COMPONENTS__RRULEMODAL_REPEAT}</div>
-            <input autoCorrect="off" className="input" placeholder={strings.COMPONENTS__RRULEMODAL_EVERY} value={textValue} onChange={(e) => {
+            <input ref={rruleBox} autoCorrect="off" className="input" placeholder={strings.COMPONENTS__RRULEMODAL_EVERY} value={textValue} onChange={(e) => {
                 setText(e.target.value);
                 if (changeTimeout.current) {
                     clearTimeout(changeTimeout.current);
