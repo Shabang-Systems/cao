@@ -4,6 +4,8 @@ import "./rrule.css";
 import { useDetectClickOutside } from 'react-detect-click-outside';
 import { RRule } from 'rrule';
 
+import strings from "@strings";
+
 export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }, ref) {
     let [open, setOpen] = useState(false);
     let [textValue, setText] = useState(initialRrule ? RRule.fromString(initialRrule).toText() : "");
@@ -50,8 +52,8 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
 
     return (
         <div className="datemodal rrule-modal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
-            <div className="header">Repeat...</div>
-            <input autoCorrect="off" className="input" placeholder="every so often" value={textValue} onChange={(e) => {
+            <div className="header">{strings.COMPONENTS__RRULEMODAL_REPEAT}</div>
+            <input autoCorrect="off" className="input" placeholder={strings.COMPONENTS__RRULEMODAL_EVERY} value={textValue} onChange={(e) => {
                 setText(e.target.value);
                 if (changeTimeout.current) {
                     clearTimeout(changeTimeout.current);
@@ -66,7 +68,7 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
                     }
                 }, 100);
             }} /> 
-            <div className="hint">{rrule ? rrule.toText() : "no repeating rule"}</div>
+            <div className="hint">{rrule ? rrule.toText() : strings.COMPONENTS__RRULEMODAL_NONE}</div>
         </div>
     );
 });
