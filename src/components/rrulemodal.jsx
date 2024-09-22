@@ -61,7 +61,18 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
     return (
         <div className="datemodal rrule-modal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
             <div className="header">{strings.COMPONENTS__RRULEMODAL_REPEAT}</div>
-            <input ref={rruleBox} autoCorrect="off" className="input" placeholder={strings.COMPONENTS__RRULEMODAL_EVERY} value={textValue} onChange={(e) => {
+            <input ref={rruleBox} autoCorrect="off" className="input" placeholder={strings.COMPONENTS__RRULEMODAL_EVERY} value={textValue}
+
+                   onKeyDown={(e) => {
+                       if (e.key === "Enter") {
+                           setOpen(false);
+                           onClose();
+                       } else if (e.key === "Escape") {
+                           setOpen(false);
+                       }
+                   }}
+
+                   onChange={(e) => {
                 setText(e.target.value);
                 if (changeTimeout.current) {
                     clearTimeout(changeTimeout.current);

@@ -164,7 +164,28 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                         <i className={"fa-solid fa-repeat"} style={{transform: "translateY(0.5px)"}} />
                     </div>
 
+                    <div className={"task-action mr-4"} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.COMPONENTS__TASK_EFFORT[task.effort-1]} data-tooltip-place={"bottom"}
+                         onClick={() => {
+                             if (task.effort == 1) {
+                                 dispatch(edit({id: task.id, effort: 2}));
+                             } else if (task.effort == 2) {
+                                 dispatch(edit({id: task.id, effort: 3}));
+                             } else if (task.effort == 3) {
+                                 dispatch(edit({id: task.id, effort: 1}));
+                             }
+                         }}
+                    >
+                        <i className={
+                            (task.effort == 1) ? "fa-regular fa-circle" :
+                                ((task.effort == 2) ?
+                                 "fa-solid fa-circle-half-stroke" :
+                                 "fa-solid fa-circle")
+                        } style={{transform: "translateY(0.5px)"}} />
+                    </div>
+
+
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
+                         style={{maxWidth: "85px"}}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
                          data-tooltip-content={task.schedule ? moment.utc(task.schedule).format(strings.DATETIME_FORMAT) :
