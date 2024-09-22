@@ -9,7 +9,7 @@ import * as chrono from 'chrono-node';
 import moment from "moment";
 import { fromCodePoint } from '@uiw/react-codemirror';
 
-export default function DatePicker({ onDate, onDone, focus, initialDate }) {
+export default function DatePicker({ onDate, onDone, focus, initialDate, start, end }) {
     // TODO will this break during day changes (i.e. 12am?)
     // probably best to have useSelector(today) eventually
     let [ref, setRef] = useState(initialDate ? initialDate : new Date());
@@ -18,10 +18,15 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     let dateSeries = hydrateCalendar(ref.getFullYear(), ref.getMonth());
     let dateField = useRef(null);
 
+    let ld = useRef(null);
+
     useEffect(() => {
-        setRef(initialDate ? initialDate : new Date());
-        setDate(initialDate);
-        setTimeString(initialDate?moment(initialDate).format(strings.TIME_FORMAT):"");
+        if (!ld.current || (initialDate && (ld.current.getTime() != initialDate.getTime()))) {
+            setDate(initialDate);
+            setRef(initialDate ? initialDate : new Date());
+            setTimeString(initialDate?moment(initialDate).format(strings.TIME_FORMAT):"");
+            ld.current = initialDate;
+        }
     }, [initialDate]);
 
 
@@ -38,11 +43,16 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
 
             let new_date;
 
+            let s = start ? new Date(start) : null;
+            let e = end ? new Date(end) : null;
+
+
+
             // don't store date if the date is entirely implied
             if (nd.impliedValues.day &&
                 nd.impliedValues.month &&
                 nd.impliedValues.year &&
-                !nd.knownValues.weekday) {
+                typeof nd.knownValues.weekday == 'undefined') {
                 let d = date ? date : ref;
                 new_date = new Date(
                     d.getFullYear(),
@@ -54,13 +64,21 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                 );
             } else {
                 new_date = nd_dateobj;
-                setRef(new Date(nd_dateobj.getFullYear(), nd_dateobj.getMonth(), 1));
+                if ((!s || new_date.getTime() > s.getTime()) &&
+                    (!e || new_date.getTime() < e.getTime())) {
+                    setRef(new Date(nd_dateobj.getFullYear(), nd_dateobj.getMonth(), 1));
+                }
             }
+
             let d = date ? date : ref;
-            if (new_date.getTime() == d.getTime()) {
-                onDone(new_date);
+
+            if ((!s || new_date.getTime() > s.getTime()) &&
+                (!e || new_date.getTime() < e.getTime())) {
+                if (new_date.getTime() == d.getTime()) {
+                    onDone(new_date);
+                }
+                setDate(new_date);
             }
-            setDate(new_date);
         } catch (e) {
             console.error(e);
             let formatted = moment(date ? date : ref).format(strings.TIME_FORMAT);
@@ -128,36 +146,79 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
                 {dateSeries[0].map(x =>
                     <div key={x+"pref"}
                          onClick={backward}
-                         className="dategrid-cell diminished prefix">
-                        <div className="dategrid-cell-text">{x}</div>
-                    </div>
-                )}
-                {dateSeries[1].map(x =>
-                    <div key={x}
                          onClick={() => {
                              let nd = date ? date : ref;
                              let res = new Date(ref.getFullYear(),
-                                                ref.getMonth(),
+                                                ref.getMonth()-1,
                                                 x,
                                                 nd.getHours(),
                                                 nd.getMinutes(),
                                                 nd.getSeconds());
-                             setTimeString(moment(res).format(strings.TIME_FORMAT));
-                             setDate(res);
+                             let s = start ? new Date(start) : null;
+                             let e = end ? new Date(end) : null;
+
+                             if ((!s || res.getTime() > s.getTime()) &&
+                                 (!e || res.getTime() < e.getTime())) {
+                                 backward();
+                             }
                          }}
-                         className={"dategrid-cell" +
-                                    (date && (ref.getFullYear() == date.getFullYear() &&
-                                              ref.getMonth() == date.getMonth() &&
-                                              x == date.getDate()) ? " active" : "") +
-                                    ((ref.getFullYear() == (today).getFullYear() &&
-                                      ref.getMonth() == (today).getMonth() &&
-                                      x == (today).getDate()) ? " today" : "")}>
+                         className="dategrid-cell diminished prefix">
                         <div className="dategrid-cell-text">{x}</div>
                     </div>
                 )}
+                {dateSeries[1].map(x => {
+                    let nd = date ? date : ref;
+                    let res = new Date(ref.getFullYear(),
+                                       ref.getMonth(),
+                                       x,
+                                       nd.getHours(),
+                                       nd.getMinutes(),
+                                       nd.getSeconds());
+
+                    let s = start ? new Date(start) : null;
+                    let e = end ? new Date(end) : null;
+
+                    return (
+                        <div key={x}
+                             onClick={() => {
+                                 if ((!s || res.getTime() > s.getTime()) &&
+                                     (!e || res.getTime() < e.getTime())) {
+                                     setTimeString(moment(res).format(strings.TIME_FORMAT));
+                                     setDate(res);
+                                 }
+                             }}
+                             className={"dategrid-cell" +
+                                        (date && (ref.getFullYear() == date.getFullYear() &&
+                                                  ref.getMonth() == date.getMonth() &&
+                                                  x == date.getDate()) ? " active" : "") +
+                                        ((ref.getFullYear() == (today).getFullYear() &&
+                                          ref.getMonth() == (today).getMonth() &&
+                                          x == (today).getDate()) ? " today" : "") +
+                                        (!((!s || res.getTime() > s.getTime()) &&
+                                           (!e || res.getTime() < e.getTime())) ?
+                                         " diminished" : "")}>
+                            <div className={"dategrid-cell-text"}>{x}</div>
+                        </div>
+                    );
+                })}
                 {dateSeries[2].map(x =>
                     <div key={x+"suf"}
-                         onClick={forward}
+                         onClick={() => {
+                             let nd = date ? date : ref;
+                             let res = new Date(ref.getFullYear(),
+                                                ref.getMonth()+1,
+                                                x,
+                                                nd.getHours(),
+                                                nd.getMinutes(),
+                                                nd.getSeconds());
+                             let s = start ? new Date(start) : null;
+                             let e = end ? new Date(end) : null;
+
+                             if ((!s || res.getTime() > s.getTime()) &&
+                                 (!e || res.getTime() < e.getTime())) {
+                                 forward();
+                             }
+                         }}
                          className="dategrid-cell diminished suffix">
                         <div className="dategrid-cell-text">{x}</div>
                     </div>

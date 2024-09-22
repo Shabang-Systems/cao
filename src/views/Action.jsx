@@ -228,7 +228,7 @@ export default function Action({}) {
                                     className={"action-datelabel " + (
                                         i == selection ? "active" : ""
                                     ) + (
-                                        dueSoon[i].length > 0 ? " ds" : ""
+                                        i != horizon && dueSoon[i].length > 0 ? " ds" : ""
                                     )}
                                     onClick={() => setSelection(i)}
                                 >

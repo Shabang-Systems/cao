@@ -100,6 +100,8 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         <div className="task group" ref={wrapperRef}>
             <DateModal
                 initialDate={task.schedule ? new Date(task.schedule) : null}
+                start={task.start}
+                end={task.due}
                 onDate={(d) => {
                     dispatch(edit({id: task.id,
                                    locked: d?true:false, // how to actually cast to bool?
@@ -185,10 +187,10 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
 
 
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
-                         style={{maxWidth: "85px"}}
+                         style={{maxWidth: "90px"}}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
-                         data-tooltip-content={task.schedule ? moment.utc(task.schedule).format(strings.DATETIME_FORMAT) :
+                         data-tooltip-content={task.schedule ? moment(task.schedule).format(strings.DATETIME_FORMAT) :
                                                strings.TOOLTIPS.SCHEDULED}
                          data-tooltip-place={"bottom"}>
                         {task.schedule ?
