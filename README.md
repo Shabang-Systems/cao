@@ -2,7 +2,7 @@
 <hr />
 Next generation task management.
 
-# The App
+## Let's go.
 ![frame](https://github.com/user-attachments/assets/6947a312-d92a-4ab9-967c-9244c7af5d3d)
 
 - **Local First**: the entire app runs off of a JSON; sync it using anything you'd like!
