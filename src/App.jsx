@@ -44,6 +44,21 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 
 
+const warn = console.warn;
+
+function logWarning(...warnings){
+  let showWarning = true;
+  warnings.forEach(warning => {
+    if (warning.includes("UNSAFE_")) showWarning = false;
+    else if (warning.includes("SourceMap")) showWarning = false;
+    else if (warning.includes("DevTools")) showWarning = false;
+  });
+  if(showWarning) warn(...warnings);
+}
+
+
+console.warn  = logWarning;
+
 function RoutableMain() {
     const logout = useContext(LogoutContext).logout;
     const ds = useContext(ConfigContext).dueSoonDays;
@@ -198,7 +213,9 @@ function App() {
                     }
                 }}}>
                     <ConfigContext.Provider value={{
-                        dueSoonDays: 1
+                        dueSoonDays: 1,
+                        workHours: 15,
+                        blockSize: 3,
                     }}>
                         <Tooltip id="rootp" />
                         <div id="theme-box" className={isDark ? "dark" : ""}>

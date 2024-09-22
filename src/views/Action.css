@@ -146,3 +146,23 @@
 .task-holder {
     margin-top: 10px;
 }
+
+.bar-outer {
+    background-color: var(--background-decoration);
+    height: 20px;
+    width: 3px;
+    display: inline-block;
+    position: relative;
+    margin-left: 8px;
+    transform: translateY(7px);
+}
+
+.bar-inner {
+    background-color: var(--foreground-decoration);
+    width: 3px;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    z-index: 1000;
+    bottom: 0;
+}

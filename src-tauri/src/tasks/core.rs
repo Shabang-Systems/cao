@@ -2,6 +2,10 @@ use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc, serde::ts_milliseconds_option};
 use std::default::Default;
+use rrule::{RRuleSet, Tz as RTz};
+use chrono::TimeZone;
+
+use anyhow::Result;
 
 fn one() -> f32 {
     return 1.0;
@@ -78,6 +82,43 @@ impl TaskDescription {
             locked: false,
             completed: false,
         }
+    }
+
+    pub fn complete(&mut self) -> Result<()> {
+        if self.rrule.is_none() || self.due.is_none() {
+            self.completed = !self.completed;
+        } else {
+            // if there is a defer date, compute the distance between defer and due dates
+            let distance = self.start.map(|x| self.due.unwrap().signed_duration_since(x));
+
+            // parse and increment due date
+            let dtstart = self.due.unwrap().format("DTSTART:%Y%m%dT%H%M%SZ\n").to_string();
+            let rrule = format!("{}{}", dtstart, self.rrule.as_ref().unwrap().as_str());
+            let rset: RRuleSet = rrule.parse()?;
+            let cast = RTz::UTC.from_local_datetime(&self.due.unwrap().naive_utc()).unwrap();
+            let cands = rset.after(cast).all(2)
+                .dates.into_iter()
+                .filter(|x| x > &cast)
+                .collect::<Vec<_>>();
+            let next = cands.first();
+            if next.is_none() {
+                self.completed = true;
+                return Ok(());
+            }
+
+            let res = next.unwrap().to_utc();
+            self.due = Some(res);
+
+            // make the user schedule it again
+            self.schedule = None;
+
+            // if distance exists, move start date as well
+            if let Some(d) = distance {
+                self.start = Some(self.due.unwrap().checked_sub_signed(d).unwrap());
+            }
+        }
+
+        Ok(())
     }
 }
    

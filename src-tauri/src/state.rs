@@ -171,6 +171,14 @@ impl GlobalState {
         let _ = self.save();
     }
 
+    /// complete a task
+    pub fn complete(&self, id: &str) -> Option<TaskDescription> {
+        let res = self.complete_task_(id);
+        let _ = self.save();
+
+        res
+    }
+
     /// drop something from the system
     pub fn delete(&self, transaction: &Delete) {
         let _ = match transaction {
@@ -252,6 +260,15 @@ impl GlobalState {
 
 /// Type-specific CRUD Operatinos
 impl GlobalState {
+
+    fn complete_task_(&self, id: &str) -> Option<TaskDescription> {
+        let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
+        let tasks = &mut monitor.tasks;
+        tasks.iter().position(|x| x.id == id).map(|idx| {
+            let _ = tasks[idx].complete();
+            tasks[idx].clone()
+        })
+    }
 
     fn delete_task_(&self, id: &str) {
         let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");

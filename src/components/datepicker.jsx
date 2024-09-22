@@ -18,6 +18,13 @@ export default function DatePicker({ onDate, onDone, focus, initialDate }) {
     let dateSeries = hydrateCalendar(ref.getFullYear(), ref.getMonth());
     let dateField = useRef(null);
 
+    useEffect(() => {
+        setRef(initialDate ? initialDate : new Date());
+        setDate(initialDate);
+        setTimeString(initialDate?moment(initialDate).format(strings.TIME_FORMAT):"");
+    }, [initialDate]);
+
+
     const today = new Date();
 
     const parseDate = useCallback((text) => {

@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
-import { edit, remove } from "@api/tasks.js";
+import { edit, remove, complete } from "@api/tasks.js";
 import "./task.css";
+
+import { RRule } from "rrule";
 
 import { useDetectClickOutside } from 'react-detect-click-outside';
 import { ConfigContext } from "../contexts.js";
@@ -18,6 +20,7 @@ import TagBar from "@components/tagbar.jsx";
 import { now } from "@api/ui.js";
 
 import DateModal from "@components/datemodal.jsx";
+import RRuleModal from "@components/rrulemodal.jsx";
 
 export default function Task( { task, initialFocus, onFocusChange } ) {
     let dispatch = useDispatch();
@@ -68,6 +71,15 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
             scheduleRef.current.setOpen(scheduleOpen);
         }
     }, [scheduleOpen]);
+    const rruleRef = useRef(null);
+    const [rruleOpen, setRruleOpen] = useState(false);
+    useEffect(() => {
+        if (rruleRef.current) {
+            rruleRef.current.setOpen(rruleOpen);
+        }
+    }, [rruleOpen]);
+
+
 
     const dueSoonDays = useContext(ConfigContext).dueSoonDays;
     const today = useSelector(now);
@@ -111,12 +123,19 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
 
+            <RRuleModal
+                initialRrule={task.rrule}
+                onClose={() => setRruleOpen(false)}
+                onRRule={(r) => {
+                    dispatch(edit({id: task.id, rrule: r?r:null}));
+                }}
+                ref={rruleRef} />
+
+
             <div className={`task-action cursor-pointer floating-task-action ${hasFocus ? "opacity-1" : "opacity-0" } group-hover:opacity-100 transition-opacity` }
                  style={{cursor: "pointer !important", zIndex: 100000}}
                     onClick={() => {
-                        // TODO completing tasks is a bit of a thing so
-                        // TODO supporting repeating tasks, etc.
-                        dispatch(edit({id: task.id, completed: !task.completed}));
+                        dispatch(complete({id: task.id}));
                         setHasFocus(false);
                     }}
             >
@@ -139,7 +158,34 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 />
 
                 <animated.div className={"task-actions"} style={{...springs}}>
+                    <div className={"task-action mr-4"+(task.rrule ?" focus": "")} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={task.rrule ? RRule.fromString(task.rrule).toText() :strings.TOOLTIPS.REPEAT} data-tooltip-place={"bottom"}
+                         onClick={() => setRruleOpen(true)}
+                    >
+                        <i className={"fa-solid fa-repeat"} style={{transform: "translateY(0.5px)"}} />
+                    </div>
+
+                    <div className={"task-action mr-4"} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.COMPONENTS__TASK_EFFORT[task.effort-1]} data-tooltip-place={"bottom"}
+                         onClick={() => {
+                             if (task.effort == 1) {
+                                 dispatch(edit({id: task.id, effort: 2}));
+                             } else if (task.effort == 2) {
+                                 dispatch(edit({id: task.id, effort: 3}));
+                             } else if (task.effort == 3) {
+                                 dispatch(edit({id: task.id, effort: 1}));
+                             }
+                         }}
+                    >
+                        <i className={
+                            (task.effort == 1) ? "fa-regular fa-circle" :
+                                ((task.effort == 2) ?
+                                 "fa-solid fa-circle-half-stroke" :
+                                 "fa-solid fa-circle")
+                        } style={{transform: "translateY(0.5px)"}} />
+                    </div>
+
+
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
+                         style={{maxWidth: "85px"}}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
                          data-tooltip-content={task.schedule ? moment.utc(task.schedule).format(strings.DATETIME_FORMAT) :

@@ -50,6 +50,6 @@ export default configureStore({
         action,
         events
     },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat([asyncDispatchMiddleware])
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({serializableCheck: false}).concat([asyncDispatchMiddleware])
 });
 
