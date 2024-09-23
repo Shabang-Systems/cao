@@ -217,8 +217,14 @@ export default function Action({}) {
                 <ul className="captureid-wrapper cursor-pointer">
                     {
                         nextDays.map((x, i) => {
-                            let hl = ((entries[i].map(x => x.effort).reduce((a,b) => a+b, 0)+
+                            let hl;
+                            if (hours[i] > 0) {
+                                hl = ((entries[i].map(x => x.effort).reduce((a,b) => a+b, 0)+
                                        dueSoon[i].map(x => x.effort).reduce((a,b) => a+b, 0))*blockSize)/hours[i];
+                            } else {
+                                hl = 1;
+                            }
+
                             return (
                                 <div
                                     data-tooltip-id={i < horizon ? "rootp" : "nootp"}
