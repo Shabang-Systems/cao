@@ -1,55 +1,39 @@
 {
-    "build": {
-        "beforeDevCommand": "yarn dev",
-        "beforeBuildCommand": "yarn build",
-        "devPath": "http://localhost:1420",
-        "distDir": "../dist"
+  "build": {
+    "beforeDevCommand": "yarn dev",
+    "beforeBuildCommand": "yarn build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "productName": "cao",
+  "mainBinaryName": "cao",
+  "version": "0.0.0",
+  "identifier": "io.shabang.cao",
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": null
     },
-    "package": {
-        "productName": "cao",
-        "version": "0.0.0"
-    },
-    "tauri": {
-        "allowlist": {
-            "all": false,
-            "dialog": {
-                "all": true
-            },
-            "shell": {
-                "all": false,
-                "open": true
-            },
-            "window": {
-                "all": true
-            },
-            "fs": {
-                "exists": true
-            }
-        },
-        "windows": [
-            {
-                "title": "cao",
-                "width": 800,
-                "height": 600,
-                "minWidth": 450,
-                "minHeight": 600,
-                "titleBarStyle": "Overlay"
-            }
-        ],
-        "security": {
-            "csp": null
-        },
-        "bundle": {
-            "active": true,
-            "targets": "all",
-            "identifier": "io.shabang.cao",
-            "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.icns",
-                "icons/icon.ico"
-            ]
-        }
-    }
+    "windows": [
+      {
+        "title": "cao",
+        "width": 800,
+        "height": 600,
+        "minWidth": 450,
+        "minHeight": 600,
+        "titleBarStyle": "Overlay"
+      }
+    ]
+  }
 }

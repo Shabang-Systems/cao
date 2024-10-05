@@ -1,8 +1,8 @@
-use serde::{Serialize, Deserialize};
-use std::{cmp::Ordering, default::Default};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use std::{cmp::Ordering, default::Default};
 
-use chrono::{Utc, DateTime};
+use chrono::{DateTime, Utc};
 
 use anyhow::Result;
 
@@ -48,67 +48,78 @@ pub struct QueryRequest {
 }
 
 impl QueryRequest {
-    fn compare_fn_dateoptions(main_a: Option<DateTime<Utc>>,
-                              main_b: Option<DateTime<Utc>>,
-                              backup_a: DateTime<Utc>,
-                              backup_b: DateTime<Utc>) -> Ordering {
+    fn compare_fn_dateoptions(
+        main_a: Option<DateTime<Utc>>,
+        main_b: Option<DateTime<Utc>>,
+        backup_a: DateTime<Utc>,
+        backup_b: DateTime<Utc>,
+    ) -> Ordering {
         if !main_a.is_none() && !main_b.is_none() {
-            main_a.unwrap().timestamp_millis().cmp(&main_b.unwrap().timestamp_millis())
+            main_a
+                .unwrap()
+                .timestamp_millis()
+                .cmp(&main_b.unwrap().timestamp_millis())
         } else if main_a.is_none() && !main_b.is_none() {
             Ordering::Greater
         } else if main_b.is_none() && !main_a.is_none() {
             Ordering::Less
         } else {
-            backup_a.timestamp_millis().cmp(&backup_b.timestamp_millis())
-       }
+            backup_a
+                .timestamp_millis()
+                .cmp(&backup_b.timestamp_millis())
+        }
     }
 
     /// Use a QueryRequest to filter a list of tasks
-    pub fn execute<'a>(&self, data: &'a[TaskDescription]) -> Result<Vec<&'a TaskDescription>>{
+    pub fn execute<'a>(&self, data: &'a [TaskDescription]) -> Result<Vec<&'a TaskDescription>> {
         let q = match &self.query_regexp {
             Some(x) => Some(Regex::new(&x)?),
-            None => None
+            None => None,
         };
         let today = Utc::now();
-        
-        let mut filtered:Vec<_> = data
+
+        let mut filtered: Vec<_> = data
             .iter()
-            .filter(|x|
-                    self.tags.iter()
+            .filter(|x| {
+                self.tags
+                    .iter()
                     .map(|y| x.tags.contains(y))
-                    .fold(true, |acc, mk| acc && mk))
-            .filter(|x| match &q { Some(y) => !y.captures(&x.content).is_none(), None => true })
+                    .fold(true, |acc, mk| acc && mk)
+            })
+            .filter(|x| match &q {
+                Some(y) => !y.captures(&x.content).is_none(),
+                None => true,
+            })
             .filter(|x| match self.availability {
                 Availability::Incomplete => !x.completed,
-                Availability::Available => 
-                    !x.completed &&
-                    (x.start.is_none() ||
-                     x.start.unwrap() < today),
+                Availability::Available => {
+                    !x.completed && (x.start.is_none() || x.start.unwrap() < today)
+                }
                 Availability::Done => x.completed,
                 Availability::All => true,
             })
             .collect();
 
-        filtered.sort_by(|x, y| {
-            match self.order.order {
-                OrderType::Captured => x.captured.timestamp_millis().cmp(&y.captured.timestamp_millis()),
-                OrderType::Start => QueryRequest::compare_fn_dateoptions(
-                    x.start, y.start, x.captured, y.captured
-                ),
-                OrderType::Due => QueryRequest::compare_fn_dateoptions(
-                    x.due, y.due, x.captured, y.captured
-                ),
-                OrderType::Scheduled => QueryRequest::compare_fn_dateoptions(
-                    x.schedule, y.schedule, x.captured, y.captured
-                )
+        filtered.sort_by(|x, y| match self.order.order {
+            OrderType::Captured => x
+                .captured
+                .timestamp_millis()
+                .cmp(&y.captured.timestamp_millis()),
+            OrderType::Start => {
+                QueryRequest::compare_fn_dateoptions(x.start, y.start, x.captured, y.captured)
+            }
+            OrderType::Due => {
+                QueryRequest::compare_fn_dateoptions(x.due, y.due, x.captured, y.captured)
+            }
+            OrderType::Scheduled => {
+                QueryRequest::compare_fn_dateoptions(x.schedule, y.schedule, x.captured, y.captured)
             }
         });
 
-        if !self.order.ascending { 
+        if !self.order.ascending {
             filtered.reverse();
         }
 
         Ok(filtered)
     }
 }
-

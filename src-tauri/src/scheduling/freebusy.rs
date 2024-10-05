@@ -1,25 +1,23 @@
 //! Read Freebusy Information
-use super::core::{Gap, Event};
-use std::{cmp::Ordering};
-use chrono::{Local, DateTime, TimeZone, Utc};
-use icalendar::{Calendar, CalendarComponent, CalendarDateTime,
-                Component, DatePerhapsTime};
+use super::core::{Event, Gap};
+use chrono::{DateTime, Local, TimeZone, Utc};
+use icalendar::{Calendar, CalendarComponent, CalendarDateTime, Component, DatePerhapsTime};
 use reqwest;
+use std::cmp::Ordering;
 
-use anyhow::{Result, anyhow};
-use futures::future::join_all;
+use anyhow::{anyhow, Result};
 use chrono_tz::Tz;
+use futures::future::join_all;
 
-use rrule::{RRuleError, RRuleSet, Tz as RTz};
 use super::zone_mapping::ZONE_MAPPINGS;
-
+use rrule::{RRuleError, RRuleSet, Tz as RTz};
 
 #[allow(dead_code)]
 async fn load_ical_file(calendar: &str) -> Result<Calendar> {
     let resp = reqwest::get(calendar).await?.text().await?;
     let cal = match resp.parse::<Calendar>() {
         Ok(x) => Ok(x),
-        Err(_) => Err(anyhow!("calendar parse error"))
+        Err(_) => Err(anyhow!("calendar parse error")),
     }?;
 
     Ok(cal)
@@ -27,9 +25,12 @@ async fn load_ical_file(calendar: &str) -> Result<Calendar> {
 
 fn resolve_date_perhaps(dpt: DatePerhapsTime) -> DateTime<Utc> {
     match dpt {
-        DatePerhapsTime::Date(d) => {
-            d.and_hms_opt(0,0,0).unwrap().and_local_timezone(Local).unwrap().to_utc()
-        },
+        DatePerhapsTime::Date(d) => d
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_local_timezone(Local)
+            .unwrap()
+            .to_utc(),
         DatePerhapsTime::DateTime(dt) => match dt {
             CalendarDateTime::Floating(cdt) => cdt.and_utc(),
             CalendarDateTime::Utc(cdt) => cdt,
@@ -37,25 +38,25 @@ fn resolve_date_perhaps(dpt: DatePerhapsTime) -> DateTime<Utc> {
                 // TODO this is WRONG but I didn't know how to parse timezones
                 let tz: Tz = match tzid.parse().ok() {
                     Some(n) => n,
-                    None => localzone::win_zone_to_iana(&tzid, None).unwrap().parse().unwrap()
+                    None => localzone::win_zone_to_iana(&tzid, None)
+                        .unwrap()
+                        .parse()
+                        .unwrap(),
                 };
-                Utc.from_utc_datetime(
-                    &tz.from_local_datetime(&date_time).unwrap().naive_utc()
-                )
+                Utc.from_utc_datetime(&tz.from_local_datetime(&date_time).unwrap().naive_utc())
             }
-        }
+        },
     }
 }
 
-/// given a list of calendars, find possible gaps between 
+/// given a list of calendars, find possible gaps between
 #[allow(dead_code)]
 pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
     // download all the calendars
-    let cals = join_all(
-        calendars
-            .iter()
-            .map(|x| async { load_ical_file(x).await })
-    ).await.into_iter().collect::<Result<Vec<Calendar>>>()?;
+    let cals = join_all(calendars.iter().map(|x| async { load_ical_file(x).await }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<Calendar>>>()?;
 
     // read and coallese events
     let mut events: Vec<Event> = vec![];
@@ -65,24 +66,25 @@ pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
                 if let (Some(start), Some(end)) = (e.get_start(), e.get_end()) {
                     let stringified = e.try_into_string().unwrap();
                     let split = stringified.split("\n");
-                    let filtered = split.filter(|&x| x.split([';', ':'])
-                                                .next().map_or(false, |x|
-                                                                x == "EXDATE" ||
-                                                                x == "RRULE" ||
-                                                                x == "EXRULE" ||
-                                                                x == "DTSTART"))
+                    let filtered = split
+                        .filter(|&x| {
+                            x.split([';', ':']).next().map_or(false, |x| {
+                                x == "EXDATE" || x == "RRULE" || x == "EXRULE" || x == "DTSTART"
+                            })
+                        })
                         .map(|x| x.trim())
                         .collect::<Vec<_>>();
-                    
+
                     let mut filtered_string = filtered.join("\n").to_string();
                     ZONE_MAPPINGS.iter().for_each(|x| {
                         filtered_string = filtered_string.replace(x.windows, x.iana[0]);
                     });
 
-                    let rrule:Result<RRuleSet, RRuleError> = filtered_string.parse();
+                    let rrule: Result<RRuleSet, RRuleError> = filtered_string.parse();
 
                     // ASSUME: Date and DATE is is all day, DateTime and DateTimeTime is not
-                    let is_all_day = matches!(&start, DatePerhapsTime::Date(_)) && matches!(&end, DatePerhapsTime::Date(_));    
+                    let is_all_day = matches!(&start, DatePerhapsTime::Date(_))
+                        && matches!(&end, DatePerhapsTime::Date(_));
                     let start_res = resolve_date_perhaps(start);
                     let end_res = resolve_date_perhaps(end);
                     let duration = start_res - end_res;
@@ -98,16 +100,16 @@ pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
                                     start: true_start.to_utc(),
                                     end: true_end.to_utc(),
                                     is_all_day: is_all_day,
-                                    name: e.get_summary().unwrap_or("").to_string()
+                                    name: e.get_summary().unwrap_or("").to_string(),
                                 })
                             });
-                        },
+                        }
                         None => events.push(Event {
                             start: start_res,
                             end: end_res,
                             is_all_day: is_all_day,
-                            name: e.get_summary().unwrap_or("").to_string()
-                        })
+                            name: e.get_summary().unwrap_or("").to_string(),
+                        }),
                     };
                 }
             }
@@ -115,12 +117,12 @@ pub async fn find_events(calendars: &[String]) -> Result<Vec<Event>> {
     });
 
     // we sort in reverse to be able to pop off the end of the stack
-    events.sort_by(|a,b| a.start.cmp(&b.start));
+    events.sort_by(|a, b| a.start.cmp(&b.start));
 
     Ok(events)
 }
 
-/// given a list of calendars, find possible gaps between 
+/// given a list of calendars, find possible gaps between
 #[allow(dead_code)]
 pub async fn find_availability(calendars: &[String]) -> Result<Vec<Gap>> {
     // download all the events
@@ -135,7 +137,7 @@ pub async fn find_availability(calendars: &[String]) -> Result<Vec<Gap>> {
         if last.end.cmp(&current.start) == Ordering::Greater {
             res.push(Gap {
                 start: current.end,
-                end: Some(last.start)
+                end: Some(last.start),
             });
         }
         last = current;
@@ -146,11 +148,13 @@ pub async fn find_availability(calendars: &[String]) -> Result<Vec<Gap>> {
     // i.e. gap forever into the future
     let last = match res.last() {
         Some(x) => x.end.unwrap(),
-        None => Utc::now()
+        None => Utc::now(),
     };
 
-    res.push(Gap { start: last, end: None } );
+    res.push(Gap {
+        start: last,
+        end: None,
+    });
 
     Ok(res)
 }
-

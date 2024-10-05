@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
-use uuid::Uuid;
-use chrono::{DateTime, Utc, serde::ts_milliseconds_option};
-use std::default::Default;
-use rrule::{RRuleSet, Tz as RTz};
 use chrono::TimeZone;
+use chrono::{serde::ts_milliseconds_option, DateTime, Utc};
+use rrule::{RRuleSet, Tz as RTz};
+use serde::{Deserialize, Serialize};
+use std::default::Default;
+use uuid::Uuid;
 
 use anyhow::Result;
 
@@ -20,7 +20,7 @@ fn now() -> DateTime<Utc> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TaskDescription {
-    //// task ID 
+    //// task ID
     #[doc(hidden)]
     #[serde(default = "uuidify")]
     pub(crate) id: String,
@@ -40,7 +40,7 @@ pub struct TaskDescription {
     #[serde(default)]
     pub priority: u8,
     /// effort of the task, in hours
-    #[serde(default="one")]
+    #[serde(default = "one")]
     pub effort: f32,
     /// when the task is able to be done
     #[serde(default)]
@@ -89,15 +89,26 @@ impl TaskDescription {
             self.completed = !self.completed;
         } else {
             // if there is a defer date, compute the distance between defer and due dates
-            let distance = self.start.map(|x| self.due.unwrap().signed_duration_since(x));
+            let distance = self
+                .start
+                .map(|x| self.due.unwrap().signed_duration_since(x));
 
             // parse and increment due date
-            let dtstart = self.due.unwrap().format("DTSTART:%Y%m%dT%H%M%SZ\n").to_string();
+            let dtstart = self
+                .due
+                .unwrap()
+                .format("DTSTART:%Y%m%dT%H%M%SZ\n")
+                .to_string();
             let rrule = format!("{}{}", dtstart, self.rrule.as_ref().unwrap().as_str());
             let rset: RRuleSet = rrule.parse()?;
-            let cast = RTz::UTC.from_local_datetime(&self.due.unwrap().naive_utc()).unwrap();
-            let cands = rset.after(cast).all(2)
-                .dates.into_iter()
+            let cast = RTz::UTC
+                .from_local_datetime(&self.due.unwrap().naive_utc())
+                .unwrap();
+            let cands = rset
+                .after(cast)
+                .all(2)
+                .dates
+                .into_iter()
                 .filter(|x| x > &cast)
                 .collect::<Vec<_>>();
             let next = cands.first();
@@ -121,7 +132,7 @@ impl TaskDescription {
         Ok(())
     }
 }
-   
+
 impl Default for TaskDescription {
     fn default() -> Self {
         TaskDescription::new(None)

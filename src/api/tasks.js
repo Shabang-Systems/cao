@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { createSelector } from "@reduxjs/toolkit";
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 
 import { snapshot } from "@api/utils.js";
 import * as chrono from 'chrono-node';

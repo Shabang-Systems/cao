@@ -1,7 +1,7 @@
 //// utiltiies ////
 import { useState, useEffect, useCallback, useContext, createContext } from "react";
-import { appWindow } from "@tauri-apps/api/window";
-import { confirm } from '@tauri-apps/api/dialog';
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { confirm } from '@tauri-apps/plugin-dialog';
 
 //// routing ////
 import {
@@ -40,8 +40,9 @@ import "./App.css";
 import strings from "@strings";
 
 //// native ////
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+const appWindow = getCurrentWebviewWindow()
 
 
 const warn = console.warn;

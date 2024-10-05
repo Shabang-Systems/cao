@@ -18,7 +18,10 @@
     "@react-spring/web": "^9.7.4",
     "@reduxjs/toolkit": "^2.2.7",
     "@replit/codemirror-vim": "^6.2.1",
-    "@tauri-apps/api": "^1",
+    "@tauri-apps/api": "^2.0.0-rc.0",
+    "@tauri-apps/plugin-dialog": "~2.0.0-rc",
+    "@tauri-apps/plugin-fs": "~2.0.0-rc",
+    "@tauri-apps/plugin-shell": "~2.0.0-rc",
     "@uiw/codemirror-extensions-events": "^4.23.0",
     "@uiw/codemirror-theme-github": "^4.23.0",
     "@uiw/react-codemirror": "^4.23.0",
@@ -38,7 +41,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1",
+    "@tauri-apps/cli": "^2.0.0-rc.18",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",

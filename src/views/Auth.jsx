@@ -1,9 +1,9 @@
 import strings from "@strings";
 import "./Auth.css";
 
-import { open, save, message } from '@tauri-apps/api/dialog';
-import { exists, BaseDirectory } from '@tauri-apps/api/fs';
-import { invoke } from '@tauri-apps/api/tauri';
+import { open, save, message } from '@tauri-apps/plugin-dialog';
+import { exists, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 
 import moment from 'moment';
 import { useCallback } from "react";

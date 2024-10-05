@@ -1,24 +1,23 @@
+use super::query::core::QueryRequest;
+use super::scheduling::{freebusy::find_events, Event};
+use super::tasks::core::TaskDescription;
 use futures::FutureExt;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::panic::AssertUnwindSafe;
-use std::sync::atomic::{AtomicU64};
+use std::sync::atomic::AtomicU64;
 use std::time::SystemTime;
 use tokio::task::JoinHandle;
-use super::tasks::{core::TaskDescription};
-use super::query::core::QueryRequest;
-use super::scheduling::{Event, freebusy::find_events};
 use tokio::time::{sleep, Duration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use std::fs::File;
 use std::io::prelude::*;
 
-use std::sync::{Arc};
-
+use std::sync::Arc;
 
 use std::sync::Mutex;
 
-use serde_json::{to_string_pretty, from_str};
+use serde_json::{from_str, to_string_pretty};
 
 /// what's the upsert tryin' to 'sert?
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -53,9 +52,8 @@ pub struct Cao {
     pub work_slots: Vec<Event>,
     #[serde(default)]
     pub calendars: Vec<String>,
-    #[serde(default="eight")]
+    #[serde(default = "eight")]
     pub horizon: usize,
-
 }
 
 /// Global shared application state
@@ -96,15 +94,19 @@ impl GlobalState {
             *p = Some(path.to_owned());
 
             let mut m = self.monitor.lock().expect("mutex poisoning TODO");
-            *m = Cao { tasks: vec![], scratchpads: vec![],
-                       searches: vec![], horizon: 8, work_slots: vec![],
-                       calendars: vec![] };
+            *m = Cao {
+                tasks: vec![],
+                scratchpads: vec![],
+                searches: vec![],
+                horizon: 8,
+                work_slots: vec![],
+                calendars: vec![],
+            };
         }
         let mc = self.monitor.clone();
         // we need to fire off a thread to update the calendar info
         tokio::spawn(async move {
             GlobalState::update_calendar(mc).await.unwrap();
-
         });
         let _ = self.save();
     }
@@ -116,7 +118,10 @@ impl GlobalState {
             let mut file = File::open(&path)?;
             let mut buf = String::new();
             let _ = file.read_to_string(&mut buf);
-            from_str::<Arc<Mutex<Cao>>>(&buf)?.lock().expect("poisionng TODO").clone()
+            from_str::<Arc<Mutex<Cao>>>(&buf)?
+                .lock()
+                .expect("poisionng TODO")
+                .clone()
         };
 
         let mut p = self.path.lock().expect("mutex poisoning TODO");
@@ -125,24 +130,28 @@ impl GlobalState {
         let mc = self.monitor.clone();
         // we need to fire off a thread to update the calendar info
         tokio::spawn(async move {
-            GlobalState::update_calendar(mc).await.expect("failed to fetch calendar; is the internet connected?");
-
+            GlobalState::update_calendar(mc)
+                .await
+                .expect("failed to fetch calendar; is the internet connected?");
         });
-
 
         Ok(())
     }
 
-
     /// save to the predetermined save path, calls [GlobalState::save_to]
     pub fn save(&self) -> Result<()> {
-        let path = self.path
+        let path = self
+            .path
             .lock()
             .expect("mutex poisinong TODO")
             .clone()
             .ok_or(anyhow!("attempted to write to nonexistant state"))?;
-        self.write_time.store(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs(),
-                              std::sync::atomic::Ordering::Release);
+        self.write_time.store(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)?
+                .as_secs(),
+            std::sync::atomic::Ordering::Release,
+        );
         let res = self.save_to(&path);
 
         res
@@ -166,7 +175,7 @@ impl GlobalState {
             Transaction::Horizon(horizon) => self.set_horizon_(*horizon),
             Transaction::Calendars(calendars) => self.set_calendars_(calendars),
         }
-        
+
         // commit to file
         let _ = self.save();
     }
@@ -184,7 +193,7 @@ impl GlobalState {
         let _ = match transaction {
             Delete::Task(task) => self.delete_task_(&task),
         };
-        
+
         // commit to file
         let _ = self.save();
     }
@@ -195,7 +204,10 @@ impl GlobalState {
         let tasks = &monitor.tasks;
         let res = request.execute(&tasks)?;
 
-        Ok(res.iter().map(|&x| x.clone()).collect::<Vec<TaskDescription>>())
+        Ok(res
+            .iter()
+            .map(|&x| x.clone())
+            .collect::<Vec<TaskDescription>>())
     }
 
     /// update calendar information for some state of self
@@ -249,18 +261,16 @@ impl GlobalState {
                 let res = AssertUnwindSafe(may_panic).catch_unwind().await;
                 match res {
                     Ok(_) => (),
-                    Err(_) => println!("Failed to read calendar, skipping....")
+                    Err(_) => println!("Failed to read calendar, skipping...."),
                 };
-                sleep(Duration::from_secs(1*60)).await;
-            };
+                sleep(Duration::from_secs(1 * 60)).await;
+            }
         })
     }
 }
 
-
 /// Type-specific CRUD Operatinos
 impl GlobalState {
-
     fn complete_task_(&self, id: &str) -> Option<TaskDescription> {
         let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
         let tasks = &mut monitor.tasks;
@@ -274,7 +284,9 @@ impl GlobalState {
         let mut monitor = self.monitor.lock().expect("aaa mutex poisoning TODO");
         let tasks = &mut monitor.tasks;
         match tasks.iter().position(|x| x.id == id) {
-            Some(idx) => { tasks.remove(idx); },
+            Some(idx) => {
+                tasks.remove(idx);
+            }
             None => (),
         };
     }

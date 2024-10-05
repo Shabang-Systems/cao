@@ -1,11 +1,11 @@
 use super::core::TaskDescription;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::iter::zip;
+use std::rc::Rc;
 
+use chrono::{serde::ts_milliseconds_option, DateTime, Utc};
 use uuid::Uuid;
-use chrono::{DateTime, Utc, serde::ts_milliseconds_option};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DateTimeHelper {
@@ -20,10 +20,10 @@ pub struct DateTimeHelper {
 /// Given a raw capture buffer, parse the structure and tags of a task.
 #[tauri::command]
 pub fn parse_tasks(captured: Vec<&str>, dates: Vec<DateTimeHelper>) -> Vec<TaskDescription> {
-    let tag_stack:Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]));
-    let start_stack:Rc<RefCell<Vec<Option<DateTime<Utc>>>>> = Rc::new(RefCell::new(vec![]));
-    let due_stack:Rc<RefCell<Vec<Option<DateTime<Utc>>>>> = Rc::new(RefCell::new(vec![]));
-    let mut result:Vec<TaskDescription> = vec![];
+    let tag_stack: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]));
+    let start_stack: Rc<RefCell<Vec<Option<DateTime<Utc>>>>> = Rc::new(RefCell::new(vec![]));
+    let due_stack: Rc<RefCell<Vec<Option<DateTime<Utc>>>>> = Rc::new(RefCell::new(vec![]));
+    let mut result: Vec<TaskDescription> = vec![];
     let capture = Some(Uuid::new_v4().to_string());
 
     zip(captured.into_iter(), dates.into_iter()).for_each(|(x, dates)| {
@@ -40,29 +40,36 @@ pub fn parse_tasks(captured: Vec<&str>, dates: Vec<DateTimeHelper>) -> Vec<TaskD
                         ss_handle.borrow_mut().pop();
                         ds_handle.borrow_mut().pop();
                     }
-                    ts_handle.borrow_mut()
+                    ts_handle
+                        .borrow_mut()
                         .push(line.replace("#", "").trim().to_owned());
-                    ss_handle.borrow_mut()
-                        .push(dates.start);
-                    ds_handle.borrow_mut()
-                        .push(dates.end);
-
+                    ss_handle.borrow_mut().push(dates.start);
+                    ds_handle.borrow_mut().push(dates.end);
                 }
             });
         });
 
-        let mut res:TaskDescription = TaskDescription::new(capture.clone());
+        let mut res: TaskDescription = TaskDescription::new(capture.clone());
         res.content = x.to_owned();
         res.tags = tag_stack.borrow().clone();
 
-        res.start = start_stack.borrow()
-            .iter().rev().filter(|&x| x.is_some()).next().and_then(|x| *x);
-        res.due = due_stack.borrow()
-            .iter().rev().filter(|&x| x.is_some()).next().and_then(|x| *x);
+        res.start = start_stack
+            .borrow()
+            .iter()
+            .rev()
+            .filter(|&x| x.is_some())
+            .next()
+            .and_then(|x| *x);
+        res.due = due_stack
+            .borrow()
+            .iter()
+            .rev()
+            .filter(|&x| x.is_some())
+            .next()
+            .and_then(|x| *x);
 
         result.push(res);
     });
 
     result
 }
-

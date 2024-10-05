@@ -7,7 +7,7 @@ import action from "./action.js";
 import events from "./events.js";
 import ui from "./ui.js";
 
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 
 import { snapshot } from "@api/utils.js";
 
