@@ -145,7 +145,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate, start, 
                 )}
                 {dateSeries[0].map(x =>
                     <div key={x+"pref"}
-                         onClick={backward}
+                         /* onClick={backward} */
                          onClick={() => {
                              let nd = date ? date : ref;
                              let res = new Date(ref.getFullYear(),

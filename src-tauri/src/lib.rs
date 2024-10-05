@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 mod commands;
 mod query;
 mod scheduling;
@@ -10,9 +8,9 @@ use futures::future::join_all;
 use state::*;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run()  {
+pub async fn run()  {
     let state = GlobalState::new();
-    // let calendar_listen_handle = state.calendar_listen();
+    let calendar_listen_handle = state.calendar_listen();
 
     // rock'n'roll
     tauri::Builder::default()
@@ -35,5 +33,5 @@ pub fn run()  {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    // let _ = join_all([calendar_listen_handle]).await;
+    let _ = join_all([calendar_listen_handle]).await;
 }
