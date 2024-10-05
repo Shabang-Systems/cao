@@ -7,7 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "fs:allow-exists",
     "core:window:allow-create",
     "core:window:allow-center",
     "core:window:allow-request-user-attention",
@@ -41,13 +40,12 @@
     "core:window:allow-set-ignore-cursor-events",
     "core:window:allow-start-dragging",
     "core:webview:allow-print",
-    "shell:allow-open",
+    "fs:allow-exists",
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:allow-message",
     "dialog:allow-ask",
     "dialog:allow-confirm",
-    "shell:default",
     "dialog:default",
     "fs:default"
   ]
