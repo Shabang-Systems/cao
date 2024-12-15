@@ -16,6 +16,10 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed BOOLEAN DEFAULT FALSE
 );
 
+CREATE INDEX idx_tasks_start ON tasks (start);
+CREATE INDEX idx_tasks_due ON tasks (due);
+CREATE INDEX idx_tasks_schedule ON tasks (schedule);
+
 CREATE TABLE IF NOT EXISTS scratchpads (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT DEFAULT ''
