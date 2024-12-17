@@ -15,7 +15,7 @@ tauri = { version = "2.0.0-rc", features = [] }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1"
 chrono = { version = "0.4.38", features = ["serde"] }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt", "sync"] }
 toml = "0.8.19"
 anyhow = "1.0.86"
 serde-lexpr = "0.1.3"
