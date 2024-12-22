@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, forwardRef } from 'react';
 
 import "./datepicker.css";
 import strings from "@strings";
@@ -111,7 +111,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate, start, 
     }, [date]);
 
     return (
-        <div className="datepicker">
+        <div className="datepicker" ref={ref1}>
             <div className="datepicker-header">
                 <div onClick={backward}
                      style={{padding: 0, margin: 0}}
@@ -265,4 +265,4 @@ export default function DatePicker({ onDate, onDone, focus, initialDate, start, 
             </div>
         </div>
     );
-}
+};

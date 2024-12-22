@@ -51,7 +51,7 @@ pub fn parse_tasks(captured: Vec<&str>, dates: Vec<DateTimeHelper>) -> Vec<TaskD
 
         let mut res: TaskDescription = TaskDescription::new(capture.clone());
         res.content = x.to_owned();
-        res.tags = tag_stack.borrow().clone();
+        res.tags = sqlx::types::Json(tag_stack.borrow().clone());
 
         res.start = start_stack
             .borrow()

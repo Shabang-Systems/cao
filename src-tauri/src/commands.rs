@@ -1,17 +1,14 @@
-use std::{io::Read, path::Path, sync::atomic::AtomicU64, time::SystemTime};
+use std::{path::Path, sync::atomic::AtomicU64, time::SystemTime};
 
-use super::query::core::QueryRequest;
 use super::scheduling::Event;
-use super::state::*;
+use sqlx::Sqlite;
+
 use crate::tasks::core::TaskDescription;
+use super::query::core::BrowseRequest;
+use super::state::*;
 
 use notify::event::Event as NE;
 use tauri::window::Window;
-
-use serde_json::from_str;
-use std::fs::File;
-use std::sync::Mutex;
-
 use tauri::Emitter;
 
 use std::fs::metadata;
@@ -19,6 +16,7 @@ use std::sync::Arc;
 
 use notify::{RecursiveMode, Watcher};
 
+#[allow(dead_code)]
 fn get_time(path: &str) -> anyhow::Result<u64> {
     Ok(metadata(path)?
         .modified()?
@@ -26,6 +24,7 @@ fn get_time(path: &str) -> anyhow::Result<u64> {
         .as_secs())
 }
 
+#[allow(dead_code)]
 fn watch(
     path: String,
     write_time: Arc<AtomicU64>,
@@ -65,111 +64,81 @@ fn watch(
     Box::leak(watcher);
 }
 
+use std::result::Result;
+
 /// initialize application state from nothing
 #[tauri::command]
-pub fn bootstrap(path: &str, state: tauri::State<GlobalState>, window: Window) {
-    state.bootstrap(path);
-    let path = state.path.lock().expect("mutex poisoning TODO");
+pub async fn bootstrap(path: String, state: tauri::State<'_, GlobalState>) -> Result<bool, String> {
 
-    let c = state.monitor.clone();
+    // TODO some kind of onboarding
+    let loaded = state.load(&path).await;
+    match loaded {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
+    }
+    // TODO
+    // watch(p, state.write_time.clone(), window, load);
 
-    let p = path.to_owned().unwrap();
-    let pc = p.clone();
-
-    let load = move || {
-        let mut m = c.lock().expect("poisoning...");
-        *m = {
-            let mut file = File::open(&pc)?;
-            let mut buf = String::new();
-            let _ = file.read_to_string(&mut buf);
-            from_str::<Arc<Mutex<Cao>>>(&buf)?
-                .lock()
-                .expect("poisionng TODO")
-                .clone()
-        };
-
-        Ok(())
-    };
-
-    watch(p, state.write_time.clone(), window, load);
 }
 
-/// load a snapshot of the application state
+
+/// initialize state
 #[tauri::command]
-pub fn load(path: &str, state: tauri::State<GlobalState>, window: Window) -> bool {
-    let loaded = state.load(path).is_ok();
-    let path = state.path.lock().expect("mutex poisoning TODO");
+pub async fn load(path: String, state: tauri::State<'_, GlobalState>) -> Result<bool, String> {
+    let loaded = state.load(&path).await;
+    match loaded {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
+    }
+    // TODO
+    // watch(p, state.write_time.clone(), window, load);
 
-    let c = state.monitor.clone();
-
-    let p = match path.to_owned() {
-        Some(n) => n,
-        None => return false,
-    };
-    let pc = p.clone();
-
-    let load = move || {
-        let mut m = c.lock().expect("poisoning...");
-        *m = {
-            let mut file = File::open(&pc)?;
-            let mut buf = String::new();
-            let _ = file.read_to_string(&mut buf);
-            from_str::<Arc<Mutex<Cao>>>(&buf)?
-                .lock()
-                .expect("poisionng TODO")
-                .clone()
-        };
-
-        Ok(())
-    };
-
-    watch(p, state.write_time.clone(), window, load);
-
-    loaded
 }
 
-/// get the user's events
+/// get the user's events 
 #[tauri::command]
-pub fn events(state: tauri::State<GlobalState>) -> Vec<Event> {
-    return {
-        let res = {
-            let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
-            monitor.work_slots.clone()
-        };
-
-        res
+pub async fn events(state: tauri::State<'_, GlobalState>) -> Result<Vec<Event>, String> {
+    let pool = state.pool.read().expect("poisoning... TODO!").clone().unwrap();
+    let work_slots: Result<Vec<Event>, String> = match sqlx::query_as::<Sqlite, Event>("SELECT * FROM events").fetch_all(&pool).await {
+        Ok(v) => Ok(v),
+        Err(e) => Err(e.to_string())
     };
+
+    work_slots
 }
 
 /// return a snapshot of the application state
 #[tauri::command]
-pub fn snapshot(state: tauri::State<GlobalState>) -> Cao {
-    return {
-        let monitor = state.monitor.lock().expect("mutex poisoning, TODO");
-        (*monitor).clone()
-    };
+pub async fn snapshot(state: tauri::State<'_, GlobalState>) -> Result<Cao, String> {
+    let pool = state.pool.read().expect("poisoning... TODO!").clone().unwrap();
+    match Cao::read_pool(&pool).await {
+        Ok(x) => Ok(x),
+        Err(e) => Err(e.to_string())
+    }
 }
 
 /// upsert an object into the database
 #[tauri::command]
-pub fn upsert(transaction: Transaction, state: tauri::State<GlobalState>) {
-    state.upsert(&transaction);
+pub async fn upsert(transaction: Transaction, state: tauri::State<'_, GlobalState>) -> Result<(), String> {
+    match state.upsert(&transaction).await {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.to_string())
+    }
 }
 
 /// insert a **task** (only!) into the database
 #[tauri::command]
-pub fn insert(task: TaskDescription, state: tauri::State<GlobalState>) -> TaskDescription {
-    state.upsert(&Transaction::Task(task.clone()));
-    task
+pub async fn insert(task: TaskDescription, state: tauri::State<'_, GlobalState>) -> Result<TaskDescription, String> {
+    match state.upsert(&Transaction::Task(task.clone())).await {
+        Ok(_) => Ok(task),
+        Err(e) => Err(e.to_string())
+    }
 }
 
 /// upsert a task into the database
 #[tauri::command]
-pub fn index(
-    query: QueryRequest,
-    state: tauri::State<GlobalState>,
-) -> Result<Vec<TaskDescription>, String> {
-    match state.index(&query) {
+pub async fn index(query: BrowseRequest, state: tauri::State<'_, GlobalState>) -> Result<Vec<TaskDescription>, String> {
+    match state.index(&query).await {
         Ok(x) => Ok(x),
         Err(e) => Err(e.to_string()),
     }
@@ -177,12 +146,15 @@ pub fn index(
 
 /// upsert a task into the database
 #[tauri::command]
-pub fn delete(transaction: Delete, state: tauri::State<GlobalState>) {
-    state.delete(&transaction);
+pub async fn delete(transaction: Delete, state: tauri::State<'_, GlobalState>) -> Result<(), ()> {
+    state.delete(&transaction).await;
+
+    Ok(())
 }
 
 /// complete a task
 #[tauri::command]
-pub fn complete(id: String, state: tauri::State<GlobalState>) -> Option<TaskDescription> {
-    state.complete(&id)
+pub async fn complete(id: String, state: tauri::State<'_, GlobalState>) -> Result<TaskDescription, ()> {
+    let res = state.complete(&id).await.ok_or(());
+    res
 }

@@ -25,8 +25,8 @@ export default function Auth( { onAuth } ) {
     const openCao = useCallback(async () => {
         let res = await open({
             filters: [{
-                name: "JSON",
-                extensions: ['json']
+                name: "cao",
+                extensions: ['cao']
             }],
             multiple: false,
         });
@@ -46,8 +46,8 @@ export default function Auth( { onAuth } ) {
     const bootstrapCao = useCallback(async () => {
         let res = await save({
             filters: [{
-                name: "JSON",
-                extensions: ['json']
+                name: "cao",
+                extensions: ['cao']
             }],
             multiple: false,
         });
