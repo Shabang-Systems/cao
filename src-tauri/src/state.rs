@@ -92,7 +92,7 @@ impl Cao {
 
 /// Public Operatinos
 impl GlobalState {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         GlobalState {
             pool: Arc::new(RwLock::new(None)),
             path: Arc::new(Mutex::new(None))

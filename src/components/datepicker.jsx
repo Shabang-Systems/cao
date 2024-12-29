@@ -111,7 +111,7 @@ export default function DatePicker({ onDate, onDone, focus, initialDate, start, 
     }, [date]);
 
     return (
-        <div className="datepicker" ref={ref1}>
+        <div className="datepicker">
             <div className="datepicker-header">
                 <div onClick={backward}
                      style={{padding: 0, margin: 0}}

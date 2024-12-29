@@ -5,6 +5,7 @@ mod state;
 mod tasks;
 
 use state::*;
+use tauri::{Builder, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run()  {
@@ -13,21 +14,19 @@ pub fn run()  {
     // let calendar_listen_handle = state.calendar_listen();
 
     // rock'n'roll
-    tauri::Builder::default()
-       // .setup(|_| {
-        //     tauri::async_runtime::spawn(async move {
-        //         // let _ = join_all([calendar_listen_handle]).await;
-        //     });
+    Builder::default()
+       .setup(|app| {
+           app.manage(state);
+            // tauri::async_runtime::spawn(async move {
+            //     // let _ = join_all([calendar_listen_handle]).await;
+            // });
 
-        //     Ok(())
-        // })
-
-        .manage(state)
+            Ok(())
+        })
 
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
 
- 
         .invoke_handler(tauri::generate_handler![
             tasks::parse_tasks,
             commands::snapshot,

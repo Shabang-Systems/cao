@@ -139,15 +139,15 @@ impl BrowseRequest {
         // Just get the sql query response
         let today = format!("{}", Utc::now().format("%+"));
         let query = self.search_query();
-        println!("query: {:?}", query);
+        // println!("query: {:?}", query);
         let mut query_as = sqlx::query_as(&query);
         if self.availability == Availability::Available {
-            println!("bound {:?}", today);
+            // println!("bound {:?}", today);
             query_as = query_as.bind(today);
         }
         for tag in self.tags.iter() {
             let tag_percent = format!("%{}%", tag);
-            println!("bound {:?}", tag_percent);
+            // println!("bound {:?}", tag_percent);
             query_as = query_as.bind(tag_percent);
         }
         let mut sql_filtered: Vec<TaskDescription> = query_as.fetch_all(pool).await?;

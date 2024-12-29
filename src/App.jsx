@@ -42,7 +42,7 @@ import strings from "@strings";
 //// native ////
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWebviewWindow();
 
 
 const warn = console.warn;
