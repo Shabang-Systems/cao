@@ -167,15 +167,17 @@ const router = createBrowserRouter([
 
 
 function App() {
-    const [isDark, setIsDark] = useState(false);
+    const [isDark, setIsDark] = useState(true);
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         appWindow.theme().then((x) => {
-            setIsDark(x == "dark");
+            // setIsDark(x == "dark");
+            setIsDark(true);
         });
         const unlistenFuture = appWindow.onThemeChanged(({ payload: theme }) => {
-            setIsDark(theme == "dark");
+            // setIsDark(theme == "dark");
+            setIsDark(true);
         });
 
         let workspace = localStorage.getItem("cao__workspace");
@@ -203,7 +205,7 @@ function App() {
     return (
         <Provider store={store}>
             <ThemeContext.Provider value={{
-                dark: isDark
+                dark: true
             }}>
                 <LogoutContext.Provider value={{logout: async () => {
                     const confirmed = await confirm('', 'Do you want to logout?');
