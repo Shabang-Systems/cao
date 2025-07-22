@@ -16,7 +16,7 @@ import "../components/task.css";
 
 import Task from "@components/task.jsx";
 
-import { setHorizon as sh } from "@api/store.js";
+import { setHorizon as sh, now } from "@api/ui.js";
 
 function getGreeting(time) {
     if (time.getHours() < 12) {
@@ -30,8 +30,8 @@ function getGreeting(time) {
 
 export default function Action({}) {
     const horizon = useSelector((state) => state.ui.horizon);
+    const today = useSelector(now);
 
-    const [today, setToday] = useState(new Date());
     const [tasksMode, setTasksMode] = useState(true);
     const nextDays = [...Array(horizon).keys()].concat([-1]);
     const [selection, setSelection] = useState(0);
@@ -43,41 +43,35 @@ export default function Action({}) {
     const selectionDate = new Date(today.getFullYear(),
                                    today.getMonth(),
                                    (today.getDate()+selection), 0,0,0);
-
-    const workslots = useSelector(createSelector(
+    
+    const allDayEvents = useSelector(createSelector(
         [(state) => state.events.entries],
         (res) => {
             let tmp = res.filter(x => {
                 let d = new Date(x.start);
                 return (d.getFullYear() == selectionDate.getFullYear() &&
                         d.getMonth() == selectionDate.getMonth() &&
-                        d.getDate() == selectionDate.getDate());
-            }).map (x => {
-                let start = moment(x.start);
-                let end = moment(x.end);
-                return {
-                    start,
-                    end,
-                    duration: end.diff(start, "minutes", true),
-                    type: "event",
-                    name: x.name,
-                    // to make the .key prop happy
-                    id: Math.random()
-                };
-            });
-            let seen = {};
-            return tmp.filter(x => {
-                if (seen[x.start+x.end+x.name]) {
-                    return false;
-                } else {
-                    seen[x.start+x.end+x.name] = true;
-                    return true;
-                }
-            });
+                        d.getDate() == selectionDate.getDate() &&
+                        x.is_all_day
+                    );
+            }).map (x => x.name);
+            return tmp;
         }
     ));
 
-    const dueSoonDays = useContext(ConfigContext).dueSoonDays;
+    const workslots = useSelector(createSelector(
+        [(state) => state.action.workslots],
+        (res) => {
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+        }
+    ));
+
+    const {dueSoonDays, workHours, blockSize} = useContext(ConfigContext);
+
+    const [hours, setHours] = useState([...Array(horizon+1).keys()].map(_ => workHours));
+    useEffect(() => {
+        setHours(workslots.map(x => x.map(y => y.duration).reduce((x,y)=>x+y, 0)).map(x => workHours-x/60));
+    }, [workslots]);
 
     const dispatch = useDispatch();
     const setHorizon = useCallback((i) => {
@@ -85,82 +79,20 @@ export default function Action({}) {
         dispatch(sh(i));
     });
     const dueSoon = useSelector(createSelector(
-        [(state) => state.tasks.db],
+        [(state) => state.action.dueSoon],
         (res) => {
-            let filtered = res.filter(x => {
-                if (!x.due) return false;
-                if (x.completed) return false;
-                if (new Date(x.start) > today) return false;
-                return true;
-            });
-
-            return [...Array(horizon+1).keys()].map(sel => {
-                return filtered.filter(x => {
-                    let sd = new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate()+sel), 0,0,0);
-
-                    if (sel == 0) {
-                        return (moment(x.due) <= 
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
-                    } else if (sel < horizon) {
-
-                        if (x.schedule) return false;
-                        // otherwise its not due soon but due "on"
-                        let due = new Date(x.due);
-                        return (due.getFullYear() == sd.getFullYear() &&
-                                due.getMonth() == sd.getMonth() &&
-                                due.getDate() == sd.getDate());
-                    } else {
-                        if (x.schedule) return false;
-                        return (moment(x.due) >= sd);
-                    }
-                }).sort((a,b) => new Date(a.due).getTime() -
-                        new Date(b.due).getTime());
-            });
-        }));
-    const dueSoonIDs = dueSoon[0].map(x => x.id);
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+        }
+    ));
     const entries = useSelector(createSelector(
         [(state) => state.action.entries],
         (res) => {
-            let filtered = res.filter(x => {
-                if (!x.schedule) return false;
-                if (dueSoonIDs.includes(x.id)) return false;
-                return true;
-            });
-            return [...Array(horizon+1).keys()].map(sel => {
-                return filtered.filter(x => {
-                    if (sel == 0) {
-                        return (moment(x.schedule) <
-                             new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate())+1, 0,0,0));
-
-                    } else if (sel < horizon) {
-                        return (moment(x.schedule) >=
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+sel), 0,0,0)) &&
-                            (moment(x.schedule) <
-                             new Date(today.getFullYear(),
-                                      today.getMonth(),
-                                      (today.getDate()+sel)+1, 0,0,0));
-                    } else {
-                        return (moment(x.schedule) >=
-                                new Date(today.getFullYear(),
-                                         today.getMonth(),
-                                         (today.getDate()+horizon), 0,0,0));
-                    }
-                }).map((x) => ({...x, type: "task"}));
-            });
-        },
-        {devModeChecks: {identityFunctionCheck: 'never'}}
+            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+        }
     ));
 
 
-    const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots : []).sort((a,b) => {
+    const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots[selection] : []).sort((a,b) => {
         let aTime = null;
         let bTime = null;
 
@@ -182,20 +114,24 @@ export default function Action({}) {
 
     let [justAbtibd, setJustAbtibd] = useState(false);
     useEffect(() => {
-        let ci = setInterval(() => {
-            setToday(new Date());
-        }, 5000);
         dispatch(compute());
+        dispatch(getEvents());
 
         let ca = setInterval(() => {
             dispatch(getEvents());
         }, 5000);
 
         return () => {
-            clearInterval(ci);
             clearInterval(ca);
         };
     }, []);
+
+    const events_str = (() => {
+        if (allDayEvents.length == 0 || tasksMode) return ""; 
+        if (allDayEvents.length == 1) return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents[0];
+        if (allDayEvents.length > 1)  return ". " + strings.VIEWS__ACTION_TODAY_IS + " " + allDayEvents.slice(0, -1).join(", ") + " and " + allDayEvents[allDayEvents.length-1];
+        return "";
+    })();
     
     return (
         <div>
@@ -203,7 +139,7 @@ export default function Action({}) {
                 <div className="greeting">
                     <div className="greeting-head">{getGreeting(today)},</div>
                     {(selection == 0) ?
-                     <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}</div>:
+                     <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}{events_str}</div>:
                      <div className="subgreeting">{strings.VIEWS__ACTION_YOUR_SCHEDULE}{selection < horizon ? moment(selectionDate).format(strings.DATE_FORMAT_LONG): strings.VIEWS__ACTION_THE_FUTURE}</div>}
                 </div>
                 <div style={{marginRight: "60px", marginLeft: "-6px", marginTop: "20px"}}>
@@ -281,6 +217,14 @@ export default function Action({}) {
                 <ul className="captureid-wrapper cursor-pointer">
                     {
                         nextDays.map((x, i) => {
+                            let hl;
+                            if (hours[i] > 0) {
+                                hl = ((entries[i].map(x => x.effort).reduce((a,b) => a+b, 0)+
+                                       dueSoon[i].map(x => x.effort).reduce((a,b) => a+b, 0))*blockSize)/hours[i];
+                            } else {
+                                hl = 1;
+                            }
+
                             return (
                                 <div
                                     data-tooltip-id={i < horizon ? "rootp" : "nootp"}
@@ -290,13 +234,18 @@ export default function Action({}) {
                                     className={"action-datelabel " + (
                                         i == selection ? "active" : ""
                                     ) + (
-                                        dueSoon[i].length > 0 ? " ds" : ""
+                                        i != horizon && dueSoon[i].length > 0 ? " ds" : ""
                                     )}
                                     onClick={() => setSelection(i)}
                                 >
-                                    <div style={{textAlign: "right", maxWidth: "20px", direction: "rtl"}}>
+                                    <div style={{textAlign: "right", maxWidth: "50px",
+                                                 direction: "rtl", marginRight: 15, transform:"translateY(-5px)"}}>
+                                        {(i < horizon) ?
+                                         <div className="bar-outer"><div  className="bar-inner"
+                                                                         style={{maxHeight: `${hl*20}px`}}></div></div>
+                                         :<></>}
                                         <span className="action-left">{x >= 0 ? strings.DAYS_OF_WEEK_SHORT[(x+today.getDay())%7] : "Future"}</span>
-                                        <span className="action-right">{entries[i].length+dueSoon[i].length}</span>
+                                        <span className="action-right">{(entries[i].length+dueSoon[i].length)}</span>
 
                                     </div>
                                 </div>

@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect, useContext } from 'react';
+import { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Editor from '@components/editor.jsx';
-import { edit, remove } from "@api/tasks.js";
+import { edit, remove, complete } from "@api/tasks.js";
 import "./task.css";
 
+import { RRule } from "rrule";
+
+import { useDetectClickOutside } from 'react-detect-click-outside';
 import { ConfigContext } from "../contexts.js";
 
 import strings from "@strings";
@@ -11,11 +14,13 @@ import moment from "moment";
 
 import { animated, useSpring } from '@react-spring/web';
 
-import { useOutsideAlerter } from "./utils.js";
+import { useOutsideClick } from "./utils.js";
 
 import TagBar from "@components/tagbar.jsx";
+import { now } from "@api/ui.js";
 
 import DateModal from "@components/datemodal.jsx";
+import RRuleModal from "@components/rrulemodal.jsx";
 
 export default function Task( { task, initialFocus, onFocusChange } ) {
     let dispatch = useDispatch();
@@ -29,12 +34,17 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
         marginBottom: hasFocus ? 5 : 0,
         pointerEvents: hasFocus ? "initial": "none",
         from: { maxHeight: 0, opacity:0, paddingTop: 0, marginBottom: 0, pointerEvents: "initial" },
-        config: { mass: 1, friction: 35, tension: 300 }
+        config: { mass: 1, friction: 35, tension: 400 }
     });
 
-    const wrapperRef = useRef(null);
     const cm = useRef(null);
-    useOutsideAlerter(wrapperRef, () => setHasFocus(false));
+    const focus = useRef(hasFocus);
+
+    const wrapperRef = useDetectClickOutside({ onTriggered: () => {
+        if (hasFocus) {
+            setHasFocus(false);
+        }
+    }});
 
     useEffect(() => {
         if (typeof onFocusChange == "function") onFocusChange(hasFocus);
@@ -61,30 +71,37 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
             scheduleRef.current.setOpen(scheduleOpen);
         }
     }, [scheduleOpen]);
-
-    const [today, setToday] = useState(new Date());
-
+    const rruleRef = useRef(null);
+    const [rruleOpen, setRruleOpen] = useState(false);
     useEffect(() => {
-        let ci = setInterval(() => {
-            setToday(new Date());
-        }, 5000);
+        if (rruleRef.current) {
+            rruleRef.current.setOpen(rruleOpen);
+        }
+    }, [rruleOpen]);
 
-        return () => clearInterval(ci);
-    }, []);
+
 
     const dueSoonDays = useContext(ConfigContext).dueSoonDays;
-    let dueSoon =  (moment(task.due) <= 
+    const today = useSelector(now);
+    let [dueSoon, setDueSoon] = useState(false);
+    let [overdue, setOverdue] = useState(false);
+    let [deffered, setDeffered] = useState(false);
+
+    useEffect(() => {
+        setDueSoon((moment(task.due) <= 
                     new Date(today.getFullYear(),
                              today.getMonth(),
-                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
-    let overdue =  (moment(task.due) <= today);
-
-    const deffered = (task.start && new Date(task.start) > today);
+                             (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds())));
+        setOverdue((moment(task.due) <= today));
+        setDeffered((task.start && new Date(task.start) > today));
+    }, [today, task]);
 
     return (
-        <div className="task" ref={wrapperRef}>
+        <div className="task group" ref={wrapperRef}>
             <DateModal
                 initialDate={task.schedule ? new Date(task.schedule) : null}
+                start={task.start}
+                end={task.due}
                 onDate={(d) => {
                     dispatch(edit({id: task.id,
                                    locked: d?true:false, // how to actually cast to bool?
@@ -107,6 +124,29 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 }}
                 onClose={() => setDeferOpen(false)}
                 ref={deferRef} />
+
+            <RRuleModal
+                initialRrule={task.rrule}
+                onClose={() => setRruleOpen(false)}
+                onRRule={(r) => {
+                    dispatch(edit({id: task.id, rrule: r?r:null}));
+                }}
+                ref={rruleRef} />
+
+
+            <div className={`task-action cursor-pointer floating-task-action ${hasFocus ? "opacity-1" : "opacity-0" } group-hover:opacity-100 transition-opacity` }
+                 style={{cursor: "pointer !important", zIndex: 100000}}
+                    onClick={() => {
+                        dispatch(complete({id: task.id}));
+                        setHasFocus(false);
+                    }}
+            >
+                <i className={task.completed ? "task-action fa-solid fa-circle-check" : "task-action fa-solid fa-check" } style={{transform: "translateY(-4px)"}} />
+            </div>
+
+            <div className="h-full w-[25px] absolute translate-x-[-25px] opacity-0 pointer-events-none"> </div>
+
+            
             <div className={"task-cm"+(task.start && deffered ? " deferred" : "")+(task.completed ? " completed" : "")+(dueSoon && !overdue ? " due-soon" : "")+(overdue ? " overdue" : "")}>
                 <Editor
                     strike={task.completed}
@@ -120,20 +160,37 @@ export default function Task( { task, initialFocus, onFocusChange } ) {
                 />
 
                 <animated.div className={"task-actions"} style={{...springs}}>
-                    <div className="task-action" data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={task.completed ? strings.TOOLTIPS.UNCOMPLETE : strings.TOOLTIPS.COMPLETE} data-tooltip-place={"bottom"}
+                    <div className={"task-action mr-4"+(task.rrule ?" focus": "")} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={task.rrule ? RRule.fromString(task.rrule).toText() :strings.TOOLTIPS.REPEAT} data-tooltip-place={"bottom"}
+                         onClick={() => setRruleOpen(true)}
+                    >
+                        <i className={"fa-solid fa-repeat"} style={{transform: "translateY(0.5px)"}} />
+                    </div>
+
+                    <div className={"task-action mr-4"} data-tooltip-id={hasFocus? "rootp" : "notp"}  data-tooltip-content={strings.COMPONENTS__TASK_EFFORT[task.effort-1]} data-tooltip-place={"bottom"}
                          onClick={() => {
-                             // TODO completing tasks is a bit of a thing so
-                             // TODO supporting repeating tasks, etc.
-                             dispatch(edit({id: task.id, completed: !task.completed}));
-                             setHasFocus(false);
+                             if (task.effort == 1) {
+                                 dispatch(edit({id: task.id, effort: 2}));
+                             } else if (task.effort == 2) {
+                                 dispatch(edit({id: task.id, effort: 3}));
+                             } else if (task.effort == 3) {
+                                 dispatch(edit({id: task.id, effort: 1}));
+                             }
                          }}
                     >
-                        <i className={task.completed ? "task-action fa-solid fa-circle-check" : "task-action fa-solid fa-check" } style={{transform: "translateY(0.5px)"}} />
+                        <i className={
+                            (task.effort == 1) ? "fa-regular fa-circle" :
+                                ((task.effort == 2) ?
+                                 "fa-solid fa-circle-half-stroke" :
+                                 "fa-solid fa-circle")
+                        } style={{transform: "translateY(0.5px)"}} />
                     </div>
+
+
                     <div className={"task-action pr-5" + (scheduleOpen ? " accent": "")}
+                         style={{maxWidth: "90px"}}
                          onClick={() => setScheduleOpen(true)}
                          data-tooltip-id={hasFocus? "rootp" : "notp"}
-                         data-tooltip-content={task.schedule ? moment.utc(task.schedule).format(strings.DATETIME_FORMAT) :
+                         data-tooltip-content={task.schedule ? moment(task.schedule).format(strings.DATETIME_FORMAT) :
                                                strings.TOOLTIPS.SCHEDULED}
                          data-tooltip-place={"bottom"}>
                         {task.schedule ?

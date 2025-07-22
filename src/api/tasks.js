@@ -88,6 +88,21 @@ const remove = createAsyncThunk(
     },
 );
 
+const complete = createAsyncThunk(
+    'tasks/complete',
+
+    async (payload, { getState }) => {
+        let state = getState();
+        let db = state.tasks.db
+            .filter(x => payload.id != x.id);
+        let r = await invoke('complete', { id: payload.id });
+        db.push(r);
+        return {
+            db,
+        };
+    },
+);
+
 // this is where the entire database is dumped
 export const tasksSlice = createSlice({
     name: "tasks",
@@ -108,10 +123,20 @@ export const tasksSlice = createSlice({
             .addCase(abtib.rejected, (state, { error }) => {
                 console.error(error);
             })
+            .addCase(complete.rejected, (state, { error }) => {
+                console.error(error);
+            })
             .addCase(insert.rejected, (state, { error }) => {
                 console.error(error);
             })
             .addCase(edit.fulfilled, (state, { payload, asyncDispatch }) => {
+                asyncDispatch({type: "global/reindex"});
+                return {
+                    ...state,
+                    ...payload
+                };
+            })
+            .addCase(complete.fulfilled, (state, { payload, asyncDispatch }) => {
                 asyncDispatch({type: "global/reindex"});
                 return {
                     ...state,
@@ -148,6 +173,6 @@ export const tasksSlice = createSlice({
     },
 });
 
-export { abtib, edit, remove, insert };
+export { abtib, edit, remove, insert, complete };
 export default tasksSlice.reducer;
 

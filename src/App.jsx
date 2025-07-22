@@ -18,6 +18,7 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { ThemeContext, ConfigContext, LogoutContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
+import { tick } from "@api/ui.js";
 
 //// views ////
 import Capture from "@views/Capture.jsx";
@@ -40,11 +41,27 @@ import strings from "@strings";
 
 //// native ////
 import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from '@tauri-apps/api/event';
 
 
+const warn = console.warn;
+
+function logWarning(...warnings){
+  let showWarning = true;
+  warnings.forEach(warning => {
+    if (warning.includes("UNSAFE_")) showWarning = false;
+    else if (warning.includes("SourceMap")) showWarning = false;
+    else if (warning.includes("DevTools")) showWarning = false;
+  });
+  if(showWarning) warn(...warnings);
+}
+
+
+console.warn  = logWarning;
 
 function RoutableMain() {
     const logout = useContext(LogoutContext).logout;
+    const ds = useContext(ConfigContext).dueSoonDays;
     const loc = useLocation();
 
     const ready = useSelector((state) => {
@@ -58,13 +75,27 @@ function RoutableMain() {
     // generate the initial snapshot
     useEffect(() => {
         dispatch(snapshot());
+
         // we also want to update all queries every minute
         // in order to make sure due days/alerts/etc. stay accurate
         let ci = setInterval(() => {
             dispatch({type: "global/reindex"});
         }, 60000);
 
-        return () => clearInterval(ci);
+        let t = setInterval(() => {
+            dispatch(tick(ds));
+        }, 5000);
+
+
+        listen("refresh", (event) => {
+            dispatch(snapshot());
+            dispatch({type: "global/reindex"});
+        });
+
+        return () => {
+            clearInterval(ci);
+            clearInterval(t);
+        };
     }, []);
 
     return (
@@ -136,15 +167,17 @@ const router = createBrowserRouter([
 
 
 function App() {
-    const [isDark, setIsDark] = useState(false);
+    const [isDark, setIsDark] = useState(true);
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         appWindow.theme().then((x) => {
-            setIsDark(x == "dark");
+            // setIsDark(x == "dark");
+            setIsDark(true);
         });
         const unlistenFuture = appWindow.onThemeChanged(({ payload: theme }) => {
-            setIsDark(theme == "dark");
+            // setIsDark(theme == "dark");
+            setIsDark(true);
         });
 
         let workspace = localStorage.getItem("cao__workspace");
@@ -172,7 +205,7 @@ function App() {
     return (
         <Provider store={store}>
             <ThemeContext.Provider value={{
-                dark: isDark
+                dark: true
             }}>
                 <LogoutContext.Provider value={{logout: async () => {
                     const confirmed = await confirm('', 'Do you want to logout?');
@@ -182,7 +215,9 @@ function App() {
                     }
                 }}}>
                     <ConfigContext.Provider value={{
-                        dueSoonDays: 1
+                        dueSoonDays: 1,
+                        workHours: 15,
+                        blockSize: 2,
                     }}>
                         <Tooltip id="rootp" />
                         <div id="theme-box" className={isDark ? "dark" : ""}>

@@ -12,6 +12,7 @@ pub struct Event {
     pub start: DateTime<Utc>,
     pub end: DateTime<Utc>,
     #[serde(default)]
+    pub is_all_day: bool,
+    #[serde(default)]
     pub name: String,
 }
-

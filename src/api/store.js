@@ -5,6 +5,7 @@ import tasks from "./tasks.js";
 import browse from "./browse.js";
 import action from "./action.js";
 import events from "./events.js";
+import ui from "./ui.js";
 
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -40,63 +41,15 @@ const asyncDispatchMiddleware = store => next => action => {
     return res;
 };
 
-const setHorizon = createAsyncThunk(
-    'ui/setHorizon',
-
-    async (horizon, { getState }) => {
-        let res = await invoke('upsert', { transaction: {Horizon: horizon } });
-        
-        return horizon;
-    },
-);
-
-// a basic UI reducer to manage global loading
-const ui = createSlice({
-    name: "ui",
-    initialState: {
-        ready: false,
-        horizon: 8
-    },
-    reducers: {
-    },
-    extraReducers: (builder) => {
-        builder
-            .addCase(setHorizon.fulfilled, (state, { payload }) => {
-                return {
-                    ...state, 
-                    horizon: payload
-                };
-            })
-            .addCase(snapshot.pending, (state) => {
-                return {
-                    ready: false
-                };
-            })
-            .addCase(snapshot.rejected, (state, {error}) => {
-                return {
-                    ready: error
-                };
-            })
-            .addCase(snapshot.fulfilled, (state, {payload}) => {
-                return {
-                    ready: true,
-                    horizon: payload.horizon
-                };
-            });
-    },
-});
-
 export default configureStore({
     reducer: {
         capture,
         tasks,
-        ui: ui.reducer,
+        ui,
         browse,
         action,
         events
     },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat([asyncDispatchMiddleware])
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({serializableCheck: false}).concat([asyncDispatchMiddleware])
 });
-
-export { setHorizon };
 
