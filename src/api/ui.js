@@ -30,7 +30,8 @@ const ui = createSlice({
         ready: false,
         horizon: 8,
         dueSoonDays: 1,
-        clock: (new Date()).getTime()
+        clock: (new Date()).getTime(),
+        tasksMode: true
     },
     reducers: {
         tick: (state, {payload}) => {
@@ -38,6 +39,12 @@ const ui = createSlice({
                 ...state,
                 clock: (new Date()).getTime(),
                 dueSoonDays: payload
+            }
+        },
+        setTasksMode: (state, {payload}) => {
+            return {
+                ...state,
+                tasksMode: payload
             }
         }
     },
@@ -66,7 +73,7 @@ const ui = createSlice({
 });
 
 export { setHorizon, now }; 
-export const { tick } = ui.actions;
+export const { tick, setTasksMode } = ui.actions;
 export default ui.reducer;
 
 

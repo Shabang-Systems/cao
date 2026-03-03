@@ -4,7 +4,7 @@ import "./Capture.css";
 import { ConfigContext } from "../contexts.js";
 
 import { compute } from "@api/action.js";
-import { insert } from "@api/tasks.js";
+import { insert, edit } from "@api/tasks.js";
 import { getEvents } from "@api/events.js";
 import { listen } from '@tauri-apps/api/event';
 
@@ -17,8 +17,12 @@ import { useDispatch, useSelector } from "react-redux";
 import "../components/task.css";
 
 import Task from "@components/task.jsx";
+import SortableItem from "@components/SortableItem.jsx";
 
-import { setHorizon as sh, now } from "@api/ui.js";
+import { DndContext, closestCenter, PointerSensor, useSensors, useSensor } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+
+import { setHorizon as sh, setTasksMode as stm, now } from "@api/ui.js";
 
 function getGreeting(time) {
     if (time.getHours() < 12) {
@@ -70,7 +74,9 @@ export default function Action({}) {
     const horizon = useSelector((state) => state.ui.horizon);
     const today = useSelector(now);
 
-    const [tasksMode, setTasksMode] = useState(true);
+    const dispatch = useDispatch();
+    const tasksMode = useSelector((state) => state.ui.tasksMode);
+    const setTasksMode = useCallback((v) => dispatch(stm(v)), [dispatch]);
     const nextDays = [...Array(horizon).keys()].concat([-1]);
     const [selection, setSelection] = useState(0);
 
@@ -95,7 +101,6 @@ export default function Action({}) {
         setHours(workslots.map(x => x.map(y => y.duration).reduce((x,y)=>x+y, 0)).map(x => workHours-x/60));
     }, [workslots]);
 
-    const dispatch = useDispatch();
     const setHorizon = useCallback((i) => {
         setSelection(0);
         dispatch(sh(i));
@@ -125,6 +130,59 @@ export default function Action({}) {
         return aTime-bTime;
     });
 
+    const [localDisplay, setLocalDisplay] = useState(null);
+    useEffect(() => { setLocalDisplay(null); }, [entries, workslots, selection]);
+    const renderDisplay = localDisplay ?? display;
+
+    const [isDragging, setIsDragging] = useState(false);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    );
+
+    const getItemTime = (item) => {
+        return item.type == "task"
+            ? new Date(item.schedule).getTime()
+            : new Date(item.start).getTime();
+    };
+
+    const handleDragEnd = useCallback((event) => {
+        const { active, over } = event;
+        if (!active || !over || active.id === over.id) return;
+
+        const cur = localDisplay ?? display;
+        const oldIndex = cur.findIndex(x => x.id === active.id);
+        const newIndex = cur.findIndex(x => x.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const dragged = cur[oldIndex];
+        if (dragged.type !== "task") return;
+
+        const reordered = arrayMove(cur, oldIndex, newIndex);
+        const pos = reordered.findIndex(x => x.id === dragged.id);
+
+        let newSchedule;
+        const prev = pos > 0 ? reordered[pos - 1] : null;
+        const next = pos < reordered.length - 1 ? reordered[pos + 1] : null;
+
+        if (prev && next) {
+            newSchedule = Math.round((getItemTime(prev) + getItemTime(next)) / 2);
+        } else if (next) {
+            const candidate = getItemTime(next) - 60000;
+            const candidateDate = new Date(candidate);
+            newSchedule = (candidateDate.getFullYear() === selectionDate.getFullYear() &&
+                           candidateDate.getMonth() === selectionDate.getMonth() &&
+                           candidateDate.getDate() === selectionDate.getDate())
+                ? candidate : getItemTime(next);
+        } else if (prev) {
+            newSchedule = getItemTime(prev) + 60000;
+        } else {
+            return;
+        }
+
+        setLocalDisplay(reordered);
+        dispatch(edit({ id: dragged.id, schedule: newSchedule, locked: true }));
+    }, [display, localDisplay, dispatch]);
 
     let [justAbtibd, setJustAbtibd] = useState(false);
     useEffect(() => {
@@ -156,7 +214,7 @@ export default function Action({}) {
                      <div className="greeting-subhead">{strings.VIEWS__ACTION}{moment(today).format(strings.DATETIME_FORMAT_LONG)}{events_str}</div>:
                      <div className="subgreeting">{strings.VIEWS__ACTION_YOUR_SCHEDULE}{selection < horizon ? moment(selectionDate).format(strings.DATE_FORMAT_LONG): strings.VIEWS__ACTION_THE_FUTURE}</div>}
                 </div>
-                <div style={{marginRight: "60px", marginLeft: "-6px", marginTop: "20px"}}>
+                <div className={isDragging ? "is-dragging" : ""} style={{marginRight: "60px", marginLeft: "-6px", marginTop: "20px"}}>
                     <div className="due-soon-box"
                          style={{display: (dueSoon[selection].length > 0) ? "block" : "none"}}>
                         <div className={"due-soon-header top"+(selection !=0 ? " ds" : "")} style={{paddingTop: 0}}>{(selection == 0) ? strings.VIEWS__DUE_SOON:strings.VIEWS__DUE_ON_DATE }</div>
@@ -172,24 +230,32 @@ export default function Action({}) {
                         }
                         <div className="due-soon-header">{strings.VIEWS__SCHEDULED}</div>
                     </div>
-                    {(display.length > 0) ? display.map((x, indx) => (
-                        x.type == "task" ?
-                        <div key={x.id} className="task-holder">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter}
+                               onDragStart={() => setIsDragging(true)}
+                               onDragEnd={(e) => { setIsDragging(false); handleDragEnd(e); }}
+                               onDragCancel={() => setIsDragging(false)}>
+                        <SortableContext items={renderDisplay.map(x => x.id)} strategy={verticalListSortingStrategy}>
+                    {(renderDisplay.length > 0) ? renderDisplay.map((x, indx) => (
+                        <SortableItem key={x.id} id={x.id} disabled={x.type !== "task"}>
+                        {x.type == "task" ?
+                        <div className="task-holder">
                             <Task
                                 task={x}
                                 initialFocus={justAbtibd && (x.id == entries[selection][entries[selection].length-1].id)}
                                 onFocusChange={(x) => {if (!x) setJustAbtibd(false);}}
                             />
-                            {/* <div style={{paddingBottom: "2px"}}></div> */}
                         </div>:
-                        <div key={x.id} className="calendar-entry"
+                        <div className="calendar-entry"
                              style={{height: x.duration*1.5}}>
                             <div className="calendar-time top">{moment(x.start).format(strings.TIME_FORMAT)} - {moment(x.end).format(strings.TIME_FORMAT)}</div>
                             <div className="calendar-description">{x.name}</div>
-                        </div>
+                        </div>}
+                        </SortableItem>
                     )): <div className="free-day">
                                                    {free.current}
                                                </div>}
+                        </SortableContext>
+                    </DndContext>
                 </div>
                 <div className="action-abtib" onClick={() => { 
                     if (display.length > 0) {

@@ -147,6 +147,39 @@
     margin-top: 10px;
 }
 
+.drag-handle {
+    position: absolute;
+    left: -46px;
+    top: 5px;
+    transform: translateY(-2px);
+    color: var(--background-decoration);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s;
+    padding: 4px;
+    font-size: 11px;
+    z-index: 10;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+*:hover > .drag-handle {
+    opacity: 1;
+}
+
+.is-dragging {
+    position: relative;
+}
+
+.is-dragging::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+}
+
 .bar-outer {
     background-color: var(--background-decoration);
     height: 20px;

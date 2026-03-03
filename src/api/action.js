@@ -38,7 +38,7 @@ const workslots = createAsyncThunk(
                     type: "event",
                     name: x.name,
                     // to make the .key prop happy
-                    id: Math.random()
+                    id: `event-${x.name}-${start.valueOf()}-${end.valueOf()}`
                 };
             });
             let seen = {};
