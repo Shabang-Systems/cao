@@ -6,9 +6,11 @@ import { ConfigContext } from "../contexts.js";
 import { compute } from "@api/action.js";
 import { insert } from "@api/tasks.js";
 import { getEvents } from "@api/events.js";
+import { listen } from '@tauri-apps/api/event';
 
 import moment from "moment";
 import { createSelector } from '@reduxjs/toolkit';
+import { useMemo } from "react";
 
 import strings from "@strings";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,6 +30,42 @@ function getGreeting(time) {
     }
 }
 
+const makeSelectAllDayEvents = (selectionDate) => createSelector(
+    [(state) => state.events.entries],
+    (res) => {
+        let tmp = res.filter(x => {
+            let d = new Date(x.start);
+            return (d.getFullYear() == selectionDate.getFullYear() &&
+                    d.getMonth() == selectionDate.getMonth() &&
+                    d.getDate() == selectionDate.getDate() &&
+                    x.is_all_day
+                );
+        }).map(x => x.name);
+        return tmp;
+    }
+);
+
+const makeSelectWorkslots = (horizon) => createSelector(
+    [(state) => state.action.workslots],
+    (res) => {
+        return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+    }
+);
+
+const makeSelectDueSoon = (horizon) => createSelector(
+    [(state) => state.action.dueSoon],
+    (res) => {
+        return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+    }
+);
+
+const makeSelectEntries = (horizon) => createSelector(
+    [(state) => state.action.entries],
+    (res) => {
+        return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
+    }
+);
+
 export default function Action({}) {
     const horizon = useSelector((state) => state.ui.horizon);
     const today = useSelector(now);
@@ -44,27 +82,11 @@ export default function Action({}) {
                                    today.getMonth(),
                                    (today.getDate()+selection), 0,0,0);
     
-    const allDayEvents = useSelector(createSelector(
-        [(state) => state.events.entries],
-        (res) => {
-            let tmp = res.filter(x => {
-                let d = new Date(x.start);
-                return (d.getFullYear() == selectionDate.getFullYear() &&
-                        d.getMonth() == selectionDate.getMonth() &&
-                        d.getDate() == selectionDate.getDate() &&
-                        x.is_all_day
-                    );
-            }).map (x => x.name);
-            return tmp;
-        }
-    ));
+    const selectAllDayEvents = useMemo(() => makeSelectAllDayEvents(selectionDate), [selectionDate]);
+    const allDayEvents = useSelector(selectAllDayEvents);
 
-    const workslots = useSelector(createSelector(
-        [(state) => state.action.workslots],
-        (res) => {
-            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
-        }
-    ));
+    const selectWorkslots = useMemo(() => makeSelectWorkslots(horizon), [horizon]);
+    const workslots = useSelector(selectWorkslots);
 
     const {dueSoonDays, workHours, blockSize} = useContext(ConfigContext);
 
@@ -78,18 +100,10 @@ export default function Action({}) {
         setSelection(0);
         dispatch(sh(i));
     });
-    const dueSoon = useSelector(createSelector(
-        [(state) => state.action.dueSoon],
-        (res) => {
-            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
-        }
-    ));
-    const entries = useSelector(createSelector(
-        [(state) => state.action.entries],
-        (res) => {
-            return res.length == horizon+1 ? res : [...Array(horizon+1).keys()].map(_ => []);
-        }
-    ));
+    const selectDueSoon = useMemo(() => makeSelectDueSoon(horizon), [horizon]);
+    const dueSoon = useSelector(selectDueSoon);
+    const selectEntries = useMemo(() => makeSelectEntries(horizon), [horizon]);
+    const entries = useSelector(selectEntries);
 
 
     const display = entries[selection].concat((selection < horizon && !tasksMode) ? workslots[selection] : []).sort((a,b) => {
@@ -117,12 +131,12 @@ export default function Action({}) {
         dispatch(compute());
         dispatch(getEvents());
 
-        let ca = setInterval(() => {
+        const unlistenPromise = listen("calendar-updated", () => {
             dispatch(getEvents());
-        }, 5000);
+        });
 
         return () => {
-            clearInterval(ca);
+            unlistenPromise.then(fn => fn());
         };
     }, []);
 

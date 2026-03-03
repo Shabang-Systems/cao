@@ -57,6 +57,8 @@ const workslots = createAsyncThunk(
     });
 
 
+let computeInFlight = false;
+
 const compute = createAsyncThunk(
     'action/dispatch',
 
@@ -148,6 +150,13 @@ const compute = createAsyncThunk(
             dueSoon
         }
     },
+    {
+        condition: () => {
+            if (computeInFlight) return false;
+            computeInFlight = true;
+            return true;
+        },
+    }
 );
 
 export const actionSlice = createSlice({
@@ -165,9 +174,10 @@ export const actionSlice = createSlice({
                 console.error(error);
             })
             .addCase(compute.rejected, (state, { error }) => {
+                computeInFlight = false;
                 console.error(error);
             })
-            .addCase(tick, (state, { payload, asyncDispatch }) => {
+            .addCase(tick, (state, { asyncDispatch }) => {
                 asyncDispatch(compute());
             })
             .addCase(workslots.fulfilled, (state, { payload }) => {
@@ -177,6 +187,7 @@ export const actionSlice = createSlice({
                 };
             })
             .addCase(compute.fulfilled, (state, { payload }) => {
+                computeInFlight = false;
                 return {
                     ...state,
                     ...payload

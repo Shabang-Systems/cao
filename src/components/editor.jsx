@@ -91,6 +91,14 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
     const changeTimeout = useRef(null);
 
     useEffect(() => {
+        return () => {
+            if (changeTimeout.current) {
+                clearTimeout(changeTimeout.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
         setCode(value);
     }, [value]);
 

@@ -14,6 +14,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use std::sync::{Arc};
+use tauri::{AppHandle, Manager};
 
 
 use std::sync::Mutex;
@@ -219,7 +220,7 @@ impl GlobalState {
     }
 
     /// listen to calendar update
-    pub fn calendar_listen(&self) -> JoinHandle<()> {
+    pub fn calendar_listen(&self, app_handle: AppHandle) -> JoinHandle<()> {
         // we are not worried about aggressive cloning of self.monitor,
         // beacuse its an Arc<Mutex<_>> so we are just copying a pointer around
         let cao = self.monitor.clone();
@@ -248,7 +249,9 @@ impl GlobalState {
                 };
                 let res = AssertUnwindSafe(may_panic).catch_unwind().await;
                 match res {
-                    Ok(_) => (),
+                    Ok(_) => {
+                        let _ = app_handle.emit_all("calendar-updated", ());
+                    },
                     Err(_) => println!("Failed to read calendar, skipping....")
                 };
                 sleep(Duration::from_secs(1*60)).await;

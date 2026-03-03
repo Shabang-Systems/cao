@@ -12,17 +12,20 @@ import { set, pop, grow, view } from "@api/browse.js";
 
 import "./Browser.css";
 import "./Capture.css";
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+
+const makeSelectCurrentQuery = () => createSelector(
+    [(state) => state.browse.searches[state.browse.current]],
+    (res) => res?res:{},
+    {devModeChecks: {identityFunctionCheck: 'never'}}
+);
 
 export default function Browser() {
     let entries = useSelector((s) => s.browse.entries);
     const dispatch = useDispatch();
     const isLoading = useSelector((s) => s.tasks.loading);
-    const currentQuery = useSelector(createSelector(
-        [(state) => state.browse.searches[state.browse.current]],
-        (res) => res?res:{},
-        {devModeChecks: {identityFunctionCheck: 'never'}}
-    ));
+    const selectCurrentQuery = useMemo(makeSelectCurrentQuery, []);
+    const currentQuery = useSelector(selectCurrentQuery);
     const length = useSelector((state) =>
         state.browse.searches.length
     );

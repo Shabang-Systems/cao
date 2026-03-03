@@ -8,18 +8,23 @@ mod state;
 mod query;
 mod commands;
 mod scheduling;
-use futures::future::join_all;
-
 use state::*;
+
+use tauri::Manager;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let state = GlobalState::new();
-    let calendar_listen_handle = state.calendar_listen();
 
         // rock'n'roll
     tauri::Builder::default()
         .manage(state)
+        .setup(|app| {
+            let handle = app.handle();
+            let state = app.state::<GlobalState>();
+            state.calendar_listen(handle);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             tasks::parse_tasks,
             commands::snapshot,
@@ -34,10 +39,6 @@ async fn main() -> Result<()> {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-
-    let _ = join_all([
-        calendar_listen_handle
-    ]).await;
 
     Ok(())
 }

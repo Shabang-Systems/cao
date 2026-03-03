@@ -10,7 +10,8 @@ import {
     Route,
     Link,
     Outlet,
-    useLocation
+    useLocation,
+    useNavigate
 } from "react-router-dom";
 
 //// view controlling ////
@@ -19,6 +20,7 @@ import { ThemeContext, ConfigContext, LogoutContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
 import { tick } from "@api/ui.js";
+import { debouncedReindex } from "@api/reindex.js";
 
 //// views ////
 import Capture from "@views/Capture.jsx";
@@ -59,10 +61,13 @@ function logWarning(...warnings){
 
 console.warn  = logWarning;
 
+const TAB_ROUTES = ["/", "/capture", "/browse", "/settings"];
+
 function RoutableMain() {
     const logout = useContext(LogoutContext).logout;
     const ds = useContext(ConfigContext).dueSoonDays;
     const loc = useLocation();
+    const navigate = useNavigate();
 
     const ready = useSelector((state) => {
         return state.ui.ready;
@@ -72,6 +77,20 @@ function RoutableMain() {
     });
     const dispatch = useDispatch();
 
+    // Cmd/Ctrl+1-4 to switch tabs
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!(e.metaKey || e.ctrlKey)) return;
+            const idx = parseInt(e.key, 10);
+            if (idx >= 1 && idx <= TAB_ROUTES.length) {
+                e.preventDefault();
+                navigate(TAB_ROUTES[idx - 1]);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [navigate]);
+
     // generate the initial snapshot
     useEffect(() => {
         dispatch(snapshot());
@@ -79,7 +98,7 @@ function RoutableMain() {
         // we also want to update all queries every minute
         // in order to make sure due days/alerts/etc. stay accurate
         let ci = setInterval(() => {
-            dispatch({type: "global/reindex"});
+            debouncedReindex();
         }, 60000);
 
         let t = setInterval(() => {
@@ -87,14 +106,15 @@ function RoutableMain() {
         }, 5000);
 
 
-        listen("refresh", (event) => {
+        const unlistenPromise = listen("refresh", (event) => {
             dispatch(snapshot());
-            dispatch({type: "global/reindex"});
+            debouncedReindex();
         });
 
         return () => {
             clearInterval(ci);
             clearInterval(t);
+            unlistenPromise.then(fn => fn());
         };
     }, []);
 

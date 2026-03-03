@@ -22,7 +22,7 @@ export default function Settings({}) {
             setVersion(version);
             setTauriVersion(tauriVersion);
         })();
-    });
+    }, []);
 
     const dispatch = useDispatch();
     const horizon = useSelector((state) => state.ui.horizon);

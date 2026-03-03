@@ -58,6 +58,14 @@ export default forwardRef(function RRuleModal({ onClose, onRRule, initialRrule }
     }});
     const changeTimeout = useRef(null);
 
+    useEffect(() => {
+        return () => {
+            if (changeTimeout.current) {
+                clearTimeout(changeTimeout.current);
+            }
+        };
+    }, []);
+
     return (
         <div className="datemodal rrule-modal" style={{display: open ? "block": "none" }}  ref={wrapperRef}>
             <div className="header">{strings.COMPONENTS__RRULEMODAL_REPEAT}</div>
