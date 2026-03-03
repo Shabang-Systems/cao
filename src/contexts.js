@@ -13,6 +13,8 @@ const ConfigContext = createContext({
 
 const LogoutContext = createContext({logout: () => {}});
 
-export { ThemeContext, ConfigContext, LogoutContext };
+const EditingContext = createContext({ onFocus: () => {}, onBlur: () => {}, isEditing: () => false });
+
+export { ThemeContext, ConfigContext, LogoutContext, EditingContext };
 
 

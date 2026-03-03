@@ -1,5 +1,5 @@
 //// utiltiies ////
-import { useState, useEffect, useCallback, useContext, createContext } from "react";
+import { useState, useEffect, useCallback, useContext, useRef, createContext } from "react";
 import { appWindow } from "@tauri-apps/api/window";
 import { confirm } from '@tauri-apps/api/dialog';
 
@@ -16,7 +16,7 @@ import {
 
 //// view controlling ////
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import { ThemeContext, ConfigContext, LogoutContext } from "./contexts.js";
+import { ThemeContext, ConfigContext, LogoutContext, EditingContext } from "./contexts.js";
 import store from "@api/store.js";
 import { snapshot } from "@api/utils.js";
 import { tick } from "@api/ui.js";
@@ -61,7 +61,7 @@ function logWarning(...warnings){
 
 console.warn  = logWarning;
 
-const TAB_ROUTES = ["/", "/capture", "/browse", "/settings"];
+const TAB_ROUTES = ["/", "/browse", "/settings"];
 
 function RoutableMain() {
     const logout = useContext(LogoutContext).logout;
@@ -76,6 +76,14 @@ function RoutableMain() {
         return state.capture.scratchpads;
     });
     const dispatch = useDispatch();
+
+    // Track how many editors are focused to pause ticks during editing
+    const editingCount = useRef(0);
+    const editingCtx = useRef({
+        onFocus: () => { editingCount.current++; },
+        onBlur: () => { editingCount.current = Math.max(0, editingCount.current - 1); },
+        isEditing: () => editingCount.current > 0
+    }).current;
 
     // Cmd/Ctrl+1-4 to switch tabs
     useEffect(() => {
@@ -102,7 +110,9 @@ function RoutableMain() {
         }, 60000);
 
         let t = setInterval(() => {
-            dispatch(tick(ds));
+            if (!editingCtx.isEditing()) {
+                dispatch(tick(ds));
+            }
         }, 5000);
 
 
@@ -128,11 +138,6 @@ function RoutableMain() {
                             <i className="fa-solid fa-person-running"></i>
                         </div>
                     </Link>
-                    <Link to={"/capture"} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.CAPTURE}>
-                        <div className={"bottom-nav-button"+(loc.pathname == "/capture" ? " active" : "")+(captures.filter(x => x.trim() != "").length > 0 ? " ds" : "")}>
-                            <i className="fa-solid fa-inbox"></i>
-                        </div>
-                    </Link>
                     <Link to={"/browse"} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.BROWSE}>
                         <div className={"bottom-nav-button"+(loc.pathname == "/browse" ? " active" : "")}>
                             <i className="fa-solid fa-layer-group"></i>
@@ -145,7 +150,9 @@ function RoutableMain() {
                     </Link>
 
                 </div>
-                <Outlet />
+                <EditingContext.Provider value={editingCtx}>
+                    <Outlet />
+                </EditingContext.Provider>
             </div> : (ready == false ? <Load /> :
                       <GlobalErrorModal error={JSON.stringify(ready,
                                                               Object.getOwnPropertyNames(ready),

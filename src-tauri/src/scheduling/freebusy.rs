@@ -35,13 +35,17 @@ fn resolve_date_perhaps(dpt: DatePerhapsTime) -> DateTime<Utc> {
             CalendarDateTime::Utc(cdt) => cdt,
             CalendarDateTime::WithTimezone { date_time, tzid } => {
                 // TODO this is WRONG but I didn't know how to parse timezones
-                let tz: Tz = match tzid.parse().ok() {
-                    Some(n) => n,
-                    None => localzone::win_zone_to_iana(&tzid, None).unwrap().parse().unwrap()
-                };
-                Utc.from_utc_datetime(
-                    &tz.from_local_datetime(&date_time).unwrap().naive_utc()
-                )
+                let tz: Option<Tz> = tzid.parse().ok().or_else(|| {
+                    localzone::win_zone_to_iana(&tzid, None)
+                        .and_then(|s| s.parse().ok())
+                });
+                match tz {
+                    Some(tz) => tz.from_local_datetime(&date_time)
+                        .earliest()
+                        .map(|dt| dt.with_timezone(&Utc))
+                        .unwrap_or_else(|| date_time.and_utc()),
+                    None => date_time.and_utc(),
+                }
             }
         }
     }
