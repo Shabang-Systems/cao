@@ -142,7 +142,7 @@ impl Default for TaskDescription {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{Duration, TimeZone};
+    use chrono::{Datelike, Duration, TimeZone};
 
     #[test]
     fn test_new_task_has_uuid() {
@@ -254,5 +254,205 @@ mod tests {
     fn test_default_effort_is_one() {
         let task = TaskDescription::default();
         assert_eq!(task.effort, 1.0);
+    }
+
+    // ---- fixture JSON deserialization tests ----
+
+    fn load_fixtures() -> Vec<TaskDescription> {
+        let json = include_str!("../../tests/fixtures.json");
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn test_fixture_loads_all_tasks() {
+        let tasks = load_fixtures();
+        assert_eq!(tasks.len(), 15);
+    }
+
+    #[test]
+    fn test_fixture_preserves_ids() {
+        let tasks = load_fixtures();
+        assert_eq!(tasks[0].id, "aaaa-1111-bbbb-2222");
+        assert_eq!(tasks[1].id, "bbbb-2222-cccc-3333");
+    }
+
+    #[test]
+    fn test_fixture_fields_out_of_order() {
+        // tasks[1] has "content" before "id", tasks[2] has "tags" first
+        let tasks = load_fixtures();
+        assert_eq!(tasks[1].content, "Fix login bug");
+        assert_eq!(tasks[1].id, "bbbb-2222-cccc-3333");
+        assert_eq!(tasks[2].id, "cccc-3333-dddd-4444");
+        assert!(tasks[2].completed);
+    }
+
+    #[test]
+    fn test_fixture_negative_epoch_dates() {
+        let tasks = load_fixtures();
+        // due: -1ms => 1969-12-31T23:59:59.999Z
+        let task = &tasks[3];
+        assert_eq!(task.content, "Task due on Feb 30 (impossible day)");
+        let due = task.due.unwrap();
+        assert!(due.timestamp_millis() == -1);
+
+        // task from 1969 with negative start and due
+        let task = &tasks[4];
+        assert_eq!(task.due.unwrap().timestamp_millis(), -86400000);
+        assert_eq!(task.start.unwrap().timestamp_millis(), -172800000);
+        assert!(task.start.unwrap() < task.due.unwrap());
+    }
+
+    #[test]
+    fn test_fixture_distant_future() {
+        let tasks = load_fixtures();
+        let task = &tasks[5];
+        assert_eq!(task.content, "Task in distant future year 2099");
+        let due = task.due.unwrap();
+        assert!(due.year() >= 2099);
+        assert!(task.schedule.is_some());
+    }
+
+    #[test]
+    fn test_fixture_backwards_timeline() {
+        // due < start (due is before start)
+        let tasks = load_fixtures();
+        let task = &tasks[6];
+        assert_eq!(task.content, "Due before start (backwards timeline)");
+        assert!(task.due.unwrap() < task.start.unwrap());
+    }
+
+    #[test]
+    fn test_fixture_minimal_task_defaults() {
+        let tasks = load_fixtures();
+        let task = &tasks[7];
+        assert_eq!(task.content, "Minimal task - only required fields");
+        // serde defaults should fill in
+        assert_eq!(task.priority, 0);
+        assert_eq!(task.effort, 1.0);
+        assert!(task.tags.is_empty());
+        assert!(task.start.is_none());
+        assert!(task.due.is_none());
+        assert!(task.schedule.is_none());
+        assert!(task.rrule.is_none());
+        assert!(!task.locked);
+    }
+
+    #[test]
+    fn test_fixture_max_values() {
+        let tasks = load_fixtures();
+        let task = &tasks[8];
+        assert_eq!(task.effort, 100.0);
+        assert_eq!(task.priority, 255);
+        assert_eq!(task.tags.len(), 4);
+        assert!(task.locked);
+        assert!(task.rrule.is_some());
+        assert!(task.start.is_some());
+        assert!(task.due.is_some());
+        assert!(task.schedule.is_some());
+    }
+
+    #[test]
+    fn test_fixture_completed_recurring() {
+        let tasks = load_fixtures();
+        let task = &tasks[9];
+        assert!(task.completed);
+        assert!(task.rrule.is_some());
+    }
+
+    #[test]
+    fn test_fixture_empty_content() {
+        let tasks = load_fixtures();
+        let task = &tasks[10];
+        assert_eq!(task.content, "");
+    }
+
+    #[test]
+    fn test_fixture_schedule_without_due() {
+        let tasks = load_fixtures();
+        let task = &tasks[11];
+        assert!(task.schedule.is_some());
+        assert!(task.due.is_none());
+    }
+
+    #[test]
+    fn test_fixture_zero_effort() {
+        let tasks = load_fixtures();
+        let task = &tasks[12];
+        assert_eq!(task.effort, 0.0);
+    }
+
+    #[test]
+    fn test_fixture_unicode_content_and_tags() {
+        let tasks = load_fixtures();
+        let task = &tasks[13];
+        assert!(task.content.contains("买菜"));
+        assert!(task.content.contains("café"));
+        assert!(task.tags.contains(&"i18n".to_string()));
+        assert!(task.tags.contains(&"日本語".to_string()));
+    }
+
+    #[test]
+    fn test_fixture_all_dates_identical() {
+        let tasks = load_fixtures();
+        let task = &tasks[14];
+        assert_eq!(task.due, task.start);
+        assert_eq!(task.due, task.schedule);
+        // due/start/schedule are all 1735689600000ms = 2025-01-01T00:00:00Z
+        // captured is "2025-01-01T00:00:00Z" (RFC3339)
+        assert_eq!(task.captured.timestamp_millis(), task.due.unwrap().timestamp_millis());
+    }
+
+    #[test]
+    fn test_fixture_roundtrip_serialize_deserialize() {
+        let tasks = load_fixtures();
+        for task in &tasks {
+            let json = serde_json::to_string(task).unwrap();
+            let back: TaskDescription = serde_json::from_str(&json).unwrap();
+            assert_eq!(back.id, task.id);
+            assert_eq!(back.content, task.content);
+            assert_eq!(back.completed, task.completed);
+            assert_eq!(back.priority, task.priority);
+            assert_eq!(back.effort, task.effort);
+            assert_eq!(back.due, task.due);
+            assert_eq!(back.start, task.start);
+            assert_eq!(back.schedule, task.schedule);
+            assert_eq!(back.locked, task.locked);
+        }
+    }
+
+    #[test]
+    fn test_fixture_filter_by_tag_work() {
+        let tasks = load_fixtures();
+        let work_tasks: Vec<_> = tasks.iter()
+            .filter(|t| t.tags.contains(&"work".to_string()))
+            .collect();
+        assert_eq!(work_tasks.len(), 3); // Fix login bug, Max effort, Completed recurring
+    }
+
+    #[test]
+    fn test_fixture_filter_incomplete() {
+        let tasks = load_fixtures();
+        let incomplete: Vec<_> = tasks.iter().filter(|t| !t.completed).collect();
+        assert_eq!(incomplete.len(), 13); // 15 - 2 completed
+    }
+
+    #[test]
+    fn test_fixture_complete_recurring_advances() {
+        // Take the "Fix login bug" task (has rrule + due) and complete it
+        let tasks = load_fixtures();
+        let mut task = tasks[1].clone();
+        let original_due = task.due.unwrap();
+        assert!(task.rrule.is_some());
+
+        task.complete().unwrap();
+
+        // Should NOT be marked completed (recurring)
+        assert!(!task.completed);
+        // Due should have advanced
+        assert!(task.due.unwrap() > original_due);
+        // Start-due distance should be preserved
+        let original_gap = original_due.signed_duration_since(tasks[1].start.unwrap());
+        let new_gap = task.due.unwrap().signed_duration_since(task.start.unwrap());
+        assert_eq!(original_gap.num_days(), new_gap.num_days());
     }
 }

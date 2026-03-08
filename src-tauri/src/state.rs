@@ -352,6 +352,8 @@ impl GlobalState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Datelike;
+    use crate::query::core::Availability;
 
     /// Helper: create an in-memory SQLite pool with migrations applied
     async fn test_pool() -> SqlitePool {
@@ -533,5 +535,242 @@ mod tests {
         let pool_ref = state.pool.read().unwrap().clone().unwrap();
         let cao = Cao::read_pool(&pool_ref).await.unwrap();
         assert_eq!(cao.scratchpads, vec!["c".to_string()]);
+    }
+
+    // ---- fixture-based integration tests: round-trip through SQLite ----
+
+    fn load_fixtures() -> Vec<TaskDescription> {
+        let json = include_str!("../tests/fixtures.json");
+        serde_json::from_str(json).unwrap()
+    }
+
+    async fn state_with_fixtures() -> GlobalState {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+        let tasks = load_fixtures();
+        for task in &tasks {
+            state.upsert(&Transaction::Task(task.clone())).await.unwrap();
+        }
+        state
+    }
+
+    #[tokio::test]
+    async fn test_fixture_all_tasks_persist() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.tasks.len(), 15);
+    }
+
+    #[tokio::test]
+    async fn test_fixture_ids_survive_roundtrip() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let ids: Vec<&str> = cao.tasks.iter().map(|t| t.id.as_str()).collect();
+        assert!(ids.contains(&"aaaa-1111-bbbb-2222"));
+        assert!(ids.contains(&"ffff-6666-0000-7777"));
+        assert!(ids.contains(&"7777-eeee-8888-ffff"));
+    }
+
+    #[tokio::test]
+    async fn test_fixture_negative_dates_survive_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "dddd-4444-eeee-5555").unwrap();
+        assert_eq!(task.due.unwrap().timestamp_millis(), -1);
+
+        let task = cao.tasks.iter().find(|t| t.id == "eeee-5555-ffff-6666").unwrap();
+        assert_eq!(task.due.unwrap().timestamp_millis(), -86400000);
+        assert_eq!(task.start.unwrap().timestamp_millis(), -172800000);
+    }
+
+    #[tokio::test]
+    async fn test_fixture_distant_future_survives_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "ffff-6666-0000-7777").unwrap();
+        assert!(task.due.unwrap().year() >= 2099);
+        assert!(task.schedule.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_fixture_backwards_timeline_survives_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "0000-7777-1111-8888").unwrap();
+        assert!(task.due.unwrap() < task.start.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_fixture_unicode_survives_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "7777-eeee-8888-ffff").unwrap();
+        assert!(task.content.contains("买菜"));
+        assert!(task.content.contains("café"));
+        assert!(task.tags.contains(&"日本語".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_fixture_max_values_survive_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "2222-9999-3333-aaaa").unwrap();
+        assert_eq!(task.effort, 100.0);
+        assert_eq!(task.priority, 255);
+        assert!(task.locked);
+        assert_eq!(task.tags.len(), 4);
+    }
+
+    #[tokio::test]
+    async fn test_fixture_empty_content_survives_sqlite() {
+        let state = state_with_fixtures().await;
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        let task = cao.tasks.iter().find(|t| t.id == "4444-bbbb-5555-cccc").unwrap();
+        assert_eq!(task.content, "");
+    }
+
+    #[tokio::test]
+    async fn test_fixture_query_incomplete_via_sqlite() {
+        let state = state_with_fixtures().await;
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        // 15 total, 2 completed => 13 incomplete
+        assert_eq!(results.len(), 13);
+        assert!(results.iter().all(|t| !t.completed));
+    }
+
+    #[tokio::test]
+    async fn test_fixture_query_completed_via_sqlite() {
+        let state = state_with_fixtures().await;
+        let req = BrowseRequest {
+            availability: Availability::Done,
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        assert_eq!(results.len(), 2);
+        assert!(results.iter().all(|t| t.completed));
+    }
+
+    #[tokio::test]
+    async fn test_fixture_query_by_tag_via_sqlite() {
+        let state = state_with_fixtures().await;
+        let req = BrowseRequest {
+            availability: Availability::All,
+            tags: vec!["edge-case".to_string()],
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        assert_eq!(results.len(), 3); // negative epoch, impossible date, backwards timeline
+    }
+
+    #[tokio::test]
+    async fn test_fixture_query_by_multiple_tags_via_sqlite() {
+        let state = state_with_fixtures().await;
+        let req = BrowseRequest {
+            availability: Availability::All,
+            tags: vec!["edge-case".to_string(), "time-travel".to_string()],
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].id, "eeee-5555-ffff-6666");
+    }
+
+    #[tokio::test]
+    async fn test_fixture_query_ordered_by_due_asc() {
+        let state = state_with_fixtures().await;
+        let req = BrowseRequest {
+            availability: Availability::All,
+            order: super::super::query::core::OrderRequest {
+                order: super::super::query::core::OrderType::Due,
+                ascending: true,
+            },
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        // tasks with due dates should be ordered ascending
+        let dues: Vec<Option<i64>> = results.iter()
+            .map(|t| t.due.map(|d| d.timestamp_millis()))
+            .collect();
+        // verify non-null dues are sorted
+        let non_null: Vec<i64> = dues.iter().filter_map(|d| *d).collect();
+        for w in non_null.windows(2) {
+            assert!(w[0] <= w[1], "due dates not ascending: {} > {}", w[0], w[1]);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fixture_delete_then_query() {
+        let state = state_with_fixtures().await;
+        state.delete(&Delete::Task("aaaa-1111-bbbb-2222".to_string())).await;
+        let req = BrowseRequest {
+            availability: Availability::All,
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        assert_eq!(results.len(), 14);
+        assert!(!results.iter().any(|t| t.id == "aaaa-1111-bbbb-2222"));
+    }
+
+    #[tokio::test]
+    async fn test_fixture_complete_then_query() {
+        let state = state_with_fixtures().await;
+        // Complete "Buy groceries" (no rrule, should toggle completed)
+        let result = state.complete("aaaa-1111-bbbb-2222").await.unwrap();
+        assert!(result.completed);
+
+        let req = BrowseRequest {
+            availability: Availability::Done,
+            ..Default::default()
+        };
+        let results = state.index(&req).await.unwrap();
+        // Was 2 completed, now 3
+        assert_eq!(results.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_fixture_upsert_updates_existing() {
+        let state = state_with_fixtures().await;
+        let mut tasks = load_fixtures();
+        tasks[0].content = "Updated content".to_string();
+        tasks[0].priority = 99;
+        state.upsert(&Transaction::Task(tasks[0].clone())).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        // Should still be 15 (upsert, not insert)
+        assert_eq!(cao.tasks.len(), 15);
+        let updated = cao.tasks.iter().find(|t| t.id == "aaaa-1111-bbbb-2222").unwrap();
+        assert_eq!(updated.content, "Updated content");
+        assert_eq!(updated.priority, 99);
+    }
+
+    #[tokio::test]
+    async fn test_fixture_available_filters_correctly() {
+        let state = state_with_fixtures().await;
+        let available_req = BrowseRequest {
+            availability: Availability::Available,
+            ..Default::default()
+        };
+        let available = state.index(&available_req).await.unwrap();
+        // Available means: incomplete AND (start is null OR start < now)
+        // All returned tasks must be incomplete
+        assert!(available.iter().all(|t| !t.completed));
+        // Available count should be <= incomplete count (13)
+        assert!(available.len() <= 13);
+        // Available count should be > 0 (we have tasks without start dates)
+        assert!(available.len() > 0);
     }
 }

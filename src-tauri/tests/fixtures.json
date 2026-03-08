@@ -1,0 +1,141 @@
+[
+  {
+    "id": "aaaa-1111-bbbb-2222",
+    "content": "Buy groceries",
+    "tags": ["personal", "errands"],
+    "priority": 2,
+    "effort": 0.5,
+    "due": 1735689600000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "content": "Fix login bug",
+    "id": "bbbb-2222-cccc-3333",
+    "tags": ["work", "urgent"],
+    "rrule": "RRULE:FREQ=WEEKLY;INTERVAL=1",
+    "due": 1735776000000,
+    "start": 1735516800000,
+    "priority": 5,
+    "effort": 3.0,
+    "captured": "2024-12-31T00:00:00Z",
+    "locked": true,
+    "completed": false
+  },
+  {
+    "tags": [],
+    "completed": true,
+    "id": "cccc-3333-dddd-4444",
+    "content": "Old finished task",
+    "captured": "2024-01-01T00:00:00Z",
+    "effort": 1.0,
+    "priority": 0
+  },
+  {
+    "id": "dddd-4444-eeee-5555",
+    "content": "Task due on Feb 30 (impossible day)",
+    "tags": ["edge-case"],
+    "due": -1,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "eeee-5555-ffff-6666",
+    "content": "Task from year 1969 (negative epoch)",
+    "tags": ["edge-case", "time-travel"],
+    "due": -86400000,
+    "start": -172800000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "ffff-6666-0000-7777",
+    "content": "Task in distant future year 2099",
+    "tags": ["future"],
+    "due": 4102444800000,
+    "start": 4102358400000,
+    "schedule": 4102444800000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "0000-7777-1111-8888",
+    "content": "Due before start (backwards timeline)",
+    "tags": ["edge-case"],
+    "due": 1735516800000,
+    "start": 1735776000000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "1111-8888-2222-9999",
+    "content": "Minimal task - only required fields",
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "effort": 100.0,
+    "priority": 255,
+    "id": "2222-9999-3333-aaaa",
+    "content": "Max effort and priority",
+    "tags": ["work", "urgent", "critical", "blocked"],
+    "due": 1735689600000,
+    "start": 1735603200000,
+    "schedule": 1735646400000,
+    "captured": "2024-12-31T00:00:00Z",
+    "locked": true,
+    "completed": false,
+    "rrule": "RRULE:FREQ=DAILY;INTERVAL=1"
+  },
+  {
+    "id": "3333-aaaa-4444-bbbb",
+    "content": "Completed recurring task",
+    "tags": ["work"],
+    "rrule": "RRULE:FREQ=MONTHLY;INTERVAL=1",
+    "due": 1735689600000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": true
+  },
+  {
+    "id": "4444-bbbb-5555-cccc",
+    "content": "",
+    "tags": [],
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "5555-cccc-6666-dddd",
+    "content": "Task with schedule but no due",
+    "tags": ["personal"],
+    "schedule": 1735689600000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "6666-dddd-7777-eeee",
+    "content": "Zero effort task",
+    "tags": [],
+    "effort": 0.0,
+    "due": 1735689600000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "7777-eeee-8888-ffff",
+    "content": "Unicode task: 买菜 🛒 café résumé naïve",
+    "tags": ["i18n", "日本語"],
+    "due": 1735689600000,
+    "captured": "2024-12-31T00:00:00Z",
+    "completed": false
+  },
+  {
+    "id": "8888-ffff-9999-0000",
+    "content": "All dates identical",
+    "tags": [],
+    "due": 1735689600000,
+    "start": 1735689600000,
+    "schedule": 1735689600000,
+    "captured": "2025-01-01T00:00:00Z",
+    "completed": false
+  }
+]
