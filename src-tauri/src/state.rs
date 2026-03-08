@@ -7,7 +7,7 @@ use anyhow::{Result};
 use std::sync::Arc;
 use futures::FutureExt;
 use std::panic::AssertUnwindSafe;
-use tokio::task::JoinHandle;
+use tauri::async_runtime::JoinHandle;
 use futures::future::join_all;
 use super::query::core::BrowseRequest;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
@@ -122,7 +122,7 @@ impl GlobalState {
         *pl = Some(pool);
 
         // we need to fire off a thread to update the calendar info
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             GlobalState::update_calendar(&pool_copy)
                 .await
                 .expect("failed to fetch calendar; is the internet connected?");
@@ -205,7 +205,7 @@ impl GlobalState {
         // we are not worried about aggressive cloning of self.pool,
         // because its an Arc<RwLock<_>> so we are just copying a pointer around
         let pool = self.pool.clone();
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             loop {
                 {
                     let locked = pool.read().expect("poisoning... TODO!").clone();
