@@ -123,9 +123,9 @@ impl GlobalState {
 
         // we need to fire off a thread to update the calendar info
         tauri::async_runtime::spawn(async move {
-            GlobalState::update_calendar(&pool_copy)
-                .await
-                .expect("failed to fetch calendar; is the internet connected?");
+            if let Err(e) = GlobalState::update_calendar(&pool_copy).await {
+                println!("Failed to fetch calendar on load: {e}");
+            }
         });
 
         Ok(())
@@ -209,33 +209,36 @@ impl GlobalState {
             loop {
                 {
                     let locked = pool.read().expect("poisoning... TODO!").clone();
-                    // BIG BIG WARNING
-                    // we AssertUnwindSafe on the following closure, meaning if you
-                    // use any mutable reference or RefCell inside which panics
-                    // it will cause the shared data to be in an INCONSISTENT STATE
-                    //
-                    // Across any .unwrap() / .expect() boundary, make sure that you
-                    // are not holding cao's monitor mutex (that is, NO UNWRAPS WHEN
-                    // YOU HOLD THE CAO MUTEX). If you do, you will poison the global
-                    // monitor mutex and crash the app. You can, however, poison
-                    // your own/calendar mutexes because they will be re-created on the
-                    // next loop.
-                    //
-                    // so anything in this reference needs to be a standard mutex (NOT
-                    // tokio mutex), because standard mutexes have correctly-implemneted
-                    // poisoning semantics or have interior mutability which is not
-                    // held across await boundaries. The complier WILL NOT check it
-                    // for you.
-                    let may_panic = async move {
-                        GlobalState::update_calendar(&locked.unwrap()).await.unwrap();
-                    };
-                    let res = AssertUnwindSafe(may_panic).catch_unwind().await;
-                    match res {
-                        Ok(_) => {
-                            let _ = app_handle.emit("calendar-updated", ());
-                        },
-                        Err(_) => println!("Failed to read calendar, skipping....")
-                    };
+                    // skip if the pool hasn't been initialized yet (no db loaded)
+                    if let Some(db_pool) = locked {
+                        // BIG BIG WARNING
+                        // we AssertUnwindSafe on the following closure, meaning if you
+                        // use any mutable reference or RefCell inside which panics
+                        // it will cause the shared data to be in an INCONSISTENT STATE
+                        //
+                        // Across any .unwrap() / .expect() boundary, make sure that you
+                        // are not holding cao's monitor mutex (that is, NO UNWRAPS WHEN
+                        // YOU HOLD THE CAO MUTEX). If you do, you will poison the global
+                        // monitor mutex and crash the app. You can, however, poison
+                        // your own/calendar mutexes because they will be re-created on the
+                        // next loop.
+                        //
+                        // so anything in this reference needs to be a standard mutex (NOT
+                        // tokio mutex), because standard mutexes have correctly-implemneted
+                        // poisoning semantics or have interior mutability which is not
+                        // held across await boundaries. The complier WILL NOT check it
+                        // for you.
+                        let may_panic = async move {
+                            GlobalState::update_calendar(&db_pool).await.unwrap();
+                        };
+                        let res = AssertUnwindSafe(may_panic).catch_unwind().await;
+                        match res {
+                            Ok(_) => {
+                                let _ = app_handle.emit("calendar-updated", ());
+                            },
+                            Err(_) => println!("Failed to read calendar, skipping....")
+                        };
+                    }
                 }
                 sleep(Duration::from_secs(1*60)).await;
             };
@@ -343,5 +346,192 @@ impl GlobalState {
         let _ = join_all(futs).await;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper: create an in-memory SQLite pool with migrations applied
+    async fn test_pool() -> SqlitePool {
+        let pool = SqlitePoolOptions::new()
+            .connect_with(
+                SqliteConnectOptions::from_str("sqlite::memory:")
+                    .unwrap()
+                    .create_if_missing(true),
+            )
+            .await
+            .unwrap();
+        sqlx::migrate!("./migrations").run(&pool).await.unwrap();
+        pool
+    }
+
+    #[tokio::test]
+    async fn test_new_state_has_no_pool() {
+        let state = GlobalState::new();
+        let locked = state.pool.read().unwrap().clone();
+        assert!(locked.is_none(), "fresh GlobalState should have no pool");
+    }
+
+    #[tokio::test]
+    async fn test_new_state_has_no_path() {
+        let state = GlobalState::new();
+        let p = state.path.lock().unwrap().clone();
+        assert!(p.is_none(), "fresh GlobalState should have no path");
+    }
+
+    #[tokio::test]
+    async fn test_cao_read_pool_empty_db() {
+        let pool = test_pool().await;
+        let cao = Cao::read_pool(&pool).await.unwrap();
+        assert!(cao.tasks.is_empty());
+        assert!(cao.scratchpads.is_empty());
+        assert!(cao.searches.is_empty());
+        assert!(cao.work_slots.is_empty());
+        assert!(cao.calendars.is_empty());
+        assert_eq!(cao.horizon, 8);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_and_read_task() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let task = TaskDescription::new(None);
+        let tid = task.id.clone();
+        state.upsert(&Transaction::Task(task)).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.tasks.len(), 1);
+        assert_eq!(cao.tasks[0].id, tid);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_horizon() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        state.upsert(&Transaction::Horizon(14)).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.horizon, 14);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_scratchpads() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let pads = vec!["pad1".to_string(), "pad2".to_string()];
+        state.upsert(&Transaction::Board(pads.clone())).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.scratchpads, pads);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_searches() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let searches = vec![BrowseRequest::default(), BrowseRequest::default()];
+        state.upsert(&Transaction::Search(searches.clone())).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.searches.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_calendars() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let cals = vec!["https://cal.example.com/a.ics".to_string()];
+        state.upsert(&Transaction::Calendars(cals.clone())).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.calendars, cals);
+    }
+
+    #[tokio::test]
+    async fn test_delete_task() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let task = TaskDescription::new(None);
+        let tid = task.id.clone();
+        state.upsert(&Transaction::Task(task)).await.unwrap();
+
+        state.delete(&Delete::Task(tid)).await;
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert!(cao.tasks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_complete_task() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let mut task = TaskDescription::new(None);
+        task.due = Some(chrono::Utc::now());
+        let tid = task.id.clone();
+        state.upsert(&Transaction::Task(task)).await.unwrap();
+
+        let result = state.complete(&tid).await;
+        assert!(result.is_some());
+        assert!(result.unwrap().completed);
+    }
+
+    #[tokio::test]
+    async fn test_index_returns_results() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        let task = TaskDescription::new(None);
+        state.upsert(&Transaction::Task(task)).await.unwrap();
+
+        let results = state.index(&BrowseRequest::default()).await.unwrap();
+        assert_eq!(results.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_update_calendar_empty_calendars() {
+        // update_calendar with no calendar URLs should succeed (no events)
+        let pool = test_pool().await;
+        GlobalState::update_calendar(&pool).await.unwrap();
+
+        let events: Vec<(i64,)> = sqlx::query_as("SELECT COUNT(*) FROM events")
+            .fetch_one(&pool).await.map(|r| vec![r]).unwrap();
+        assert_eq!(events[0].0, 0);
+    }
+
+    #[tokio::test]
+    async fn test_scratchpads_overwrite_on_re_upsert() {
+        let pool = test_pool().await;
+        let state = GlobalState::new();
+        *state.pool.write().unwrap() = Some(pool);
+
+        state.upsert(&Transaction::Board(vec!["a".into(), "b".into()])).await.unwrap();
+        state.upsert(&Transaction::Board(vec!["c".into()])).await.unwrap();
+
+        let pool_ref = state.pool.read().unwrap().clone().unwrap();
+        let cao = Cao::read_pool(&pool_ref).await.unwrap();
+        assert_eq!(cao.scratchpads, vec!["c".to_string()]);
     }
 }
