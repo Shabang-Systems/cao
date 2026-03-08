@@ -2,14 +2,26 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { snapshot } from "@api/utils.js";
 import { invoke } from '@tauri-apps/api/core';
 
+let queryInFlight = false;
+let pendingQueryArgs = null;
+
 const query = createAsyncThunk(
     'browse/query',
 
-    async (query, thunkAPI) => {
-        let entries = await invoke('index', { query });
-        // console.log(entries);
+    async (queryArgs, thunkAPI) => {
+        let entries = await invoke('index', { query: queryArgs });
         return entries;
     },
+    {
+        condition: (queryArgs) => {
+            if (queryInFlight) {
+                pendingQueryArgs = queryArgs;
+                return false;
+            }
+            queryInFlight = true;
+            return true;
+        },
+    }
 );
 
 // I'm sorry but I don't know how to get around an unwrapped proxy
@@ -60,13 +72,25 @@ export const browseSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(query.fulfilled, (state, { payload }) => {
+            .addCase(query.fulfilled, (state, { payload, asyncDispatch }) => {
+                queryInFlight = false;
+                if (pendingQueryArgs) {
+                    let args = pendingQueryArgs;
+                    pendingQueryArgs = null;
+                    asyncDispatch(query(args));
+                }
                 return {
                     ...state,
                     entries: payload
                 };
             })
-            .addCase(query.rejected, (state, { error }) => {
+            .addCase(query.rejected, (state, { error, asyncDispatch }) => {
+                queryInFlight = false;
+                if (pendingQueryArgs) {
+                    let args = pendingQueryArgs;
+                    pendingQueryArgs = null;
+                    asyncDispatch(query(args));
+                }
                 console.error(error);
             })
             .addCase(snapshot.fulfilled, (state, { payload, asyncDispatch } ) => {

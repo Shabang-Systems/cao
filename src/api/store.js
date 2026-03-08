@@ -10,6 +10,7 @@ import ui from "./ui.js";
 import { invoke } from '@tauri-apps/api/core';
 
 import { snapshot } from "@api/utils.js";
+import { initReindex } from "@api/reindex.js";
 
 // This middleware will just add the property "async dispatch" to all actions
 // https://stackoverflow.com/questions/36730793/can-i-dispatch-an-action-in-reducer
@@ -41,7 +42,7 @@ const asyncDispatchMiddleware = store => next => action => {
     return res;
 };
 
-export default configureStore({
+const store = configureStore({
     reducer: {
         capture,
         tasks,
@@ -52,4 +53,8 @@ export default configureStore({
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({serializableCheck: false}).concat([asyncDispatchMiddleware])
 });
+
+initReindex(store);
+
+export default store;
 

@@ -3,6 +3,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { invoke } from '@tauri-apps/api/core';
 
 import { snapshot } from "@api/utils.js";
+import { debouncedReindex } from "@api/reindex.js";
 import * as chrono from 'chrono-node';
 
 // each of the thunks will do their usual job, and
@@ -129,36 +130,36 @@ export const tasksSlice = createSlice({
             .addCase(insert.rejected, (state, { error }) => {
                 console.error(error);
             })
-            .addCase(edit.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch({type: "global/reindex"});
+            .addCase(edit.fulfilled, (state, { payload }) => {
+                debouncedReindex();
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(complete.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch({type: "global/reindex"});
+            .addCase(complete.fulfilled, (state, { payload }) => {
+                debouncedReindex();
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(remove.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch({type: "global/reindex"});
+            .addCase(remove.fulfilled, (state, { payload }) => {
+                debouncedReindex();
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(abtib.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch({type: "global/reindex"});
+            .addCase(abtib.fulfilled, (state, { payload }) => {
+                debouncedReindex();
                 return {
                     ...state,
                     ...payload
                 };
             })
-            .addCase(insert.fulfilled, (state, { payload, asyncDispatch }) => {
-                asyncDispatch({type: "global/reindex"});
+            .addCase(insert.fulfilled, (state, { payload }) => {
+                debouncedReindex();
                 return {
                     ...state,
                     db: state.db.concat([payload])
