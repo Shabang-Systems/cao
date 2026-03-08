@@ -11,16 +11,14 @@ use tauri::{Builder, Manager};
 pub fn run()  {
     let state = GlobalState::new();
 
-    // let calendar_listen_handle = state.calendar_listen();
-
     // rock'n'roll
     Builder::default()
-       .setup(|app| {
-           app.manage(state);
-            // tauri::async_runtime::spawn(async move {
-            //     // let _ = join_all([calendar_listen_handle]).await;
-            // });
+        .manage(state)
 
+        .setup(|app| {
+            let handle = app.handle().clone();
+            let s = app.state::<GlobalState>();
+            s.calendar_listen(handle);
             Ok(())
         })
 

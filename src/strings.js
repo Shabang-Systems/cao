@@ -66,6 +66,7 @@ export default {
         NEXT_DAY: "Next Day",
         INCREASE_CAL: "Increase Calendar Slots",
         DECREASE_CAL: "Decrease Calendar Slots",
+        REFRESH_CAL: "Refresh Calendars",
         TASKS_MODE: "Show Tasks Only",
         CALENDAR_MODE: "Show Tasks and Events",
         LOGOUT: "Logout",

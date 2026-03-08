@@ -147,6 +147,39 @@
     margin-top: 10px;
 }
 
+.drag-handle {
+    position: absolute;
+    left: -46px;
+    top: 5px;
+    transform: translateY(-2px);
+    color: var(--background-decoration);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s;
+    padding: 4px;
+    font-size: 11px;
+    z-index: 10;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+*:hover > .drag-handle {
+    opacity: 1;
+}
+
+.is-dragging {
+    position: relative;
+}
+
+.is-dragging::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+}
+
 .bar-outer {
     background-color: var(--background-decoration);
     height: 20px;
@@ -165,4 +198,83 @@
     position: absolute;
     z-index: 1000;
     bottom: 0;
+}
+
+/* ===== Mobile Responsive - Action View ===== */
+@media (max-width: 640px) {
+    .action-main {
+        margin-top: 10px;
+        padding: 10px 15px 10px 15px;
+    }
+
+    .action-main > div:nth-child(2) {
+        margin-right: 0 !important;
+    }
+
+    .action-abtib {
+        margin-right: 0;
+        opacity: 0.5;
+    }
+
+    .greeting-subhead {
+        padding-right: 0;
+        font-size: 14px;
+    }
+
+    /* Move the day selector from right sidebar to a horizontal scroll strip at top */
+    .captureid-outer {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        padding: 0 !important;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 10px 0;
+        padding-bottom: 5px !important;
+    }
+
+    .captureid-outer > .mb-3 {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 0 !important;
+        flex-shrink: 0;
+    }
+
+    .captureid-outer .captureid-wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 4px;
+        overflow-x: auto;
+    }
+
+    .captureid-outer .horizon-switch {
+        flex-shrink: 0;
+    }
+
+    .action-datelabel {
+        white-space: nowrap;
+        padding: 4px 8px;
+    }
+
+    .action-datelabel > div {
+        direction: ltr !important;
+        text-align: center !important;
+        margin-right: 0 !important;
+    }
+
+    /* Drag handles visible on mobile via long press */
+    .drag-handle {
+        left: -30px;
+        opacity: 0.3;
+    }
+
+    /* Calendar entries full width */
+    .calendar-entry {
+        margin-left: 0;
+    }
 }

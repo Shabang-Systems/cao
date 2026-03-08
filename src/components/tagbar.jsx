@@ -13,7 +13,7 @@ import { githubLight } from '@uiw/codemirror-theme-github';
 import ReactDOM from "react-dom/client";
 import * as events from '@uiw/codemirror-extensions-events';
 
-import { ThemeContext } from "@contexts";
+import { ThemeContext, EditingContext } from "@contexts";
 
 import { MatchDecorator } from "@codemirror/view";
 
@@ -94,6 +94,7 @@ export default function TagBar( { defaultValue, onNewTags } ) {
                                      defaultValue.join(",")+"," : "");
     const oldTags = useRef(defaultValue);
     const { dark } = useContext(ThemeContext);
+    const editing = useContext(EditingContext);
     const editor = useRef(null);
 
     return (
@@ -131,6 +132,10 @@ export default function TagBar( { defaultValue, onNewTags } ) {
                                codeLanguages: languages }),
                     placeholder(strings.COMPONENTS__TAGBAR_EMPTY),
                     FontSizeTheme,
+                    events.content({
+                        focus: () => { editing.onFocus(); },
+                        blur: () => { editing.onBlur(); },
+                    }),
                     Prec.highest(
                         keymap.of([
                             {

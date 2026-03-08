@@ -138,3 +138,121 @@ impl Default for TaskDescription {
         TaskDescription::new(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, TimeZone};
+
+    #[test]
+    fn test_new_task_has_uuid() {
+        let task = TaskDescription::new(None);
+        assert!(!task.id.is_empty());
+        // UUID v4 format: 8-4-4-4-12
+        assert_eq!(task.id.len(), 36);
+    }
+
+    #[test]
+    fn test_new_task_defaults() {
+        let task = TaskDescription::new(None);
+        assert_eq!(task.content, "");
+        assert_eq!(task.tags.len(), 0);
+        assert_eq!(task.priority, 0);
+        assert_eq!(task.effort, 1.0);
+        assert!(!task.completed);
+        assert!(!task.locked);
+        assert!(task.start.is_none());
+        assert!(task.due.is_none());
+        assert!(task.schedule.is_none());
+        assert!(task.rrule.is_none());
+        assert!(task.capture.is_none());
+    }
+
+    #[test]
+    fn test_new_task_with_capture_id() {
+        let task = TaskDescription::new(Some("cap-123".to_string()));
+        assert_eq!(task.capture, Some("cap-123".to_string()));
+    }
+
+    #[test]
+    fn test_complete_toggles_simple_task() {
+        let mut task = TaskDescription::new(None);
+        assert!(!task.completed);
+        task.complete().unwrap();
+        assert!(task.completed);
+        task.complete().unwrap();
+        assert!(!task.completed);
+    }
+
+    #[test]
+    fn test_complete_no_rrule_toggles() {
+        let mut task = TaskDescription::new(None);
+        task.due = Some(Utc::now());
+        // No rrule, so complete should toggle
+        task.complete().unwrap();
+        assert!(task.completed);
+    }
+
+    #[test]
+    fn test_complete_with_rrule_advances_due() {
+        let mut task = TaskDescription::new(None);
+        let base_due = Utc.with_ymd_and_hms(2025, 1, 1, 12, 0, 0).unwrap();
+        task.due = Some(base_due);
+        task.rrule = Some("RRULE:FREQ=WEEKLY;INTERVAL=1".to_string());
+
+        task.complete().unwrap();
+
+        // Should NOT be marked completed (recurring task)
+        assert!(!task.completed);
+        // Due date should have advanced by ~1 week
+        let new_due = task.due.unwrap();
+        assert!(new_due > base_due);
+        assert!((new_due - base_due).num_days() >= 6);
+        assert!((new_due - base_due).num_days() <= 8);
+    }
+
+    #[test]
+    fn test_complete_with_rrule_clears_schedule() {
+        let mut task = TaskDescription::new(None);
+        let base_due = Utc.with_ymd_and_hms(2025, 1, 1, 12, 0, 0).unwrap();
+        task.due = Some(base_due);
+        task.schedule = Some(base_due);
+        task.rrule = Some("RRULE:FREQ=DAILY;INTERVAL=1".to_string());
+
+        task.complete().unwrap();
+
+        // Schedule should be cleared so the user re-schedules
+        assert!(task.schedule.is_none());
+    }
+
+    #[test]
+    fn test_complete_with_rrule_preserves_start_distance() {
+        let mut task = TaskDescription::new(None);
+        let base_due = Utc.with_ymd_and_hms(2025, 3, 10, 12, 0, 0).unwrap();
+        let base_start = base_due - Duration::days(3);
+        task.due = Some(base_due);
+        task.start = Some(base_start);
+        task.rrule = Some("RRULE:FREQ=WEEKLY;INTERVAL=1".to_string());
+
+        task.complete().unwrap();
+
+        // Start should have moved to maintain the 3-day gap
+        let new_due = task.due.unwrap();
+        let new_start = task.start.unwrap();
+        let gap = new_due.signed_duration_since(new_start);
+        assert_eq!(gap.num_days(), 3);
+    }
+
+    #[test]
+    fn test_unique_ids() {
+        let task1 = TaskDescription::new(None);
+        let task2 = TaskDescription::new(None);
+        assert_ne!(task1.id, task2.id);
+    }
+
+    #[test]
+    fn test_default_effort_is_one() {
+        let task = TaskDescription::default();
+        assert_eq!(task.effort, 1.0);
+    }
+}

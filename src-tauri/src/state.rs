@@ -12,6 +12,7 @@ use futures::future::join_all;
 use super::query::core::BrowseRequest;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::sync::{Mutex, RwLock};
+use tauri::Emitter;
 
 /// what's the upsert tryin' to 'sert?
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -200,9 +201,9 @@ impl GlobalState {
     }
 
     /// listen to calendar update
-    pub fn calendar_listen(&self) -> JoinHandle<()> {
-        // we are not worried about aggressive cloning of self.monitor,
-        // beacuse its an Arc<Mutex<_>> so we are just copying a pointer around
+    pub fn calendar_listen(&self, app_handle: tauri::AppHandle) -> JoinHandle<()> {
+        // we are not worried about aggressive cloning of self.pool,
+        // because its an Arc<RwLock<_>> so we are just copying a pointer around
         let pool = self.pool.clone();
         tokio::spawn(async move {
             loop {
@@ -230,7 +231,9 @@ impl GlobalState {
                     };
                     let res = AssertUnwindSafe(may_panic).catch_unwind().await;
                     match res {
-                        Ok(_) => (),
+                        Ok(_) => {
+                            let _ = app_handle.emit("calendar-updated", ());
+                        },
                         Err(_) => println!("Failed to read calendar, skipping....")
                     };
                 }
@@ -299,17 +302,19 @@ impl GlobalState {
     async fn set_search_(&self, queries: &Vec<BrowseRequest>) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
         sqlx::query("DELETE FROM searches").execute(&pool).await?;
-        let _ = queries.into_iter()
+        let futs: Vec<_> = queries.into_iter()
             .enumerate()
-            .map(|(i, x)| { 
+            .map(|(i, x)| {
                 let pc = pool.clone();
+                let json = sqlx::types::Json(x.clone());
                 async move {
-                    sqlx::query("INSERT INTO searches (id,request) VALUES (?)")
+                    sqlx::query("INSERT INTO searches (id,request) VALUES (?,?)")
                         .bind(i as u32)
-                        .bind(sqlx::types::Json(x))
+                        .bind(json)
                         .execute(&pc).await
                 }
-            });
+            }).collect();
+        let _ = join_all(futs).await;
 
         Ok(())
     }
@@ -323,17 +328,19 @@ impl GlobalState {
     async fn set_calendars_(&self, calendars: &Vec<String>) -> Result<()> {
         let pool = self.pool.read().expect("poisoning... TODO!").clone().unwrap();
         sqlx::query("DELETE FROM calendars").execute(&pool).await?;
-        let _ = calendars.into_iter()
+        let futs: Vec<_> = calendars.into_iter()
             .enumerate()
-            .map(|(i,x)| { 
+            .map(|(i,x)| {
                 let pc = pool.clone();
+                let val = x.clone();
                 async move {
                     sqlx::query("INSERT INTO calendars (id,content) VALUES (?,?)")
                         .bind(i as u32)
-                        .bind(x)
+                        .bind(val)
                         .execute(&pc).await
                 }
-            });
+            }).collect();
+        let _ = join_all(futs).await;
 
         Ok(())
     }

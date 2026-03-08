@@ -4,7 +4,7 @@ import "./Action.css";
 import strings from "@strings";
 
 import { setHorizon } from "@api/ui.js";
-import { setCalendars } from "@api/events.js";
+import { setCalendars, getEvents } from "@api/events.js";
 import { useDispatch, useSelector } from "react-redux";
 
 import { LogoutContext }  from "../contexts.js";
@@ -65,6 +65,12 @@ export default function Settings({}) {
                                 dispatch(setCalendars(calendars.concat([""])));
                             }} data-tooltip-id="rootp"  data-tooltip-content={strings.TOOLTIPS.INCREASE_CAL}>
                             <i className="fa-solid fa-plus"></i>
+                        </div>
+                        <div
+                            className="button" onClick={() => {
+                                dispatch(getEvents());
+                            }} data-tooltip-id="rootp" data-tooltip-content={strings.TOOLTIPS.REFRESH_CAL}>
+                            <i className="fa-solid fa-rotate"></i>
                         </div>
 
                     </div>

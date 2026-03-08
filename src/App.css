@@ -72,7 +72,7 @@
     font-size: 13px;
     padding: 0 5px 88px 3px;
     justify-content: space-between;
-    height: 115px;
+    height: 90px;
 }
 
 .buttom-nav {
@@ -103,5 +103,64 @@
 
 #logout:hover {
     color: var(--foreground-decoration);
+}
+
+/* ===== Mobile Responsive ===== */
+
+/* Safe area support for iOS notch/home indicator */
+.global {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+#top-hide {
+    height: calc(40px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media (max-width: 640px) {
+    /* Move navigation from vertical left side to horizontal bottom bar */
+    .bottom-nav {
+        flex-direction: row;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0;
+        width: 100%;
+        height: auto;
+        padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)) 0;
+        justify-content: space-around;
+        background-color: var(--background-color);
+        border-top: 1px solid var(--background-decoration);
+        z-index: 20001 !important;
+    }
+
+    .bottom-nav-button {
+        font-size: 18px;
+        padding: 8px 16px;
+        margin: 0;
+    }
+
+    /* Add bottom padding to main scroll area so content isn't hidden behind nav */
+    .global {
+        margin-bottom: 0;
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Larger touch targets for buttons */
+    .button {
+        min-height: 32px;
+        min-width: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+    }
+
+    /* Hide tooltips on touch devices */
+    #rootp {
+        display: none !important;
+    }
 }
 

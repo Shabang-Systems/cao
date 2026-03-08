@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, forwardRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import "./datepicker.css";
 import strings from "@strings";

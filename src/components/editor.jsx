@@ -12,7 +12,7 @@ import { githubLight } from '@uiw/codemirror-theme-github';
 import ReactDOM from "react-dom/client";
 import * as events from '@uiw/codemirror-extensions-events';
 
-import { ThemeContext } from "@contexts";
+import { ThemeContext, EditingContext } from "@contexts";
 
 import "./editor.css";
 import strings from "@strings";
@@ -29,6 +29,7 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
     const [code, setCode] = useState(value ? value : defaultValue);
     const [selection, setSelection] = useState(null);
     const { dark } = useContext(ThemeContext);
+    const editing = useContext(EditingContext);
     const cm = useRef(null);
 
     useEffect(() => {
@@ -91,6 +92,14 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
     const changeTimeout = useRef(null);
 
     useEffect(() => {
+        return () => {
+            if (changeTimeout.current) {
+                clearTimeout(changeTimeout.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
         setCode(value);
     }, [value]);
 
@@ -134,11 +143,13 @@ export default forwardRef (function Editor({ onChange, onSelectionChange, defaul
                     placeholder(strings.COMPONENTS__EDITOR__CM_PLACEHOLDER),
                     events.content({
                         focus: (evn) => {
+                            editing.onFocus();
                             if (typeof onFocusChange == "function") {
                                 onFocusChange(true);
                             }
                         },
                         blur: (evn) => {
+                            editing.onBlur();
                             if (typeof onFocusChange == "function") {
                                 onFocusChange(false);
                             }

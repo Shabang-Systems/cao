@@ -37,8 +37,8 @@ const workslots = createAsyncThunk(
                     duration: end.diff(start, "minutes", true),
                     type: "event",
                     name: x.name,
-                    // to make the .key prop happy
-                    id: Math.random()
+                    // stable id for dnd-kit
+                    id: `event-${x.name}-${start.valueOf()}-${end.valueOf()}`
                 };
             });
             let seen = {};
@@ -56,6 +56,8 @@ const workslots = createAsyncThunk(
         return { workslots };
     });
 
+
+let computeInFlight = false;
 
 const compute = createAsyncThunk(
     'action/dispatch',
@@ -81,7 +83,7 @@ const compute = createAsyncThunk(
                                   (today.getDate()+sel), 0,0,0);
 
                 if (sel == 0) {
-                    return (moment(x.due) <= 
+                    return (moment(x.due) <=
                             new Date(today.getFullYear(),
                                      today.getMonth(),
                                      (today.getDate()+dueSoonDays), today.getHours(),today.getMinutes(),today.getSeconds()));
@@ -148,6 +150,13 @@ const compute = createAsyncThunk(
             dueSoon
         }
     },
+    {
+        condition: () => {
+            if (computeInFlight) return false;
+            computeInFlight = true;
+            return true;
+        },
+    }
 );
 
 export const actionSlice = createSlice({
@@ -165,9 +174,10 @@ export const actionSlice = createSlice({
                 console.error(error);
             })
             .addCase(compute.rejected, (state, { error }) => {
+                computeInFlight = false;
                 console.error(error);
             })
-            .addCase(tick, (state, { payload, asyncDispatch }) => {
+            .addCase(tick, (state, { asyncDispatch }) => {
                 asyncDispatch(compute());
             })
             .addCase(workslots.fulfilled, (state, { payload }) => {
@@ -177,6 +187,7 @@ export const actionSlice = createSlice({
                 };
             })
             .addCase(compute.fulfilled, (state, { payload }) => {
+                computeInFlight = false;
                 return {
                     ...state,
                     ...payload
@@ -197,4 +208,3 @@ export const actionSlice = createSlice({
 export const { } = actionSlice.actions;
 export { compute, workslots };
 export default actionSlice.reducer;
-

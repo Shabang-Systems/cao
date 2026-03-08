@@ -163,7 +163,7 @@ impl BrowseRequest {
         Ok(sql_filtered)
     }
 
-    /// Use a BrowseRequest to filter a list of tasks
+    /// Use a BrowseRequest to filter a list of tasks (in-memory, used for tests)
     pub fn execute<'a>(&self, data: &'a [TaskDescription]) -> Result<Vec<&'a TaskDescription>> {
         let q = match &self.query_regexp {
             Some(x) => Some(Regex::new(&x)?),
@@ -214,5 +214,246 @@ impl BrowseRequest {
         }
 
         Ok(filtered)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, TimeZone};
+
+    fn make_task(content: &str, tags: Vec<&str>, completed: bool) -> TaskDescription {
+        let mut task = TaskDescription::new(None);
+        task.content = content.to_string();
+        task.tags = sqlx::types::Json(tags.iter().map(|s| s.to_string()).collect());
+        task.completed = completed;
+        task
+    }
+
+    #[test]
+    fn test_default_browse_request() {
+        let req = BrowseRequest::default();
+        assert_eq!(req.availability, Availability::Incomplete);
+        assert!(req.tags.is_empty());
+        assert!(req.query_regexp.is_none());
+    }
+
+    #[test]
+    fn test_filter_incomplete() {
+        let tasks = vec![
+            make_task("task1", vec![], false),
+            make_task("task2", vec![], true),
+            make_task("task3", vec![], false),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 2);
+        // Default order is Captured descending, so task3 (created last) comes first
+        let contents: Vec<&str> = result.iter().map(|t| t.content.as_str()).collect();
+        assert!(contents.contains(&"task1"));
+        assert!(contents.contains(&"task3"));
+    }
+
+    #[test]
+    fn test_filter_completed() {
+        let tasks = vec![
+            make_task("task1", vec![], false),
+            make_task("task2", vec![], true),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::Done,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].content, "task2");
+    }
+
+    #[test]
+    fn test_filter_all() {
+        let tasks = vec![
+            make_task("task1", vec![], false),
+            make_task("task2", vec![], true),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::All,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_filter_by_tags() {
+        let tasks = vec![
+            make_task("task1", vec!["work", "urgent"], false),
+            make_task("task2", vec!["personal"], false),
+            make_task("task3", vec!["work"], false),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            tags: vec!["work".to_string()],
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().all(|t| t.tags.contains(&"work".to_string())));
+    }
+
+    #[test]
+    fn test_filter_by_multiple_tags() {
+        let tasks = vec![
+            make_task("task1", vec!["work", "urgent"], false),
+            make_task("task2", vec!["work"], false),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            tags: vec!["work".to_string(), "urgent".to_string()],
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].content, "task1");
+    }
+
+    #[test]
+    fn test_filter_by_regex() {
+        let tasks = vec![
+            make_task("fix bug #123", vec![], false),
+            make_task("add feature", vec![], false),
+            make_task("fix bug #456", vec![], false),
+        ];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            query_regexp: Some("fix bug #\\d+".to_string()),
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_order_by_captured_descending() {
+        let mut task1 = make_task("first", vec![], false);
+        task1.captured = Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap();
+        let mut task2 = make_task("second", vec![], false);
+        task2.captured = Utc.with_ymd_and_hms(2025, 1, 2, 0, 0, 0).unwrap();
+
+        let tasks = vec![task1, task2];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            order: OrderRequest {
+                order: OrderType::Captured,
+                ascending: false,
+            },
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result[0].content, "second");
+        assert_eq!(result[1].content, "first");
+    }
+
+    #[test]
+    fn test_order_by_captured_ascending() {
+        let mut task1 = make_task("first", vec![], false);
+        task1.captured = Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap();
+        let mut task2 = make_task("second", vec![], false);
+        task2.captured = Utc.with_ymd_and_hms(2025, 1, 2, 0, 0, 0).unwrap();
+
+        let tasks = vec![task1, task2];
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            order: OrderRequest {
+                order: OrderType::Captured,
+                ascending: true,
+            },
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result[0].content, "first");
+        assert_eq!(result[1].content, "second");
+    }
+
+    #[test]
+    fn test_filter_available_excludes_future_start() {
+        let mut task = make_task("future task", vec![], false);
+        task.start = Some(Utc::now() + Duration::days(30));
+
+        let tasks = vec![task];
+        let req = BrowseRequest {
+            availability: Availability::Available,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_filter_available_includes_past_start() {
+        let mut task = make_task("available task", vec![], false);
+        task.start = Some(Utc::now() - Duration::days(1));
+
+        let tasks = vec![task];
+        let req = BrowseRequest {
+            availability: Availability::Available,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_filter_available_includes_no_start() {
+        let task = make_task("no start task", vec![], false);
+
+        let tasks = vec![task];
+        let req = BrowseRequest {
+            availability: Availability::Available,
+            ..Default::default()
+        };
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_search_query_generates_sql() {
+        let req = BrowseRequest {
+            availability: Availability::Incomplete,
+            order: OrderRequest {
+                order: OrderType::Due,
+                ascending: true,
+            },
+            ..Default::default()
+        };
+        let sql = req.search_query();
+        assert!(sql.contains("SELECT * FROM tasks"));
+        assert!(sql.contains("completed == 0"));
+        assert!(sql.contains("ORDER BY due"));
+        assert!(sql.contains("ASC"));
+    }
+
+    #[test]
+    fn test_search_query_with_tags() {
+        let req = BrowseRequest {
+            availability: Availability::All,
+            tags: vec!["work".to_string()],
+            ..Default::default()
+        };
+        let sql = req.search_query();
+        assert!(sql.contains("tags LIKE"));
+    }
+
+    #[test]
+    fn test_empty_filter_returns_all_incomplete() {
+        let tasks = vec![
+            make_task("a", vec![], false),
+            make_task("b", vec![], false),
+        ];
+        let req = BrowseRequest::default();
+        let result = req.execute(&tasks).unwrap();
+        assert_eq!(result.len(), 2);
     }
 }

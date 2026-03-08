@@ -54,3 +54,17 @@
 .icon {
     transform: translateY(2px);
 }
+
+@media (max-width: 640px) {
+    .settings-inner {
+        max-width: 90vw;
+        padding: 0 10px;
+    }
+
+    .settings-entry input {
+        width: 100%;
+        margin-top: 5px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}

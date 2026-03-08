@@ -1,5 +1,6 @@
 import { configureStore, combineReducers, createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { snapshot } from "@api/utils.js";
+import { invoke } from '@tauri-apps/api/core';
 
 import { createSelector } from '@reduxjs/toolkit';
 
@@ -8,7 +9,7 @@ const setHorizon = createAsyncThunk(
 
     async (horizon, { getState }) => {
         let res = await invoke('upsert', { transaction: {Horizon: horizon } });
-        
+
         return horizon;
     },
 );
@@ -30,7 +31,8 @@ const ui = createSlice({
         ready: false,
         horizon: 8,
         dueSoonDays: 1,
-        clock: (new Date()).getTime()
+        clock: (new Date()).getTime(),
+        tasksMode: true
     },
     reducers: {
         tick: (state, {payload}) => {
@@ -39,13 +41,19 @@ const ui = createSlice({
                 clock: (new Date()).getTime(),
                 dueSoonDays: payload
             }
+        },
+        setTasksMode: (state, {payload}) => {
+            return {
+                ...state,
+                tasksMode: payload
+            }
         }
     },
     extraReducers: (builder) => {
         builder
             .addCase(setHorizon.fulfilled, (state, { payload }) => {
                 return {
-                    ...state, 
+                    ...state,
                     horizon: payload
                 };
             })
@@ -65,8 +73,6 @@ const ui = createSlice({
     },
 });
 
-export { setHorizon, now }; 
-export const { tick } = ui.actions;
+export { setHorizon, now };
+export const { tick, setTasksMode } = ui.actions;
 export default ui.reducer;
-
-

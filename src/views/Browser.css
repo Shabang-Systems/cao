@@ -58,3 +58,21 @@
     outline: none;
 }
 
+@media (max-width: 640px) {
+    .capture-options {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .capture-options-select {
+        font-size: 13px;
+        margin-right: 8px;
+        padding: 4px 6px;
+    }
+
+    .capture-cm-box {
+        font-size: 16px;
+        padding: 8px 10px;
+    }
+}
+
